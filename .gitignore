@@ -1,0 +1,32 @@
+# Build output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.rsuser
+
+# Rider / VSCode / VS
+.vs/
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# User secrets
+secrets.json
+
+# Environment files
+.env
+.env.*
+
+# Local app settings overrides
+appsettings.Development.json
+.fake
