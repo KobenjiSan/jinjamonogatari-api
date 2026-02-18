@@ -4,20 +4,26 @@ using MediatR;
 
 namespace Application.Features.Users.Commands.RegisterUser;
 
-public class RegisterUserHandler : IRequestHandler<RegisterUserCommand>
+public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, RegisterUserResult>
 {
     private readonly IUserReadService _readService;
     private readonly IUserWriteService _writeService;
     private readonly IPasswordHasher _passwords;
+    private readonly ITokenService _tokens;
 
-    public RegisterUserHandler(IUserReadService readService, IUserWriteService writeService, IPasswordHasher passwords)
+     public RegisterUserHandler(
+        IUserReadService readService,
+        IUserWriteService writeService,
+        IPasswordHasher passwords,
+        ITokenService tokens)
     {
         _readService = readService;
         _writeService = writeService;
         _passwords = passwords;
+        _tokens = tokens;
     }
 
-    public async Task<Unit> Handle(RegisterUserCommand request, CancellationToken ct)
+    public async Task<RegisterUserResult> Handle(RegisterUserCommand request, CancellationToken ct)
     {
         var email = request.Email.Trim().ToLowerInvariant();
         var username = request.Username.Trim();
@@ -31,8 +37,10 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserCommand>
 
         var passHash = _passwords.Hash(request.Password);
 
-        await _writeService.CreateUserAsync(email, username, passHash, ct);
+        var user = await _writeService.CreateUserAsync(email, username, passHash, ct);
 
-        return Unit.Value;
+        var accessToken = _tokens.CreateAccessToken(user.UserId, user.Email);
+
+        return new RegisterUserResult(accessToken);
     }
 }

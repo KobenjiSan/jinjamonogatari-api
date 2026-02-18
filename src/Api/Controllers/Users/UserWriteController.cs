@@ -43,12 +43,12 @@ public class UserWriteController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.Password))
             throw new ArgumentException("Password is required.");
 
-        await _mediator.Send(new RegisterUserCommand(
+        var result = await _mediator.Send(new RegisterUserCommand(
             request.Email,
             request.Username,
             request.Password));
 
-        return NoContent();
+         return Ok(result);
     }
 }
 
