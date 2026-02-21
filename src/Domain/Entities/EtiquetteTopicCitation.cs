@@ -1,6 +1,8 @@
+using Domain.Common;
+
 namespace Domain.Entities;
 
-public class EtiquetteTopicCitation
+public class EtiquetteTopicCitation : IHasCreatedAt
 {
     public int TopicId { get; set; }
     public EtiquetteTopic Topic { get; set; } = null!;

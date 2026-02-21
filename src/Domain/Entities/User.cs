@@ -1,6 +1,8 @@
+using Domain.Common;
+
 namespace Domain.Entities;
 
-public class User
+public class User : IHasTimestamps
 {
     // PK
     public int UserId { get; set; }

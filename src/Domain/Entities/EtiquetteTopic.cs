@@ -1,6 +1,8 @@
+using Domain.Common;
+
 namespace Domain.Entities;
 
-public class EtiquetteTopic
+public class EtiquetteTopic : IHasTimestamps
 {
     public int TopicId { get; set; }
 

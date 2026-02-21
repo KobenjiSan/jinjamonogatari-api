@@ -1,6 +1,8 @@
+using Domain.Common;
+
 namespace Domain.Entities;
 
-public class Image
+public class Image : IHasTimestamps
 {
     public int ImgId { get; set; }
 

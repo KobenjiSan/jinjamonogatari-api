@@ -31,7 +31,10 @@ builder.Services.AddMediatR(typeof(Application.Common.Interfaces.IAppDbContext).
 
 // DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("Default"),
+        npgsqlOptions => npgsqlOptions.UseNetTopologySuite()
+    ));
 
 // CORS (dev)
 builder.Services.AddCors(options =>

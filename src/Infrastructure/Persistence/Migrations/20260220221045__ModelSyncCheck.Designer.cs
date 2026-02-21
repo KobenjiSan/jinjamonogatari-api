@@ -3,8 +3,8 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
@@ -12,16 +12,17 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260220221045__ModelSyncCheck")]
+    partial class _ModelSyncCheck
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Domain.Entities.Citation", b =>
@@ -278,10 +279,6 @@ namespace api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("locality");
 
-                    b.Property<Point>("Location")
-                        .HasColumnType("geography(point,4326)")
-                        .HasColumnName("location");
-
                     b.Property<decimal?>("Lon")
                         .HasColumnType("decimal(9,6)")
                         .HasColumnName("lon");
@@ -343,61 +340,6 @@ namespace api.Migrations
                         .HasFilter("slug IS NOT NULL");
 
                     b.ToTable("shrines", (string)null);
-                });
-
-            modelBuilder.Entity("Domain.Entities.ShrineTag", b =>
-                {
-                    b.Property<int>("ShrineId")
-                        .HasColumnType("integer")
-                        .HasColumnName("shrine_id");
-
-                    b.Property<int>("TagId")
-                        .HasColumnType("integer")
-                        .HasColumnName("tag_id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.HasKey("ShrineId", "TagId");
-
-                    b.HasIndex("TagId");
-
-                    b.ToTable("shrine_tags", (string)null);
-                });
-
-            modelBuilder.Entity("Domain.Entities.Tag", b =>
-                {
-                    b.Property<int>("TagId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("tag_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TagId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("TitleEn")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("title_en");
-
-                    b.Property<string>("TitleJp")
-                        .HasColumnType("text")
-                        .HasColumnName("title_jp");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("TagId");
-
-                    b.HasIndex("TitleEn")
-                        .IsUnique();
-
-                    b.ToTable("tags", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>
@@ -564,25 +506,6 @@ namespace api.Migrations
                     b.Navigation("Image");
                 });
 
-            modelBuilder.Entity("Domain.Entities.ShrineTag", b =>
-                {
-                    b.HasOne("Domain.Entities.Shrine", "Shrine")
-                        .WithMany("ShrineTags")
-                        .HasForeignKey("ShrineId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.Tag", "Tag")
-                        .WithMany("ShrineTags")
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Shrine");
-
-                    b.Navigation("Tag");
-                });
-
             modelBuilder.Entity("Domain.Entities.Citation", b =>
                 {
                     b.Navigation("EtiquetteTopicCitations");
@@ -602,16 +525,6 @@ namespace api.Migrations
                     b.Navigation("EtiquetteSteps");
 
                     b.Navigation("EtiquetteTopicsAsHero");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Shrine", b =>
-                {
-                    b.Navigation("ShrineTags");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Tag", b =>
-                {
-                    b.Navigation("ShrineTags");
                 });
 #pragma warning restore 612, 618
         }
