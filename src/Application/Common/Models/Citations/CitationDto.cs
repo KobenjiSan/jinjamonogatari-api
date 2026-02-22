@@ -5,6 +5,5 @@ public record CitationDto(
     string? Title,
     string? Author,
     string? Url,
-    int? Year,
-    string? Notes
+    int? Year
 );
