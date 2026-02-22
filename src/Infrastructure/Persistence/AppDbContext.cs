@@ -14,12 +14,29 @@ public class AppDbContext : DbContext, IAppDbContext
     // Shrines
     public DbSet<Shrine> Shrines => Set<Shrine>();
 
+    // Gallery
+    public DbSet<ShrineGallery> ShrineGalleries => Set<ShrineGallery>();
+
+    // Kami
+    public DbSet<Kami> Kamis => Set<Kami>();
+    public DbSet<ShrineKami> ShrineKamis => Set<ShrineKami>();
+    public DbSet<KamiCitation> KamiCitations => Set<KamiCitation>();
+
+    // History
+    public DbSet<History> Histories => Set<History>();
+    public DbSet<HistoryCitation> HistoryCitations => Set<HistoryCitation>();
+
+    // Folklore
+    public DbSet<Folklore> Folklores => Set<Folklore>();
+    public DbSet<FolkloreCitation> FolkloreCitations => Set<FolkloreCitation>();
+
     // Tags
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<ShrineTag> ShrineTags => Set<ShrineTag>();
 
     // Auth
     public DbSet<User> Users => Set<User>();
+    public DbSet<UserCollection> UserCollections => Set<UserCollection>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     // Etiquette

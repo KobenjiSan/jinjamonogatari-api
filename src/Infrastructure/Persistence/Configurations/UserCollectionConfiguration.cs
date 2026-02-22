@@ -8,10 +8,13 @@ public class UserCollectionConfiguration : IEntityTypeConfiguration<UserCollecti
 {
     public void Configure(EntityTypeBuilder<UserCollection> e)
     {
+        // Map entity to table
         e.ToTable("user_collection");
 
+        // Composite primary key
         e.HasKey(x => new { x.UserId, x.ShrineId });
 
+        // Joined Tables
         e.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
         e.Property(x => x.ShrineId).HasColumnName("shrine_id").IsRequired();
 

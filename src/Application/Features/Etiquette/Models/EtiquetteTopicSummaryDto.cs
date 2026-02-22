@@ -10,7 +10,6 @@ public record EtiquetteTopicSummaryDto(
     string? Summary,
     string? IconKey,
     string? IconSet,
-    int? ImageId,
     bool ShowInGlance,
     bool ShowAsHighlight,
     int? GlanceOrder,

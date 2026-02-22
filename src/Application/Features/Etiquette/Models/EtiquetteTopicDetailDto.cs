@@ -19,7 +19,6 @@ public record EtiquetteTopicDetailDto(
     DateTime? PublishedAt,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    ImageDto? HeroImage,
     IReadOnlyList<EtiquetteStepDto> Steps,
     IReadOnlyList<CitationDto> Citations
 );
