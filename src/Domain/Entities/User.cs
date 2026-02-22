@@ -7,7 +7,7 @@ public class User : IHasTimestamps
     // PK
     public int UserId { get; set; }
     
-    // Required for signup/login
+    // Required for signup / login
     public string Email { get; set; } = default!;
     public string Username { get; set; } = default!;
     public string PassHash { get; set; } = default!;
@@ -20,8 +20,11 @@ public class User : IHasTimestamps
     // TODO: not implemented yet
     public int? RoleId { get; set; }
 
-    // Audit timestamps
+    // Timestamps
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
+
+    // Relationships (collections)
+    public ICollection<UserCollection> UserCollections { get; set; } = new List<UserCollection>();
 }

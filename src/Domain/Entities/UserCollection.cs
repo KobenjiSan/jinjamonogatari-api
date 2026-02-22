@@ -2,15 +2,15 @@ using Domain.Common;
 
 namespace Domain.Entities;
 
-public class ShrineTag : IHasCreatedAt
+public class UserCollection : IHasCreatedAt
 {
     // Connected Tables
+    public int UserId { get; set; }
+    public User User { get; set; } = null!;
+
     public int ShrineId { get; set; }
     public Shrine Shrine { get; set; } = null!;
 
-    public int TagId { get; set; }
-    public Tag Tag { get; set; } = null!;
-
-    // Timestamp
+    // Timestamps
     public DateTime CreatedAt { get; set; }
 }

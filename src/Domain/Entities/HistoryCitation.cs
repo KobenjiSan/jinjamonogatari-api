@@ -2,15 +2,15 @@ using Domain.Common;
 
 namespace Domain.Entities;
 
-public class EtiquetteTopicCitation : IHasCreatedAt
+public class HistoryCitation : IHasCreatedAt
 {
     // Connected Tables
-    public int TopicId { get; set; }
-    public EtiquetteTopic Topic { get; set; } = null!;
+    public int HistoryId { get; set; }
+    public History History { get; set; } = null!;
 
     public int CiteId { get; set; }
     public Citation Citation { get; set; } = null!;
 
-    // Timestamps
+    // Timestamp
     public DateTime CreatedAt { get; set; }
 }

@@ -5,7 +5,8 @@ namespace Domain.Entities;
 
 public class Shrine : IHasTimestamps
 {
-    public int ShrineId { get; set; }           // Our id
+    // PK
+    public int ShrineId { get; set; }
     public string? InputtedId { get; set; }     // OverpassAPI id (for reference)
 
     // Location
@@ -40,10 +41,17 @@ public class Shrine : IHasTimestamps
     // Publishing
     public string? Status { get; set; }
 
+    // Timestamps
+    public DateTime? PublishedAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public DateTime? PublishedAt { get; set; }
+    
 
     // Relationships (collections)
-    public List<ShrineTag> ShrineTags { get; set; } = new();
+    public ICollection<ShrineTag> ShrineTags { get; set; } = new List<ShrineTag>();
+    public ICollection<ShrineKami> ShrineKamis { get; set; } = new List<ShrineKami>();
+    public ICollection<History> ShrineHistories { get; set; } = new List<History>();
+    public ICollection<Folklore> ShrineFolklores { get; set; } = new List<Folklore>();
+    public ICollection<ShrineGallery> ShrineGalleries { get; set; } = new List<ShrineGallery>();
+    public ICollection<UserCollection> UserCollections { get; set; } = new List<UserCollection>();
 }

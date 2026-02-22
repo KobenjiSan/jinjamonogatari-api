@@ -10,11 +10,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace api.Migrations
+namespace Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260221015330_AddTagsAndShrineTags")]
-    partial class AddTagsAndShrineTags
+    [Migration("20260222022316_AddShrineDomainTables")]
+    partial class AddShrineDomainTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -40,6 +40,10 @@ namespace api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("author");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
                     b.Property<string>("Notes")
                         .HasColumnType("text")
                         .HasColumnName("notes");
@@ -47,6 +51,10 @@ namespace api.Migrations
                     b.Property<string>("Title")
                         .HasColumnType("text")
                         .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<string>("Url")
                         .HasColumnType("text")
@@ -124,10 +132,6 @@ namespace api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("icon_set");
 
-                    b.Property<int?>("ImageId")
-                        .HasColumnType("integer")
-                        .HasColumnName("img_id");
-
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("published_at");
@@ -154,11 +158,13 @@ namespace api.Migrations
                         .HasColumnName("summary");
 
                     b.Property<string>("TitleLong")
-                        .HasColumnType("text")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("title_long");
 
                     b.Property<string>("TitleShort")
-                        .HasColumnType("text")
+                        .HasMaxLength(12)
+                        .HasColumnType("character varying(12)")
                         .HasColumnName("title_short");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -166,8 +172,6 @@ namespace api.Migrations
                         .HasColumnName("updated_at");
 
                     b.HasKey("TopicId");
-
-                    b.HasIndex("ImageId");
 
                     b.HasIndex("Slug")
                         .IsUnique();
@@ -194,6 +198,160 @@ namespace api.Migrations
                     b.HasIndex("CiteId");
 
                     b.ToTable("etiquette_citations", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Folklore", b =>
+                {
+                    b.Property<int>("FolkloreId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("folklore_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FolkloreId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("ImgId")
+                        .HasColumnType("integer")
+                        .HasColumnName("img_id");
+
+                    b.Property<string>("Information")
+                        .HasColumnType("text")
+                        .HasColumnName("information");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
+
+                    b.Property<int>("ShrineId")
+                        .HasColumnType("integer")
+                        .HasColumnName("shrine_id");
+
+                    b.Property<int?>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("FolkloreId");
+
+                    b.HasIndex("ImgId");
+
+                    b.HasIndex("ShrineId");
+
+                    b.ToTable("folklore", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.FolkloreCitation", b =>
+                {
+                    b.Property<int>("FolkloreId")
+                        .HasColumnType("integer")
+                        .HasColumnName("folklore_id");
+
+                    b.Property<int>("CiteId")
+                        .HasColumnType("integer")
+                        .HasColumnName("cite_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.HasKey("FolkloreId", "CiteId");
+
+                    b.HasIndex("CiteId");
+
+                    b.ToTable("folklore_citations", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.History", b =>
+                {
+                    b.Property<int>("HistoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("history_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("HistoryId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly?>("EventDate")
+                        .HasColumnType("date")
+                        .HasColumnName("event_date");
+
+                    b.Property<int?>("ImgId")
+                        .HasColumnType("integer")
+                        .HasColumnName("img_id");
+
+                    b.Property<string>("Information")
+                        .HasColumnType("text")
+                        .HasColumnName("information");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
+
+                    b.Property<int>("ShrineId")
+                        .HasColumnType("integer")
+                        .HasColumnName("shrine_id");
+
+                    b.Property<int?>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("HistoryId");
+
+                    b.HasIndex("ImgId");
+
+                    b.HasIndex("ShrineId");
+
+                    b.ToTable("history", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.HistoryCitation", b =>
+                {
+                    b.Property<int>("HistoryId")
+                        .HasColumnType("integer")
+                        .HasColumnName("history_id");
+
+                    b.Property<int>("CiteId")
+                        .HasColumnType("integer")
+                        .HasColumnName("cite_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.HasKey("HistoryId", "CiteId");
+
+                    b.HasIndex("CiteId");
+
+                    b.ToTable("history_citations", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Image", b =>
@@ -234,6 +392,75 @@ namespace api.Migrations
                     b.HasIndex("CiteId");
 
                     b.ToTable("images", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Kami", b =>
+                {
+                    b.Property<int>("KamiId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("kami_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("KamiId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Desc")
+                        .HasColumnType("text")
+                        .HasColumnName("desc");
+
+                    b.Property<int?>("ImgId")
+                        .HasColumnType("integer")
+                        .HasColumnName("img_id");
+
+                    b.Property<string>("NameEn")
+                        .HasColumnType("text")
+                        .HasColumnName("name_en");
+
+                    b.Property<string>("NameJp")
+                        .HasColumnType("text")
+                        .HasColumnName("name_jp");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("KamiId");
+
+                    b.HasIndex("ImgId");
+
+                    b.ToTable("kami", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.KamiCitation", b =>
+                {
+                    b.Property<int>("KamiId")
+                        .HasColumnType("integer")
+                        .HasColumnName("kami_id");
+
+                    b.Property<int>("CiteId")
+                        .HasColumnType("integer")
+                        .HasColumnName("cite_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.HasKey("KamiId", "CiteId");
+
+                    b.HasIndex("CiteId");
+
+                    b.ToTable("kami_citations", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Shrine", b =>
@@ -346,6 +573,48 @@ namespace api.Migrations
                         .HasFilter("slug IS NOT NULL");
 
                     b.ToTable("shrines", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.ShrineGallery", b =>
+                {
+                    b.Property<int>("ShrineId")
+                        .HasColumnType("integer")
+                        .HasColumnName("shrine_id");
+
+                    b.Property<int>("ImgId")
+                        .HasColumnType("integer")
+                        .HasColumnName("img_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.HasKey("ShrineId", "ImgId");
+
+                    b.HasIndex("ImgId");
+
+                    b.ToTable("shrine_gallery", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.ShrineKami", b =>
+                {
+                    b.Property<int>("ShrineId")
+                        .HasColumnType("integer")
+                        .HasColumnName("shrine_id");
+
+                    b.Property<int>("KamiId")
+                        .HasColumnType("integer")
+                        .HasColumnName("kami_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.HasKey("ShrineId", "KamiId");
+
+                    b.HasIndex("KamiId");
+
+                    b.ToTable("shrine_kami", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.ShrineTag", b =>
@@ -472,6 +741,27 @@ namespace api.Migrations
                     b.ToTable("users", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.UserCollection", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.Property<int>("ShrineId")
+                        .HasColumnType("integer")
+                        .HasColumnName("shrine_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.HasKey("UserId", "ShrineId");
+
+                    b.HasIndex("ShrineId");
+
+                    b.ToTable("user_collection", (string)null);
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -503,7 +793,7 @@ namespace api.Migrations
             modelBuilder.Entity("Domain.Entities.EtiquetteStep", b =>
                 {
                     b.HasOne("Domain.Entities.Image", "Image")
-                        .WithMany("EtiquetteSteps")
+                        .WithMany()
                         .HasForeignKey("ImageId")
                         .OnDelete(DeleteBehavior.SetNull);
 
@@ -516,16 +806,6 @@ namespace api.Migrations
                     b.Navigation("Image");
 
                     b.Navigation("Topic");
-                });
-
-            modelBuilder.Entity("Domain.Entities.EtiquetteTopic", b =>
-                {
-                    b.HasOne("Domain.Entities.Image", "Image")
-                        .WithMany("EtiquetteTopicsAsHero")
-                        .HasForeignKey("ImageId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Image");
                 });
 
             modelBuilder.Entity("Domain.Entities.EtiquetteTopicCitation", b =>
@@ -547,6 +827,80 @@ namespace api.Migrations
                     b.Navigation("Topic");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Folklore", b =>
+                {
+                    b.HasOne("Domain.Entities.Image", "Image")
+                        .WithMany()
+                        .HasForeignKey("ImgId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Domain.Entities.Shrine", "Shrine")
+                        .WithMany("ShrineFolklores")
+                        .HasForeignKey("ShrineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Image");
+
+                    b.Navigation("Shrine");
+                });
+
+            modelBuilder.Entity("Domain.Entities.FolkloreCitation", b =>
+                {
+                    b.HasOne("Domain.Entities.Citation", "Citation")
+                        .WithMany("FolkloreCitations")
+                        .HasForeignKey("CiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Folklore", "Folklore")
+                        .WithMany("FolkloreCitations")
+                        .HasForeignKey("FolkloreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Citation");
+
+                    b.Navigation("Folklore");
+                });
+
+            modelBuilder.Entity("Domain.Entities.History", b =>
+                {
+                    b.HasOne("Domain.Entities.Image", "Image")
+                        .WithMany()
+                        .HasForeignKey("ImgId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Domain.Entities.Shrine", "Shrine")
+                        .WithMany("ShrineHistories")
+                        .HasForeignKey("ShrineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Image");
+
+                    b.Navigation("Shrine");
+                });
+
+            modelBuilder.Entity("Domain.Entities.HistoryCitation", b =>
+                {
+                    b.HasOne("Domain.Entities.Citation", "Citation")
+                        .WithMany("HistoryCitations")
+                        .HasForeignKey("CiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.History", "History")
+                        .WithMany("HistoryCitations")
+                        .HasForeignKey("HistoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Citation");
+
+                    b.Navigation("History");
+                });
+
             modelBuilder.Entity("Domain.Entities.Image", b =>
                 {
                     b.HasOne("Domain.Entities.Citation", "Citation")
@@ -557,6 +911,35 @@ namespace api.Migrations
                     b.Navigation("Citation");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Kami", b =>
+                {
+                    b.HasOne("Domain.Entities.Image", "Image")
+                        .WithMany()
+                        .HasForeignKey("ImgId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Image");
+                });
+
+            modelBuilder.Entity("Domain.Entities.KamiCitation", b =>
+                {
+                    b.HasOne("Domain.Entities.Citation", "Citation")
+                        .WithMany("KamiCitations")
+                        .HasForeignKey("CiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Kami", "Kami")
+                        .WithMany("KamiCitations")
+                        .HasForeignKey("KamiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Citation");
+
+                    b.Navigation("Kami");
+                });
+
             modelBuilder.Entity("Domain.Entities.Shrine", b =>
                 {
                     b.HasOne("Domain.Entities.Image", "Image")
@@ -565,6 +948,44 @@ namespace api.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Image");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ShrineGallery", b =>
+                {
+                    b.HasOne("Domain.Entities.Image", "Image")
+                        .WithMany()
+                        .HasForeignKey("ImgId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Shrine", "Shrine")
+                        .WithMany("ShrineGalleries")
+                        .HasForeignKey("ShrineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Image");
+
+                    b.Navigation("Shrine");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ShrineKami", b =>
+                {
+                    b.HasOne("Domain.Entities.Kami", "Kami")
+                        .WithMany("ShrineKamis")
+                        .HasForeignKey("KamiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Shrine", "Shrine")
+                        .WithMany("ShrineKamis")
+                        .HasForeignKey("ShrineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Kami");
+
+                    b.Navigation("Shrine");
                 });
 
             modelBuilder.Entity("Domain.Entities.ShrineTag", b =>
@@ -586,11 +1007,36 @@ namespace api.Migrations
                     b.Navigation("Tag");
                 });
 
+            modelBuilder.Entity("Domain.Entities.UserCollection", b =>
+                {
+                    b.HasOne("Domain.Entities.Shrine", "Shrine")
+                        .WithMany("UserCollections")
+                        .HasForeignKey("ShrineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany("UserCollections")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Shrine");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Domain.Entities.Citation", b =>
                 {
                     b.Navigation("EtiquetteTopicCitations");
 
+                    b.Navigation("FolkloreCitations");
+
+                    b.Navigation("HistoryCitations");
+
                     b.Navigation("ImagesAttributed");
+
+                    b.Navigation("KamiCitations");
                 });
 
             modelBuilder.Entity("Domain.Entities.EtiquetteTopic", b =>
@@ -600,21 +1046,46 @@ namespace api.Migrations
                     b.Navigation("TopicCitations");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Image", b =>
+            modelBuilder.Entity("Domain.Entities.Folklore", b =>
                 {
-                    b.Navigation("EtiquetteSteps");
+                    b.Navigation("FolkloreCitations");
+                });
 
-                    b.Navigation("EtiquetteTopicsAsHero");
+            modelBuilder.Entity("Domain.Entities.History", b =>
+                {
+                    b.Navigation("HistoryCitations");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Kami", b =>
+                {
+                    b.Navigation("KamiCitations");
+
+                    b.Navigation("ShrineKamis");
                 });
 
             modelBuilder.Entity("Domain.Entities.Shrine", b =>
                 {
+                    b.Navigation("ShrineFolklores");
+
+                    b.Navigation("ShrineGalleries");
+
+                    b.Navigation("ShrineHistories");
+
+                    b.Navigation("ShrineKamis");
+
                     b.Navigation("ShrineTags");
+
+                    b.Navigation("UserCollections");
                 });
 
             modelBuilder.Entity("Domain.Entities.Tag", b =>
                 {
                     b.Navigation("ShrineTags");
+                });
+
+            modelBuilder.Entity("Domain.Entities.User", b =>
+                {
+                    b.Navigation("UserCollections");
                 });
 #pragma warning restore 612, 618
         }

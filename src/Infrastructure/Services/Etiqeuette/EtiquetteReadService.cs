@@ -30,7 +30,6 @@ public class EtiquetteReadService : IEtiquetteReadService
                 t.Summary,
                 t.IconKey,
                 t.IconSet,
-                t.ImageId,
                 t.ShowInGlance,
                 t.ShowAsHighlight,
                 t.GlanceOrder,
@@ -94,24 +93,6 @@ public class EtiquetteReadService : IEtiquetteReadService
                     t.PublishedAt,
                     t.CreatedAt,
                     t.UpdatedAt,
-                    t.Image == null
-                        ? null
-                        : new ImageDto(
-                            t.Image.ImgId,
-                            t.Image.ImgSource,
-                            t.Image.Title,
-                            t.Image.Desc,
-                            t.Image.Citation == null
-                                ? null
-                                : new CitationDto(
-                                    t.Image.Citation.CiteId,
-                                    t.Image.Citation.Title,
-                                    t.Image.Citation.Author,
-                                    t.Image.Citation.Url,
-                                    t.Image.Citation.Year,
-                                    t.Image.Citation.Notes
-                                )
-                        ),
                     t.Steps
                         .OrderBy(s => s.StepOrder ?? int.MaxValue)
                         .ThenBy(s => s.StepId)
