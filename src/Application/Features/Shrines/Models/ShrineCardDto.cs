@@ -5,8 +5,7 @@ public record ShrineCardDto(
     string Slug,
     string? NameEn,
     string? NameJp,
-    string? ImageUrl,
-    double? DistanceMeters
+    string? ImageUrl
 );
 
 // Add later

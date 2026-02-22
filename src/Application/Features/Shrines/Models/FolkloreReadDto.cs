@@ -6,7 +6,7 @@ namespace Application.Features.Shrines.Models;
 public record FolkloreReadDto(
     int FolkloreId,
     string Title,
-    string Story,
+    string Information,
     ImageCitedDto? Image,
     IReadOnlyList<CitationDto> Citations
 );
