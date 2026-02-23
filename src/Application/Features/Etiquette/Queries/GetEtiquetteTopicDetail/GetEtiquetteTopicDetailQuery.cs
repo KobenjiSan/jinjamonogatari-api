@@ -8,4 +8,4 @@ public record GetEtiquetteTopicDetailByIdQuery(int TopicId) : IRequest<GetEtique
 public record GetEtiquetteTopicDetailBySlugQuery(string Slug) : IRequest<GetEtiquetteTopicDetailResult>;
 
 // RESULT
-public record GetEtiquetteTopicDetailResult(EtiquetteTopicDetailDto Topic);
+public record GetEtiquetteTopicDetailResult(EtiquetteTopicDto Topic);

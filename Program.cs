@@ -14,6 +14,8 @@ using Application.Features.Users.Services;
 using Application.Common.Interfaces;
 using Application.Features.Etiquette.Services;
 using Infrastructure.Services.Etiquette;
+using Application.Features.Shrines.Services;
+using Infrastructure.Services.Shrines;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,6 +84,8 @@ builder.Services.AddScoped<IUserReadService, UserReadService>();
 builder.Services.AddScoped<IUserWriteService, UserWriteService>();
 // Etiquette
 builder.Services.AddScoped<IEtiquetteReadService, EtiquetteReadService>();
+// Shrines
+builder.Services.AddScoped<IShrineReadService, ShrineReadService>();
 
 
 var app = builder.Build();

@@ -1,7 +1,6 @@
 using Application.Common.Models.Citations;
 using Application.Common.Models.Images;
 using Application.Features.Etiquette.Models;
-using Application.Features.Etiquette.Queries.GetEtiquetteTopicDetail;
 using Application.Features.Etiquette.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,13 +15,14 @@ public class EtiquetteReadService : IEtiquetteReadService
         _db = db;
     }
 
-    public async Task<IReadOnlyList<EtiquetteTopicSummaryDto>> GetTopicsAsync(CancellationToken ct)
+    public async Task<IReadOnlyList<EtiquetteTopicDto>> GetTopicsAsync(CancellationToken ct)
     {
         return await _db.EtiquetteTopics
             .AsNoTracking()
+            .Where(t => t.PublishedAt != null)
             .OrderBy(t => t.GuideOrder ?? int.MaxValue)
             .ThenBy(t => t.TopicId)
-            .Select(t => new EtiquetteTopicSummaryDto(
+            .Select(t => new EtiquetteTopicDto(
                 t.TopicId,
                 t.Slug,
                 t.TitleLong,
@@ -34,105 +34,148 @@ public class EtiquetteReadService : IEtiquetteReadService
                 t.ShowAsHighlight,
                 t.GlanceOrder,
                 t.GuideOrder,
-                t.Status,
-                t.PublishedAt,
-                t.CreatedAt,
-                t.UpdatedAt,
                 t.Steps
                     .OrderBy(s => s.StepOrder ?? int.MaxValue)
                     .ThenBy(s => s.StepId)
-                    .Select(s => new EtiquetteStepSummaryDto(
+                    .Select(s => new EtiquetteStepDto(
                         s.StepId,
                         s.StepOrder,
                         s.Text,
-                        s.ImageId
+                        s.Image == null
+                            ? null
+                            : new ImageCitedDto(
+                                s.Image.ImgSource,
+                                s.Image.Citation == null
+                                    ? null
+                                    : new CitationDto(
+                                        s.Image.Citation.CiteId,
+                                        s.Image.Citation.Title,
+                                        s.Image.Citation.Author,
+                                        s.Image.Citation.Url,
+                                        s.Image.Citation.Year
+                                    )
+                            )
                     ))
                     .ToList(),
                 t.TopicCitations
-                    .OrderBy(tc => tc.CreatedAt)
-                    .ThenBy(tc => tc.CiteId)
+                    .OrderBy(tc => tc.CiteId)
                     .Select(tc => new CitationDto(
                         tc.Citation.CiteId,
                         tc.Citation.Title,
                         tc.Citation.Author,
                         tc.Citation.Url,
-                        tc.Citation.Year,
-                        tc.Citation.Notes
+                        tc.Citation.Year
                     ))
                     .ToList()
             ))
             .ToListAsync(ct);
     }
 
-    public Task<GetEtiquetteTopicDetailResult?> GetTopicDetailByIdAsync(int topicId, CancellationToken ct)
-        => BuildTopicDetailQuery()
-            .FirstOrDefaultAsync(x => x.Topic.TopicId == topicId, ct);
-
-    public Task<GetEtiquetteTopicDetailResult?> GetTopicDetailBySlugAsync(string slug, CancellationToken ct)
-        => BuildTopicDetailQuery()
-            .FirstOrDefaultAsync(x => x.Topic.Slug == slug, ct);
-
-    private IQueryable<GetEtiquetteTopicDetailResult> BuildTopicDetailQuery()
+    public async Task<EtiquetteTopicDto?> GetTopicDetailByIdAsync(int topicId, CancellationToken ct)
     {
-        return _db.EtiquetteTopics
+        return await _db.EtiquetteTopics
             .AsNoTracking()
-            .Select(t => new GetEtiquetteTopicDetailResult(
-                new EtiquetteTopicDetailDto(
-                    t.TopicId,
-                    t.Slug,
-                    t.TitleLong,
-                    t.TitleShort,
-                    t.Summary,
-                    t.IconKey,
-                    t.IconSet,
-                    t.ShowInGlance,
-                    t.ShowAsHighlight,
-                    t.GlanceOrder,
-                    t.GuideOrder,
-                    t.Status,
-                    t.PublishedAt,
-                    t.CreatedAt,
-                    t.UpdatedAt,
-                    t.Steps
-                        .OrderBy(s => s.StepOrder ?? int.MaxValue)
-                        .ThenBy(s => s.StepId)
-                        .Select(s => new EtiquetteStepDto(
-                            s.StepId,
-                            s.StepOrder,
-                            s.Text,
-                            s.Image == null
-                                ? null
-                                : new ImageDto(
-                                    s.Image.ImgId,
-                                    s.Image.ImgSource,
-                                    s.Image.Title,
-                                    s.Image.Desc,
-                                    s.Image.Citation == null
-                                        ? null
-                                        : new CitationDto(
-                                            s.Image.Citation.CiteId,
-                                            s.Image.Citation.Title,
-                                            s.Image.Citation.Author,
-                                            s.Image.Citation.Url,
-                                            s.Image.Citation.Year,
-                                            s.Image.Citation.Notes
-                                        )
-                                )
-                        ))
-                        .ToList(),
-                    t.TopicCitations
-                        .OrderBy(tc => tc.CreatedAt)
-                        .ThenBy(tc => tc.CiteId)
-                        .Select(tc => new CitationDto(
-                            tc.Citation.CiteId,
-                            tc.Citation.Title,
-                            tc.Citation.Author,
-                            tc.Citation.Url,
-                            tc.Citation.Year,
-                            tc.Citation.Notes
-                        ))
-                        .ToList()
-                )
-            ));
+            .Where(t => t.TopicId == topicId && t.PublishedAt != null)
+            .Select(t => new EtiquetteTopicDto(
+                t.TopicId,
+                t.Slug,
+                t.TitleLong,
+                t.TitleShort,
+                t.Summary,
+                t.IconKey,
+                t.IconSet,
+                t.ShowInGlance,
+                t.ShowAsHighlight,
+                t.GlanceOrder,
+                t.GuideOrder,
+                t.Steps
+                    .OrderBy(s => s.StepOrder ?? int.MaxValue)
+                    .ThenBy(s => s.StepId)
+                    .Select(s => new EtiquetteStepDto(
+                        s.StepId,
+                        s.StepOrder,
+                        s.Text,
+                        s.Image == null
+                            ? null
+                            : new ImageCitedDto(
+                                s.Image.ImgSource,
+                                s.Image.Citation == null
+                                    ? null
+                                    : new CitationDto(
+                                        s.Image.Citation.CiteId,
+                                        s.Image.Citation.Title,
+                                        s.Image.Citation.Author,
+                                        s.Image.Citation.Url,
+                                        s.Image.Citation.CiteId == 0 ? null : s.Image.Citation.Year // harmless guard if you ever seed weird data
+                                    )
+                            )
+                    ))
+                    .ToList(),
+                t.TopicCitations
+                    .OrderBy(tc => tc.CiteId)
+                    .Select(tc => new CitationDto(
+                        tc.Citation.CiteId,
+                        tc.Citation.Title,
+                        tc.Citation.Author,
+                        tc.Citation.Url,
+                        tc.Citation.Year
+                    ))
+                    .ToList()
+            ))
+            .SingleOrDefaultAsync(ct);
+    }
+
+    public async Task<EtiquetteTopicDto?> GetTopicDetailBySlugAsync(string slug, CancellationToken ct)
+    {
+        return await _db.EtiquetteTopics
+            .AsNoTracking()
+            .Where(t => t.Slug == slug && t.PublishedAt != null)
+            .Select(t => new EtiquetteTopicDto(
+                t.TopicId,
+                t.Slug,
+                t.TitleLong,
+                t.TitleShort,
+                t.Summary,
+                t.IconKey,
+                t.IconSet,
+                t.ShowInGlance,
+                t.ShowAsHighlight,
+                t.GlanceOrder,
+                t.GuideOrder,
+                t.Steps
+                    .OrderBy(s => s.StepOrder ?? int.MaxValue)
+                    .ThenBy(s => s.StepId)
+                    .Select(s => new EtiquetteStepDto(
+                        s.StepId,
+                        s.StepOrder,
+                        s.Text,
+                        s.Image == null
+                            ? null
+                            : new ImageCitedDto(
+                                s.Image.ImgSource,
+                                s.Image.Citation == null
+                                    ? null
+                                    : new CitationDto(
+                                        s.Image.Citation.CiteId,
+                                        s.Image.Citation.Title,
+                                        s.Image.Citation.Author,
+                                        s.Image.Citation.Url,
+                                        s.Image.Citation.Year
+                                    )
+                            )
+                    ))
+                    .ToList(),
+                t.TopicCitations
+                    .OrderBy(tc => tc.CiteId)
+                    .Select(tc => new CitationDto(
+                        tc.Citation.CiteId,
+                        tc.Citation.Title,
+                        tc.Citation.Author,
+                        tc.Citation.Url,
+                        tc.Citation.Year
+                    ))
+                    .ToList()
+            ))
+            .SingleOrDefaultAsync(ct);
     }
 }

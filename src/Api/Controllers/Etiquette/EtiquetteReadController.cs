@@ -19,7 +19,7 @@ public class EtiquetteReadController : ControllerBase
 
     // GET /api/etiquette
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<EtiquetteTopicSummaryDto>>> GetTopicsAsync()
+    public async Task<ActionResult<IReadOnlyList<EtiquetteTopicDto>>> GetTopicsAsync()
     {
         var result = await _mediator.Send(new GetEtiquetteTopicsQuery());
         return Ok(result.Topics);
@@ -27,7 +27,7 @@ public class EtiquetteReadController : ControllerBase
 
     // GET /api/etiquette/3
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<EtiquetteTopicDetailDto>> GetTopicDetailByIdAsync(int id)
+    public async Task<ActionResult<EtiquetteTopicDto>> GetTopicDetailByIdAsync(int id)
     {
         var result = await _mediator.Send(new GetEtiquetteTopicDetailByIdQuery(id));
         return Ok(result.Topic);
@@ -35,7 +35,7 @@ public class EtiquetteReadController : ControllerBase
 
     // GET /api/etiquette/slug/temizu
     [HttpGet("slug/{slug}")]
-    public async Task<ActionResult<EtiquetteTopicDetailDto>> GetTopicDetailBySlugAsync(string slug)
+    public async Task<ActionResult<EtiquetteTopicDto>> GetTopicDetailBySlugAsync(string slug)
     {
         var result = await _mediator.Send(new GetEtiquetteTopicDetailBySlugQuery(slug));
         return Ok(result.Topic);

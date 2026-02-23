@@ -7,4 +7,4 @@ namespace Application.Features.Etiquette.Queries.GetEtiquetteTopics;
 public record GetEtiquetteTopicsQuery : IRequest<GetEtiquetteTopicsResult>;
 
 // RESULTS
-public record GetEtiquetteTopicsResult(IReadOnlyList<EtiquetteTopicSummaryDto> Topics);
+public record GetEtiquetteTopicsResult(IReadOnlyList<EtiquetteTopicDto> Topics);

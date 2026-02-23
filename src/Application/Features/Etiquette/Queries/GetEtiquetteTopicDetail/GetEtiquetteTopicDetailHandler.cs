@@ -18,7 +18,7 @@ public class GetEtiquetteTopicDetailByIdHandler
     {
         var topic = await _read.GetTopicDetailByIdAsync(request.TopicId, ct);
         if (topic is null) throw new NotFoundException("Etiquette topic not found.");
-        return topic;
+        return new GetEtiquetteTopicDetailResult(topic);
     }
 }
 
@@ -36,6 +36,6 @@ public class GetEtiquetteTopicDetailBySlugHandler
     {
         var topic = await _read.GetTopicDetailBySlugAsync(request.Slug, ct);
         if (topic is null) throw new NotFoundException("Etiquette topic not found.");
-        return topic;
+        return new GetEtiquetteTopicDetailResult(topic);
     }
 }

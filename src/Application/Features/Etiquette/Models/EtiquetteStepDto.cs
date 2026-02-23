@@ -6,5 +6,5 @@ public record EtiquetteStepDto(
     int StepId,
     int? StepOrder,
     string? Text,
-    ImageDto? Image
+    ImageCitedDto? Image
 );
