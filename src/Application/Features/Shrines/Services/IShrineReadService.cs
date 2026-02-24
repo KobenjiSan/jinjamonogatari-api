@@ -22,4 +22,6 @@ public interface IShrineReadService
     Task<IReadOnlyList<GalleryListItemDto>> GetShrineGalleryBySlugAsync(string slug, CancellationToken ct);
 
     Task<ImageFullDto?> GetImageByIdAsync(int id, CancellationToken ct);
+
+    Task<bool> DoesShrineExistAsync(int shrineId, CancellationToken ct);
 }

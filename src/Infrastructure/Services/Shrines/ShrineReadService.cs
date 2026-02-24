@@ -255,4 +255,9 @@ public class ShrineReadService : IShrineReadService
                     )
             )).SingleOrDefaultAsync(ct);
     }
+
+    public Task<bool> DoesShrineExistAsync(int shrineId, CancellationToken ct)
+        => _db.Shrines
+            .AsNoTracking()
+            .AnyAsync(s => s.ShrineId == shrineId, ct);
 }

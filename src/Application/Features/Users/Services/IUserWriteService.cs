@@ -12,4 +12,8 @@ public interface IUserWriteService
 
     Task UpdateLastLoginAsync(int userId, CancellationToken ct);
 
+    Task AddShrineToCollectionAsync(int userId, int shrineId, CancellationToken ct);
+
+    Task RemoveShrineFromCollectionAsync(int userId, int shrineId, CancellationToken ct);
+
 }

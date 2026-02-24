@@ -1,8 +1,11 @@
+using API.Extensions;
+using Application.Features.Collection.Queries.GetIsShrineInCollection;
+using Application.Features.Collection.Queries.GetShrineCollectionCards;
+using Application.Features.Collection.Queries.GetShrineCollectionIds;
 using Application.Features.Users.Queries.GetMe;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace Api.Controllers.Users;
 
@@ -22,13 +25,39 @@ public class UserReadController : ControllerBase
     [Authorize]
     public async Task<ActionResult<GetMeResult>> MeAsync()
     {
-        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                  ?? User.FindFirstValue("sub");
-
-        if (string.IsNullOrWhiteSpace(sub) || !int.TryParse(sub, out var userId))
-            throw new UnauthorizedAccessException("Invalid token.");
+        var userId = User.GetUserId();
 
         var result = await _mediator.Send(new GetMeQuery(userId));
+        return Ok(result);
+    }
+
+    // GET /api/users/me/collection/ids
+    [HttpGet("me/collection/ids")]
+    [Authorize]
+    public async Task<ActionResult<GetShrineCollectionIdsResult>> GetShrineCollectionIdsAsync()
+    {
+        var userId = User.GetUserId();
+        var result = await _mediator.Send(new GetShrineCollectionIdsQuery(userId));
+        return Ok(result);
+    }
+
+    // GET /api/users/me/collection/cards
+    [HttpGet("me/collection/cards")]
+    [Authorize]
+    public async Task<ActionResult<GetShrineCollectionCardsResult>> GetShrineCollectionCardsAsync()
+    {
+        var userId = User.GetUserId();
+        var result = await _mediator.Send(new GetShrineCollectionCardsQuery(userId));
+        return Ok(result);
+    }
+
+    // GET /api/users/me/collection/{shrineId}
+    [HttpGet("me/collection/{shrineId}")]
+    [Authorize]
+    public async Task<ActionResult<GetIsShrineInCollectionResult>> IsShrineInCollectionAsync([FromRoute] int shrineId)
+    {
+        var userId = User.GetUserId();
+        var result = await _mediator.Send(new GetIsShrineInCollectionQuery(userId, shrineId));
         return Ok(result);
     }
 }

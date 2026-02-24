@@ -46,4 +46,32 @@ public class UserWriteService : IUserWriteService
 
         await _db.SaveChangesAsync(ct);
     }
+
+    public async Task AddShrineToCollectionAsync(int userId, int shrineId, CancellationToken ct)
+    {
+        // idempotent save (if already saved, do nothing)
+        var alreadySaved = await _db.UserCollections
+            .AnyAsync(x => x.UserId == userId && x.ShrineId == shrineId, ct);
+
+        if (alreadySaved) return;
+
+        _db.UserCollections.Add(new UserCollection
+        {
+            UserId = userId,
+            ShrineId = shrineId
+        });
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task RemoveShrineFromCollectionAsync(int userId, int shrineId, CancellationToken ct)
+    {
+        var entry = await _db.UserCollections
+            .FirstOrDefaultAsync(x => x.UserId == userId && x.ShrineId == shrineId, ct);
+
+        if (entry is null) return; // idempotent delete
+
+        _db.UserCollections.Remove(entry);
+        await _db.SaveChangesAsync(ct);
+    }
 }

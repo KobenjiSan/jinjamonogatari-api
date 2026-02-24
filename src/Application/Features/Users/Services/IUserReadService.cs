@@ -1,3 +1,4 @@
+using Application.Features.Shrines.Models;
 using Domain.Entities;
 
 namespace Application.Features.Users.Services;
@@ -10,5 +11,11 @@ public interface IUserReadService
     Task<User?> FindByEmailOrUsernameAsync(string identifierLower, CancellationToken ct);
     
     Task<User?> FindByIdAsync(int userId, CancellationToken ct);
+
+    Task<bool> IsShrineInCollectionAsync(int userId, int shrineId, CancellationToken ct);
+
+    Task<IReadOnlyList<ShrinePreviewDto>> GetShrineCollectionCards(int userId, CancellationToken ct);
+
+    Task<IReadOnlyList<int>> GetShrineCollectionIds(int userId, CancellationToken ct);
 
 }

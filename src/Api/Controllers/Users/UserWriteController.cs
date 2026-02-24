@@ -1,6 +1,10 @@
+using API.Extensions;
+using Application.Features.Collection.Commands.AddShrineToCollection;
+using Application.Features.Collection.Commands.RemoveShrineFromCollection;
 using Application.Features.Users.Commands.LoginUser;
 using Application.Features.Users.Commands.RegisterUser;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers.Users;
@@ -49,6 +53,26 @@ public class UserWriteController : ControllerBase
             request.Password));
 
          return Ok(result);
+    }
+
+    // POST /api/users/me/collection/{shrineId}
+    [HttpPost("me/collection/{shrineId}")]
+    [Authorize]
+    public async Task<IActionResult> AddShrineToCollectionAsync([FromRoute] int shrineId)
+    {
+        var userId = User.GetUserId();
+        await _mediator.Send(new AddShrineToCollectionCommand(userId, shrineId));
+        return NoContent();
+    }
+
+    // DELETE /api/users/me/collection/{shrineId}
+    [HttpDelete("me/collection/{shrineId}")]
+    [Authorize]
+    public async Task<IActionResult> RemoveShrineFromCollectionAsync([FromRoute] int shrineId)
+    {
+        var userId = User.GetUserId();
+        await _mediator.Send(new RemoveShrineFromCollectionCommand(userId, shrineId));
+        return NoContent();
     }
 }
 
