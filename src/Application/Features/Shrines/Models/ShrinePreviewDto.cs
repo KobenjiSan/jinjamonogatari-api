@@ -7,6 +7,7 @@ public record ShrinePreviewDto(
     string? NameJp,
     string? ImageUrl,
     string? ShrineDesc,
+    double? DistanceMeters,
     IReadOnlyList<TagDto> Tags
 );
 
@@ -15,9 +16,4 @@ public record ShrinePreviewDto(
 // Filtering
 // string? Prefecture,
 // string? City,
-
-// Distance
-// double? DistanceMeters,
-
-// saved
 

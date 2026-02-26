@@ -15,7 +15,7 @@ public class GetShrinePreviewHandler : IRequestHandler<GetShrinePreviewQuery, Ge
 
     public async Task<GetShrinePreviewResult> Handle(GetShrinePreviewQuery request, CancellationToken ct)
     {
-        var preview = await _readService.GetShrinePreviewAsync(request.Slug, ct);
+        var preview = await _readService.GetShrinePreviewAsync(request.Slug, request.Lat, request.Lon, ct);
         if (preview is null) throw new NotFoundException("Shrine not found.");
         return new GetShrinePreviewResult(preview);
     }

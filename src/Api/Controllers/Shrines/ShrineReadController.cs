@@ -28,84 +28,95 @@ public class ShrineReadController : ControllerBase
     // Map Screen - shrine points on map (list of ShrineMapPointDto) [will (possibly) need PFS later and/or bounding box]
     // GET /api/shrines/map
     [HttpGet("map")]
-    public async Task<ActionResult<GetShrineMapPointsResult>> GetShrineMapPointsAsync()
+    public async Task<ActionResult<IReadOnlyList<ShrineMapPointDto>>> GetShrineMapPointsAsync()
     {
         var result = await _mediator.Send(new GetShrineMapPointsQuery());
-        return Ok(result);
+        return Ok(result.MapPoints);
     }
 
     // Map Screen - shrine preview (ShrinePreviewDto)
-    // GET /api/shrines/map/{slug}
+    // GET /api/shrines/map/{slug}?lat=...&lon=...
     [HttpGet("map/{slug}")]
-    public async Task<ActionResult<GetShrinePreviewResult>> GetShrinePreviewAsync([FromRoute] string slug)
+    public async Task<ActionResult<ShrinePreviewDto>> GetShrinePreviewAsync(
+        [FromRoute] string slug,
+        [FromQuery] double? lat,
+        [FromQuery] double? lon
+    )
     {
-        var result = await _mediator.Send(new GetShrinePreviewQuery(slug));
-        return Ok(result);
+        var result = await _mediator.Send(new GetShrinePreviewQuery(slug, lat, lon));
+        return Ok(result.Preview);
     }
 
     // List Screen - (list of ShrineCardDto) [will need PFS later]
-    // GET /api/shrines/list-view
+    // GET /api/shrines/list-view?lat=...&lon=...
     [HttpGet("list-view")]
-    public async Task<ActionResult<GetShrineListViewResult>> GetShrineListViewAsync()
+    public async Task<ActionResult<IReadOnlyList<ShrineCardDto>>> GetShrineListViewAsync(
+        [FromQuery] double? lat,
+        [FromQuery] double? lon
+    )
     {
-        var result = await _mediator.Send(new GetShrineListViewQuery());
-        return Ok(result);
+        var result = await _mediator.Send(new GetShrineListViewQuery(lat, lon));
+        return Ok(result.Shrines);
     }
 
     // Shrine Screens
     // Main page / hero - inital load (ShrineMetaDto)
-    // GET /api/shrines/{slug}/meta
+    // GET /api/shrines/{slug}/meta?lat=...&lon=...
     [HttpGet("{slug}/meta")]
-    public async Task<ActionResult<GetShrineMetaBySlugResult>> GetShrineMetaBySlugAsync([FromRoute] string slug)
+    public async Task<ActionResult<ShrineMetaDto>> GetShrineMetaBySlugAsync(
+        [FromRoute] string slug,
+        [FromQuery] double? lat,
+        [FromQuery] double? lon
+    )
     {
-        var result = await _mediator.Send(new GetShrineMetaBySlugQuery(slug));
-        return Ok(result);
+        var result = await _mediator.Send(new GetShrineMetaBySlugQuery(slug, lat, lon));
+        return Ok(result.Meta);
     }
 
     // Kami page (list of KamiReadDto)
     // GET /api/shrines/{slug}/kami
     [HttpGet("{slug}/kami")]
-    public async Task<ActionResult<GetShrineKamiBySlugResult>> GetShrineKamiBySlugAsync([FromRoute] string slug)
+    public async Task<ActionResult<IReadOnlyList<KamiReadDto>>> GetShrineKamiBySlugAsync([FromRoute] string slug)
     {
         var result = await _mediator.Send(new GetShrineKamiBySlugQuery(slug));
-        return Ok(result);
+        return Ok(result.Kami);
     }
 
     // History page (list of HistoryReadDto)
     // GET /api/shrines/{slug}/history
     [HttpGet("{slug}/history")]
-    public async Task<ActionResult<GetShrineHistoryBySlugResult>> GetShrineHistoryBySlugAsync([FromRoute] string slug)
+    public async Task<ActionResult<IReadOnlyList<HistoryReadDto>>> GetShrineHistoryBySlugAsync([FromRoute] string slug)
     {
         var result = await _mediator.Send(new GetShrineHistoryBySlugQuery(slug));
-        return Ok(result);
+        return Ok(result.History);
     }
 
     // folklore page (list of FolkloreReadDto)
     // GET /api/shrines/{slug}/folklore
     [HttpGet("{slug}/folklore")]
-    public async Task<ActionResult<GetShrineFolkloreBySlugResult>> GetShrineFolkloreBySlugAsync([FromRoute] string slug)
+    public async Task<ActionResult<IReadOnlyList<FolkloreReadDto>>> GetShrineFolkloreBySlugAsync([FromRoute] string slug)
     {
         var result = await _mediator.Send(new GetShrineFolkloreBySlugQuery(slug));
-        return Ok(result);
+        return Ok(result.Folklore);
     }
 
     // gallery page (GalleryListItemDto)
     // GET /api/shrines/{slug}/gallery
     [HttpGet("{slug}/gallery")]
-    public async Task<ActionResult<GetShrineGalleryBySlugResult>> GetShrineGalleryBySlugAsync([FromRoute] string slug)
+    public async Task<ActionResult<IReadOnlyList<ImageCitedDto>>> GetShrineGalleryBySlugAsync([FromRoute] string slug)
     {
         var result = await _mediator.Send(new GetShrineGalleryBySlugQuery(slug));
-        return Ok(result);
+        return Ok(result.Images);
     }
 
     // TEMP UNTIL I NEED FULL IMAGE CONTROLLER
     // gallery item clicked (ImageFullDto)
     // GET /api/shrines/image/{id} 
     [HttpGet("image/{id}")]
-    public async Task<ActionResult<GetImageByIdResult>> GetImageByIdAsync([FromRoute] int id)
+    public async Task<ActionResult<ImageFullDto>> GetImageByIdAsync([FromRoute] int id)
     {
         var result = await _mediator.Send(new GetImageByIdQuery(id));
-        return Ok(result);
+        return Ok(result.Image);
     }
 
 

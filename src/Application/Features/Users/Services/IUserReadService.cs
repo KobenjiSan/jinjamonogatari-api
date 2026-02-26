@@ -14,7 +14,12 @@ public interface IUserReadService
 
     Task<bool> IsShrineInCollectionAsync(int userId, int shrineId, CancellationToken ct);
 
-    Task<IReadOnlyList<ShrinePreviewDto>> GetShrineCollectionCards(int userId, CancellationToken ct);
+    Task<IReadOnlyList<ShrinePreviewDto>> GetShrineCollectionCards(
+        int userId,
+        double? lat,
+        double? lon,
+        CancellationToken ct
+    );
 
     Task<IReadOnlyList<int>> GetShrineCollectionIds(int userId, CancellationToken ct);
 

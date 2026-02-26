@@ -7,11 +7,16 @@ public interface IShrineReadService
 {
     Task<IReadOnlyList<ShrineMapPointDto>> GetShrineMapPointsAsync(CancellationToken ct);
 
-    Task<ShrinePreviewDto?> GetShrinePreviewAsync(string slug, CancellationToken ct);
+    Task<ShrinePreviewDto?> GetShrinePreviewAsync(string slug, double? lat, double? lon, CancellationToken ct);
 
-    Task<IReadOnlyList<ShrineCardDto>> GetShrineListViewAsync(CancellationToken ct);
+    Task<IReadOnlyList<ShrineCardDto>> GetShrineListViewAsync(double? lat, double? lon, CancellationToken ct);
 
-    Task<ShrineMetaDto?> GetShrineMetaBySlugAsync(string slug, CancellationToken ct);
+    Task<ShrineMetaDto?> GetShrineMetaBySlugAsync(
+        string slug,
+        double? lat,
+        double? lon,
+        CancellationToken ct
+    );
 
     Task<IReadOnlyList<KamiReadDto>> GetShrineKamiBySlugAsync(string slug, CancellationToken ct);
 

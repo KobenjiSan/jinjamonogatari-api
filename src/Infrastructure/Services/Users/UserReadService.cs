@@ -2,6 +2,7 @@ using Application.Features.Shrines.Models;
 using Application.Features.Users.Services;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
 
 namespace Infrastructure.Services.Users;
 
@@ -34,8 +35,19 @@ public class UserReadService : IUserReadService
             .AsNoTracking()
             .AnyAsync(x => x.UserId == userId && x.ShrineId == shrineId, ct);
 
-    public async Task<IReadOnlyList<ShrinePreviewDto>> GetShrineCollectionCards(int userId, CancellationToken ct)
+    public async Task<IReadOnlyList<ShrinePreviewDto>> GetShrineCollectionCards(
+        int userId,
+        double? lat,
+        double? lon,
+        CancellationToken ct
+    )
     {
+        var hasUserPoint = lat.HasValue && lon.HasValue;
+
+        var userPoint = hasUserPoint
+            ? new Point(lon!.Value, lat!.Value) { SRID = 4326 }
+            : null;
+
         return await _db.UserCollections
             .AsNoTracking()
             .Where(uc => uc.UserId == userId)
@@ -48,13 +60,17 @@ public class UserReadService : IUserReadService
                 uc.Shrine.NameJp,
                 uc.Shrine.Image != null ? uc.Shrine.Image.ImgSource : null,
                 uc.Shrine.ShrineDesc,
+                (hasUserPoint && uc.Shrine.Location != null)
+                    ? EF.Functions.Distance(uc.Shrine.Location!, userPoint!, true)
+                    : (double?)null,
                 uc.Shrine.ShrineTags
                     .Select(st => new TagDto(
                         st.TagId,
                         st.Tag.TitleEn,
                         st.Tag.TitleJp
                     )).ToList()
-            )).ToListAsync(ct);
+            ))
+            .ToListAsync(ct);
     }
 
     public async Task<IReadOnlyList<int>> GetShrineCollectionIds(int userId, CancellationToken ct)

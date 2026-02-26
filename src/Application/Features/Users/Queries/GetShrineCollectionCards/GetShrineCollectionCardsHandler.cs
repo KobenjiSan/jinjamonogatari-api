@@ -16,7 +16,7 @@ public class GetShrineCollectionCardsHandler : IRequestHandler<GetShrineCollecti
 
     public async Task<GetShrineCollectionCardsResult> Handle(GetShrineCollectionCardsQuery request, CancellationToken ct)
     {
-        IReadOnlyList<ShrinePreviewDto> cards = await _readService.GetShrineCollectionCards(request.UserId, ct);
+        IReadOnlyList<ShrinePreviewDto> cards = await _readService.GetShrineCollectionCards(request.UserId, request.Lat, request.Lon, ct);
         return new GetShrineCollectionCardsResult(cards);
     }
 }

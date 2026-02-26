@@ -3,6 +3,7 @@ using Application.Common.Models.Images;
 using Application.Features.Shrines.Models;
 using Application.Features.Shrines.Services;
 using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
 
 namespace Infrastructure.Services.Shrines;
 
@@ -32,8 +33,19 @@ public class ShrineReadService : IShrineReadService
             )).ToListAsync(ct);
     }
 
-    public async Task<ShrinePreviewDto?> GetShrinePreviewAsync(string slug, CancellationToken ct)
+    public async Task<ShrinePreviewDto?> GetShrinePreviewAsync(
+        string slug,
+        double? lat,
+        double? lon,
+        CancellationToken ct
+    )
     {
+        var hasUserPoint = lat.HasValue && lon.HasValue;
+
+        var userPoint = hasUserPoint
+            ? new Point(lon!.Value, lat!.Value) { SRID = 4326 }
+            : null;
+
         return await _db.Shrines
             .AsNoTracking()
             .Where(s => s.Slug == slug && s.PublishedAt != null)
@@ -44,31 +56,60 @@ public class ShrineReadService : IShrineReadService
                 s.NameJp,
                 s.Image != null ? s.Image.ImgSource : null,
                 s.ShrineDesc,
+                (hasUserPoint && s.Location != null)
+                    ? EF.Functions.Distance(s.Location!, userPoint!, true)
+                    : (double?)null,
                 s.ShrineTags
                     .Select(st => new TagDto(
                         st.TagId,
                         st.Tag.TitleEn,
                         st.Tag.TitleJp
                     )).ToList()
-            )).SingleOrDefaultAsync(ct);
+            ))
+            .SingleOrDefaultAsync(ct);
     }
 
-    public async Task<IReadOnlyList<ShrineCardDto>> GetShrineListViewAsync(CancellationToken ct)
+    public async Task<IReadOnlyList<ShrineCardDto>> GetShrineListViewAsync(
+        double? lat,
+        double? lon,
+        CancellationToken ct
+    )
     {
+        var hasUserPoint = lat.HasValue && lon.HasValue;
+
+        var userPoint = hasUserPoint
+            ? new Point(lon!.Value, lat!.Value) { SRID = 4326 }
+            : null;
+
         return await _db.Shrines
             .AsNoTracking()
-            .Where(s => s.PublishedAt != null && s.Slug != null)  // Will need to filter by distance
+            .Where(s => s.PublishedAt != null && s.Slug != null)
             .Select(s => new ShrineCardDto(
                 s.ShrineId,
                 s.Slug!,
                 s.NameEn,
                 s.NameJp,
-                s.Image != null ? s.Image.ImgSource : null
-            )).ToListAsync(ct);
+                s.Image != null ? s.Image.ImgSource : null,
+                (hasUserPoint && s.Location != null)
+                    ? EF.Functions.Distance(s.Location!, userPoint!, true)
+                    : (double?)null
+            ))
+            .ToListAsync(ct);
     }
 
-    public async Task<ShrineMetaDto?> GetShrineMetaBySlugAsync(string slug, CancellationToken ct)
+    public async Task<ShrineMetaDto?> GetShrineMetaBySlugAsync(
+        string slug,
+        double? lat,
+        double? lon,
+        CancellationToken ct
+    )
     {
+        var hasUserPoint = lat.HasValue && lon.HasValue;
+
+        var userPoint = hasUserPoint
+            ? new Point(lon!.Value, lat!.Value) { SRID = 4326 }
+            : null;
+
         return await _db.Shrines
             .AsNoTracking()
             .Where(s => s.Slug == slug && s.PublishedAt != null)
@@ -91,13 +132,18 @@ public class ShrineReadService : IShrineReadService
                 s.Email,
                 s.Website,
                 s.Image != null ? s.Image.ImgSource : null,
+                (hasUserPoint && s.Location != null)
+                    ? EF.Functions.Distance(s.Location!, userPoint!, true)
+                    : (double?)null,
                 s.ShrineTags
                     .Select(st => new TagDto(
-                    st.TagId,
-                    st.Tag.TitleEn,
-                    st.Tag.TitleJp
-                )).ToList()
-            )).SingleOrDefaultAsync(ct);
+                        st.TagId,
+                        st.Tag.TitleEn,
+                        st.Tag.TitleJp
+                    ))
+                    .ToList()
+            ))
+            .SingleOrDefaultAsync(ct);
     }
 
     public async Task<IReadOnlyList<KamiReadDto>> GetShrineKamiBySlugAsync(string slug, CancellationToken ct)

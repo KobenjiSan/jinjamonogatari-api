@@ -5,7 +5,8 @@ public record ShrineCardDto(
     string Slug,
     string? NameEn,
     string? NameJp,
-    string? ImageUrl
+    string? ImageUrl,
+    double? DistanceMeters
 );
 
 // Add later
@@ -13,8 +14,3 @@ public record ShrineCardDto(
 // Filtering
 // string? Prefecture,
 // string? City,
-
-// Distance
-// double? DistanceMeters,
-
-// saved

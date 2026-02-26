@@ -15,7 +15,12 @@ public class GetShrineMetaBySlugHandler : IRequestHandler<GetShrineMetaBySlugQue
 
     public async Task<GetShrineMetaBySlugResult> Handle(GetShrineMetaBySlugQuery request, CancellationToken ct)
     {
-        var shrineMeta = await _readService.GetShrineMetaBySlugAsync(request.Slug, ct);
+        var shrineMeta = await _readService.GetShrineMetaBySlugAsync(
+            request.Slug,
+            request.Lat,
+            request.Lon,
+            ct
+        );
         if (shrineMeta is null) throw new NotFoundException("Shrine not found.");
         return new GetShrineMetaBySlugResult(shrineMeta);
     }

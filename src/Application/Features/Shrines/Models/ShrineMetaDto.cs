@@ -17,10 +17,7 @@ public record ShrineMetaDto(
 
     string? ImageUrl,
 
+    double? DistanceMeters,
+
     IReadOnlyList<TagDto> Tags
 );
-
-// Add later
-
-// Distance
-// double? DistanceMeters,

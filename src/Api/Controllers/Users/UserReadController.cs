@@ -41,13 +41,16 @@ public class UserReadController : ControllerBase
         return Ok(result);
     }
 
-    // GET /api/users/me/collection/cards
+    // GET /api/users/me/collection/cards?lat=...&lon=...
     [HttpGet("me/collection/cards")]
     [Authorize]
-    public async Task<ActionResult<GetShrineCollectionCardsResult>> GetShrineCollectionCardsAsync()
+    public async Task<ActionResult<GetShrineCollectionCardsResult>> GetShrineCollectionCardsAsync(
+        [FromQuery] double? lat,
+        [FromQuery] double? lon
+    )
     {
         var userId = User.GetUserId();
-        var result = await _mediator.Send(new GetShrineCollectionCardsQuery(userId));
+        var result = await _mediator.Send(new GetShrineCollectionCardsQuery(userId, lat, lon));
         return Ok(result);
     }
 
