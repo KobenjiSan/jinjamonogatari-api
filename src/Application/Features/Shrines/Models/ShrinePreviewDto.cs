@@ -3,6 +3,10 @@ namespace Application.Features.Shrines.Models;
 public record ShrinePreviewDto(
     int ShrineId,
     string Slug,
+
+    double? Lat,
+    double? Lon,
+
     string? NameEn,
     string? NameJp,
     string? ImageUrl,
@@ -10,10 +14,4 @@ public record ShrinePreviewDto(
     double? DistanceMeters,
     IReadOnlyList<TagDto> Tags
 );
-
-// Add later
-
-// Filtering
-// string? Prefecture,
-// string? City,
 

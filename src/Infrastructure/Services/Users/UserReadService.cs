@@ -77,6 +77,8 @@ public class UserReadService : IUserReadService
             .Select(uc => new ShrinePreviewDto(
                 uc.Shrine.ShrineId,
                 uc.Shrine.Slug!,
+                uc.Shrine.Lat.HasValue ? (double?)uc.Shrine.Lat.Value : null,
+                uc.Shrine.Lon.HasValue ? (double?)uc.Shrine.Lon.Value : null,
                 uc.Shrine.NameEn,
                 uc.Shrine.NameJp,
                 uc.Shrine.Image != null ? uc.Shrine.Image.ImgSource : null,
@@ -89,10 +91,8 @@ public class UserReadService : IUserReadService
                         st.TagId,
                         st.Tag.TitleEn,
                         st.Tag.TitleJp
-                    ))
-                    .ToList()
-            ))
-            .ToListAsync(ct);
+                    )).ToList()
+            )).ToListAsync(ct);
     }
 
     public async Task<IReadOnlyList<int>> GetShrineCollectionIds(int userId, CancellationToken ct)

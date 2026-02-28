@@ -5,6 +5,9 @@ public record ShrineMetaDto(
     int ShrineId,
     string Slug,
 
+    double? Lat,
+    double? Lon,
+
     string? NameEn,
     string? NameJp,
     string? ShrineDesc,

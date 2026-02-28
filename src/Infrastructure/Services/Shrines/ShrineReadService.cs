@@ -52,6 +52,8 @@ public class ShrineReadService : IShrineReadService
             .Select(s => new ShrinePreviewDto(
                 s.ShrineId,
                 s.Slug!,
+                s.Lat.HasValue ? (double?)s.Lat.Value : null,
+                s.Lon.HasValue ? (double?)s.Lon.Value : null,
                 s.NameEn,
                 s.NameJp,
                 s.Image != null ? s.Image.ImgSource : null,
@@ -65,8 +67,7 @@ public class ShrineReadService : IShrineReadService
                         st.Tag.TitleEn,
                         st.Tag.TitleJp
                     )).ToList()
-            ))
-            .SingleOrDefaultAsync(ct);
+            )).SingleOrDefaultAsync(ct);
     }
 
     public async Task<IReadOnlyList<ShrineCardDto>> GetShrineListViewAsync(
@@ -133,6 +134,8 @@ public class ShrineReadService : IShrineReadService
             .Select(s => new ShrineMetaDto(
                 s.ShrineId,
                 s.Slug!,
+                s.Lat.HasValue ? (double?)s.Lat.Value : null,
+                s.Lon.HasValue ? (double?)s.Lon.Value : null,
                 s.NameEn,
                 s.NameJp,
                 s.ShrineDesc,
@@ -157,10 +160,8 @@ public class ShrineReadService : IShrineReadService
                         st.TagId,
                         st.Tag.TitleEn,
                         st.Tag.TitleJp
-                    ))
-                    .ToList()
-            ))
-            .SingleOrDefaultAsync(ct);
+                    )).ToList()
+            )).SingleOrDefaultAsync(ct);
     }
 
     public async Task<IReadOnlyList<KamiReadDto>> GetShrineKamiBySlugAsync(string slug, CancellationToken ct)
