@@ -52,10 +52,11 @@ public class ShrineReadController : ControllerBase
     [HttpGet("list-view")]
     public async Task<ActionResult<IReadOnlyList<ShrineCardDto>>> GetShrineListViewAsync(
         [FromQuery] double? lat,
-        [FromQuery] double? lon
+        [FromQuery] double? lon,
+        [FromQuery] string? q
     )
     {
-        var result = await _mediator.Send(new GetShrineListViewQuery(lat, lon));
+        var result = await _mediator.Send(new GetShrineListViewQuery(lat, lon, q));
         return Ok(result.Shrines);
     }
 

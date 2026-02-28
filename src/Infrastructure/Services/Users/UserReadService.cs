@@ -39,6 +39,7 @@ public class UserReadService : IUserReadService
         int userId,
         double? lat,
         double? lon,
+        string? q,
         CancellationToken ct
     )
     {
@@ -48,11 +49,31 @@ public class UserReadService : IUserReadService
             ? new Point(lon!.Value, lat!.Value) { SRID = 4326 }
             : null;
 
+        var hasQ = !string.IsNullOrWhiteSpace(q);
+        var pattern = hasQ ? $"%{q!.Trim()}%" : null;
+
         return await _db.UserCollections
             .AsNoTracking()
             .Where(uc => uc.UserId == userId)
             .OrderByDescending(uc => uc.CreatedAt)
             .Where(uc => uc.Shrine.PublishedAt != null && uc.Shrine.Slug != null)
+            .Where(uc => !hasQ || (
+                EF.Functions.ILike(uc.Shrine.NameEn ?? "", pattern!) ||
+                EF.Functions.ILike(uc.Shrine.NameJp ?? "", pattern!) ||
+                EF.Functions.ILike(uc.Shrine.Slug ?? "", pattern!) ||
+                EF.Functions.ILike(uc.Shrine.ShrineDesc ?? "", pattern!) ||
+                EF.Functions.ILike(uc.Shrine.Prefecture ?? "", pattern!) ||
+                EF.Functions.ILike(uc.Shrine.City ?? "", pattern!) ||
+                EF.Functions.ILike(uc.Shrine.Ward ?? "", pattern!) ||
+                EF.Functions.ILike(uc.Shrine.Locality ?? "", pattern!) ||
+                EF.Functions.ILike(uc.Shrine.AddressRaw ?? "", pattern!) ||
+                EF.Functions.ILike(uc.Shrine.PostalCode ?? "", pattern!) ||
+                EF.Functions.ILike(uc.Shrine.Country ?? "", pattern!) ||
+                uc.Shrine.ShrineTags.Any(st =>
+                    EF.Functions.ILike(st.Tag.TitleEn ?? "", pattern!) ||
+                    EF.Functions.ILike(st.Tag.TitleJp ?? "", pattern!)
+                )
+            ))
             .Select(uc => new ShrinePreviewDto(
                 uc.Shrine.ShrineId,
                 uc.Shrine.Slug!,
@@ -68,7 +89,8 @@ public class UserReadService : IUserReadService
                         st.TagId,
                         st.Tag.TitleEn,
                         st.Tag.TitleJp
-                    )).ToList()
+                    ))
+                    .ToList()
             ))
             .ToListAsync(ct);
     }

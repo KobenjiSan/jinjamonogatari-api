@@ -46,11 +46,12 @@ public class UserReadController : ControllerBase
     [Authorize]
     public async Task<ActionResult<GetShrineCollectionCardsResult>> GetShrineCollectionCardsAsync(
         [FromQuery] double? lat,
-        [FromQuery] double? lon
+        [FromQuery] double? lon,
+        [FromQuery] string? q
     )
     {
         var userId = User.GetUserId();
-        var result = await _mediator.Send(new GetShrineCollectionCardsQuery(userId, lat, lon));
+        var result = await _mediator.Send(new GetShrineCollectionCardsQuery(userId, lat, lon, q));
         return Ok(result);
     }
 

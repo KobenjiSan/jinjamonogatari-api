@@ -14,7 +14,7 @@ public class GetShrineListViewHandler : IRequestHandler<GetShrineListViewQuery, 
 
     public async Task<GetShrineListViewResult> Handle(GetShrineListViewQuery request, CancellationToken ct)
     {
-        var shrines = await _readService.GetShrineListViewAsync(request.Lat, request.Lon, ct);
+        var shrines = await _readService.GetShrineListViewAsync(request.Lat, request.Lon, request.Q, ct);
         return new GetShrineListViewResult(shrines);
     }
 }

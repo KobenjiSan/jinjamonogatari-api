@@ -18,6 +18,7 @@ public interface IUserReadService
         int userId,
         double? lat,
         double? lon,
+        string? q,
         CancellationToken ct
     );
 

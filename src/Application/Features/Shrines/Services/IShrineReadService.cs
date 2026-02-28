@@ -9,7 +9,12 @@ public interface IShrineReadService
 
     Task<ShrinePreviewDto?> GetShrinePreviewAsync(string slug, double? lat, double? lon, CancellationToken ct);
 
-    Task<IReadOnlyList<ShrineCardDto>> GetShrineListViewAsync(double? lat, double? lon, CancellationToken ct);
+    Task<IReadOnlyList<ShrineCardDto>> GetShrineListViewAsync(
+        double? lat,
+        double? lon,
+        string? q,
+        CancellationToken ct
+    );
 
     Task<ShrineMetaDto?> GetShrineMetaBySlugAsync(
         string slug,

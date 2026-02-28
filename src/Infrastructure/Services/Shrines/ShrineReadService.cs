@@ -72,6 +72,7 @@ public class ShrineReadService : IShrineReadService
     public async Task<IReadOnlyList<ShrineCardDto>> GetShrineListViewAsync(
         double? lat,
         double? lon,
+        string? q,
         CancellationToken ct
     )
     {
@@ -81,9 +82,25 @@ public class ShrineReadService : IShrineReadService
             ? new Point(lon!.Value, lat!.Value) { SRID = 4326 }
             : null;
 
+        var hasQ = !string.IsNullOrWhiteSpace(q);
+        var pattern = hasQ ? $"%{q!.Trim()}%" : null;
+
         return await _db.Shrines
             .AsNoTracking()
             .Where(s => s.PublishedAt != null && s.Slug != null)
+            .Where(s => !hasQ || (
+                EF.Functions.ILike(s.NameEn ?? "", pattern!) ||
+                EF.Functions.ILike(s.NameJp ?? "", pattern!) ||
+                EF.Functions.ILike(s.Slug ?? "", pattern!) ||
+                EF.Functions.ILike(s.ShrineDesc ?? "", pattern!) ||
+                EF.Functions.ILike(s.Prefecture ?? "", pattern!) ||
+                EF.Functions.ILike(s.City ?? "", pattern!) ||
+                EF.Functions.ILike(s.Ward ?? "", pattern!) ||
+                EF.Functions.ILike(s.Locality ?? "", pattern!) ||
+                EF.Functions.ILike(s.AddressRaw ?? "", pattern!) ||
+                EF.Functions.ILike(s.PostalCode ?? "", pattern!) ||
+                EF.Functions.ILike(s.Country ?? "", pattern!)
+            ))
             .Select(s => new ShrineCardDto(
                 s.ShrineId,
                 s.Slug!,
