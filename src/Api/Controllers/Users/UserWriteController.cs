@@ -3,9 +3,11 @@ using Application.Features.Collection.Commands.AddShrineToCollection;
 using Application.Features.Collection.Commands.RemoveShrineFromCollection;
 using Application.Features.Users.Commands.LoginUser;
 using Application.Features.Users.Commands.RegisterUser;
+using Application.Features.Users.Commands.RefreshTokens;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Application.Features.Users.Commands.LogoutUser;
 
 namespace Api.Controllers.Users;
 
@@ -22,7 +24,7 @@ public class UserWriteController : ControllerBase
 
     // POST /api/users/login
     [HttpPost("login")]
-    public async Task<IActionResult> LoginAsync([FromBody] LoginUserRequest request)
+    public async Task<ActionResult<LoginUserResult>> LoginAsync([FromBody] LoginUserRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Identifier))
             throw new ArgumentException("Username or Email is required.");
@@ -36,7 +38,7 @@ public class UserWriteController : ControllerBase
 
     // POST /api/users/register
     [HttpPost("register")]
-    public async Task<IActionResult> RegisterAsync([FromBody] RegisterUserRequest request)
+    public async Task<ActionResult<RegisterUserResult>> RegisterAsync([FromBody] RegisterUserRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Username))
             throw new ArgumentException("Username is required.");
@@ -53,6 +55,29 @@ public class UserWriteController : ControllerBase
             request.Password));
 
          return Ok(result);
+    }
+
+    // POST /api/users/refresh
+    [HttpPost("refresh")]
+    public async Task<ActionResult<RefreshTokenResult>> RefreshAsync([FromBody] RefreshTokenRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            throw new ArgumentException("RefreshToken is required.");
+
+        var result = await _mediator.Send(new RefreshTokenCommand(request.RefreshToken));
+        return Ok(result);
+    }
+
+    // POST /api/users/logout
+    [HttpPost("logout")]
+    public async Task<IActionResult> LogoutAsync([FromBody] RefreshTokenRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            throw new ArgumentException("RefreshToken is required.");
+
+        await _mediator.Send(new LogoutUserCommand(request.RefreshToken));
+
+        return NoContent();
     }
 
     // POST /api/users/me/collection/{shrineId}
@@ -89,4 +114,9 @@ public record RegisterUserRequest
     public string Username { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
     public string Password { get; init; } = string.Empty;
+}
+
+public record RefreshTokenRequest
+{
+    public string RefreshToken { get; init; } = string.Empty;
 }

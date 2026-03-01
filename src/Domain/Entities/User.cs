@@ -27,4 +27,5 @@ public class User : IHasTimestamps
 
     // Relationships (collections)
     public ICollection<UserCollection> UserCollections { get; set; } = new List<UserCollection>();
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

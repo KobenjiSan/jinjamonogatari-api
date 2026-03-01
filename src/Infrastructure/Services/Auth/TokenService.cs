@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Application.Common.Interfaces;
 using Infrastructure.Options;
@@ -26,11 +27,8 @@ public class TokenService : ITokenService
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
 
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_jwt.Key));
-
-        var creds = new SigningCredentials(
-            key, SecurityAlgorithms.HmacSha256);
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
             issuer: _jwt.Issuer,
@@ -41,5 +39,28 @@ public class TokenService : ITokenService
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    // =========================
+    // Refresh token helpers
+    // =========================
+
+    // Returns the RAW refresh token string (send to client once).
+    public string CreateRefreshToken()
+    {
+        // 32 bytes => 256 bits of entropy
+        var bytes = RandomNumberGenerator.GetBytes(32);
+        return Convert.ToBase64String(bytes);
+    }
+
+    // Returns a stable hash for DB lookup/storage.
+    // NOTE: In production this should add a dedicated pepper from env/config
+    // For now reuse Jwt.Key as pepper
+    public string HashRefreshToken(string rawToken)
+    {
+        var peppered = $"{rawToken}:{_jwt.Key}";
+        var bytes = Encoding.UTF8.GetBytes(peppered);
+        var hash = SHA256.HashData(bytes);
+        return Convert.ToBase64String(hash);
     }
 }

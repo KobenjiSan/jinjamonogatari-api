@@ -1,5 +1,6 @@
 using Application.Common.Interfaces;
 using Application.Features.Users.Services;
+using Domain.Entities;
 using MediatR;
 
 namespace Application.Features.Users.Commands.RegisterUser;
@@ -10,17 +11,23 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, Register
     private readonly IUserWriteService _writeService;
     private readonly IPasswordHasher _passwords;
     private readonly ITokenService _tokens;
+    private readonly IAppDbContext _db;
+    private readonly ITokenOptions _tokenOptions;
 
      public RegisterUserHandler(
         IUserReadService readService,
         IUserWriteService writeService,
         IPasswordHasher passwords,
-        ITokenService tokens)
+        ITokenService tokens,
+        IAppDbContext db,
+        ITokenOptions tokenOptions)
     {
         _readService = readService;
         _writeService = writeService;
         _passwords = passwords;
         _tokens = tokens;
+        _db = db;
+        _tokenOptions = tokenOptions;
     }
 
     public async Task<RegisterUserResult> Handle(RegisterUserCommand request, CancellationToken ct)
@@ -41,6 +48,19 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, Register
 
         var accessToken = _tokens.CreateAccessToken(user.UserId, user.Email);
 
-        return new RegisterUserResult(accessToken);
+        // Refresh token issuance
+        var rawRefresh = _tokens.CreateRefreshToken();
+        var refreshHash = _tokens.HashRefreshToken(rawRefresh);
+
+        _db.RefreshTokens.Add(new RefreshToken
+        {
+            UserId = user.UserId,
+            TokenHash = refreshHash,
+            ExpiresAtUtc = DateTime.UtcNow.AddDays(_tokenOptions.RefreshTokenDays)
+        });
+
+        await _db.SaveChangesAsync(ct);
+
+        return new RegisterUserResult(accessToken, rawRefresh);
     }
 }

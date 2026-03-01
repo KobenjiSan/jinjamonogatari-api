@@ -9,6 +9,8 @@ public interface IAppDbContext
     // This prevents Application from depending on Infrastructure directly.
     DbSet<User> Users { get; }
 
+    DbSet<RefreshToken> RefreshTokens { get; }
+
     // Save changes to the database.
     // Handlers call this after making changes.
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
