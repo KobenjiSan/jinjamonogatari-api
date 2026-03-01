@@ -74,4 +74,97 @@ public class UserWriteService : IUserWriteService
         _db.UserCollections.Remove(entry);
         await _db.SaveChangesAsync(ct);
     }
+
+    public async Task AddRefreshTokenAsync(int userId, string tokenHash, DateTime expiresAtUtc, CancellationToken ct)
+    {
+        _db.RefreshTokens.Add(new RefreshToken
+        {
+            UserId = userId,
+            TokenHash = tokenHash,
+            ExpiresAtUtc = expiresAtUtc
+        });
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task RevokeRefreshTokenAsync(string tokenHash, DateTime revokedAtUtc, CancellationToken ct)
+    {
+        var stored = await _db.RefreshTokens
+            .FirstOrDefaultAsync(x => x.TokenHash == tokenHash, ct);
+
+        if (stored is null)
+            return; // idempotent
+
+        if (stored.RevokedAtUtc is not null)
+            return; // idempotent
+
+        stored.RevokedAtUtc = revokedAtUtc;
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task<(int UserId, string Email)> RotateRefreshTokenAsync(
+        string incomingTokenHash,
+        string newTokenHash,
+        DateTime newExpiresAtUtc,
+        DateTime revokedAtUtc,
+        CancellationToken ct)
+    {
+        var stored = await _db.RefreshTokens
+            .FirstOrDefaultAsync(x => x.TokenHash == incomingTokenHash, ct);
+
+        if (stored is null || !stored.IsActive)
+            throw new UnauthorizedAccessException("Invalid refresh token.");
+
+        // Load user (email needed for access token claims)
+        var user = await _db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.UserId == stored.UserId, ct);
+
+        if (user is null)
+            throw new UnauthorizedAccessException("Invalid refresh token.");
+
+        // Revoke old token (rotation)
+        stored.RevokedAtUtc = revokedAtUtc;
+
+        // Add new token
+        _db.RefreshTokens.Add(new RefreshToken
+        {
+            UserId = user.UserId,
+            TokenHash = newTokenHash,
+            ExpiresAtUtc = newExpiresAtUtc
+        });
+
+        await _db.SaveChangesAsync(ct);
+
+        return (user.UserId, user.Email);
+    }
+
+    public async Task<User> UpdateMyProfileAsync(
+        int userId,
+        bool hasFirstName, string? firstName,
+        bool hasLastName, string? lastName,
+        bool hasPhone, string? phone,
+        CancellationToken ct)
+    {
+        var user = await _db.Users
+            .FirstOrDefaultAsync(u => u.UserId == userId, ct);
+
+        if (user is null)
+            throw new ArgumentException("User not found.");
+
+        if (hasFirstName)
+            user.FirstName = firstName; // can be null to clear
+
+        if (hasLastName)
+            user.LastName = lastName; // can be null to clear
+
+        if (hasPhone)
+            user.Phone = phone; // can be null to clear
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
+
+        return user;
+    }
 }

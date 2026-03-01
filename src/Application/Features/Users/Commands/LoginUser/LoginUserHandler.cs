@@ -1,6 +1,6 @@
 using Application.Common.Exceptions;
-using Application.Common.Interfaces;
 using Application.Features.Users.Services;
+using Application.Common.Interfaces;
 using Domain.Entities;
 using MediatR;
 
@@ -12,7 +12,6 @@ public class LoginUserHandler : IRequestHandler<LoginUserCommand, LoginUserResul
     private readonly IUserWriteService _writeService;
     private readonly ITokenService _tokens;
     private readonly IPasswordHasher _passwords;
-    private readonly IAppDbContext _db;
     private readonly ITokenOptions _tokenOptions;
 
     public LoginUserHandler(
@@ -20,14 +19,12 @@ public class LoginUserHandler : IRequestHandler<LoginUserCommand, LoginUserResul
         IUserWriteService writeService,
         ITokenService tokens,
         IPasswordHasher passwords,
-        IAppDbContext db,
         ITokenOptions tokenOptions)
     {
         _readService = readService;
         _writeService = writeService;
         _tokens = tokens;
         _passwords = passwords;
-        _db = db;
         _tokenOptions = tokenOptions;
     }
 
@@ -42,7 +39,7 @@ public class LoginUserHandler : IRequestHandler<LoginUserCommand, LoginUserResul
 
         if (!_passwords.Verify(user.PassHash, request.Password))
             throw new UnauthorizedAccessException("Invalid credentials.");
-        
+
         await _writeService.UpdateLastLoginAsync(user.UserId, ct);
 
         var accessToken = _tokens.CreateAccessToken(user.UserId, user.Email);
@@ -51,15 +48,11 @@ public class LoginUserHandler : IRequestHandler<LoginUserCommand, LoginUserResul
         var rawRefresh = _tokens.CreateRefreshToken();
         var refreshHash = _tokens.HashRefreshToken(rawRefresh);
 
-        var refreshEntity = new RefreshToken
-        {
-            UserId = user.UserId,
-            TokenHash = refreshHash,
-            ExpiresAtUtc = DateTime.UtcNow.AddDays(_tokenOptions.RefreshTokenDays)
-        };
-
-        _db.RefreshTokens.Add(refreshEntity);
-        await _db.SaveChangesAsync(ct);
+        await _writeService.AddRefreshTokenAsync(
+            user.UserId,
+            refreshHash,
+            DateTime.UtcNow.AddDays(_tokenOptions.RefreshTokenDays),
+            ct);
 
         return new LoginUserResult(accessToken, rawRefresh);
     }

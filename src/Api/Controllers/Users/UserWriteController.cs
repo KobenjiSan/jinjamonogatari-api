@@ -8,6 +8,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Application.Features.Users.Commands.LogoutUser;
+using Application.Features.Users.Commands.UpdateMyProfile;
+using System.Text.Json;
 
 namespace Api.Controllers.Users;
 
@@ -80,6 +82,36 @@ public class UserWriteController : ControllerBase
         return NoContent();
     }
 
+    // PUT /api/users/me/profile
+    [HttpPut("me/profile")]
+    [Authorize]
+    public async Task<ActionResult<UpdateMyProfileResult>> UpdateMyProfileAsync(
+        [FromBody] UpdateMyProfileRequest request)
+    {
+        var userId = User.GetUserId();
+
+        bool hasFirstName = request.FirstName.HasValue;
+        bool hasLastName = request.LastName.HasValue;
+        bool hasPhone = request.Phone.HasValue;
+
+        string? firstName = request.FirstName is { } fn ? fn.ToString() : null;
+        string? lastName  = request.LastName  is { } ln ? ln.ToString() : null;
+        string? phone     = request.Phone     is { } ph ? ph.ToString() : null;
+
+        firstName = string.IsNullOrWhiteSpace(firstName) ? "" : firstName;
+        lastName  = string.IsNullOrWhiteSpace(lastName)  ? "" : lastName;
+        phone     = string.IsNullOrWhiteSpace(phone)     ? "" : phone;
+
+        var result = await _mediator.Send(new UpdateMyProfileCommand(
+            userId,
+            hasFirstName, firstName,
+            hasLastName, lastName,
+            hasPhone, phone
+        ));
+
+        return Ok(result);
+    }
+
     // POST /api/users/me/collection/{shrineId}
     [HttpPost("me/collection/{shrineId}")]
     [Authorize]
@@ -119,4 +151,11 @@ public record RegisterUserRequest
 public record RefreshTokenRequest
 {
     public string RefreshToken { get; init; } = string.Empty;
+}
+
+public record UpdateMyProfileRequest
+{
+    public JsonElement? FirstName { get; init; }
+    public JsonElement? LastName { get; init; }
+    public JsonElement? Phone { get; init; }
 }

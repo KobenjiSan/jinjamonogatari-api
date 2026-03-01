@@ -1,19 +1,21 @@
 using Application.Common.Interfaces;
-using Domain.Entities;
+using Application.Features.Users.Services;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Users.Commands.RefreshTokens;
 
 public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, RefreshTokenResult>
 {
-    private readonly IAppDbContext _db;
+    private readonly IUserWriteService _writeService;
     private readonly ITokenService _tokens;
     private readonly ITokenOptions _tokenOptions;
 
-    public RefreshTokenHandler(IAppDbContext db, ITokenService tokens, ITokenOptions tokenOptions)
+    public RefreshTokenHandler(
+        IUserWriteService writeService,
+        ITokenService tokens,
+        ITokenOptions tokenOptions)
     {
-        _db = db;
+        _writeService = writeService;
         _tokens = tokens;
         _tokenOptions = tokenOptions;
     }
@@ -25,39 +27,19 @@ public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, RefreshT
         // Hash incoming token to match stored hash
         var incomingHash = _tokens.HashRefreshToken(raw);
 
-        // Find stored token row
-        var stored = await _db.RefreshTokens
-            .FirstOrDefaultAsync(x => x.TokenHash == incomingHash, ct);
-
-        if (stored is null || !stored.IsActive)
-            throw new UnauthorizedAccessException("Invalid refresh token.");
-
-        // Load user (we need email for access token claims)
-        var user = await _db.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.UserId == stored.UserId, ct);
-
-        if (user is null)
-            throw new UnauthorizedAccessException("Invalid refresh token.");
-
-        // Revoke old token (rotation)
-        stored.RevokedAtUtc = DateTime.UtcNow;
-
-        // Create new refresh token
+        // Create new refresh token (rotation)
         var newRaw = _tokens.CreateRefreshToken();
         var newHash = _tokens.HashRefreshToken(newRaw);
 
-        _db.RefreshTokens.Add(new RefreshToken
-        {
-            UserId = user.UserId,
-            TokenHash = newHash,
-            ExpiresAtUtc = DateTime.UtcNow.AddDays(_tokenOptions.RefreshTokenDays)
-        });
-
-        await _db.SaveChangesAsync(ct);
+        var (userId, email) = await _writeService.RotateRefreshTokenAsync(
+            incomingHash,
+            newHash,
+            DateTime.UtcNow.AddDays(_tokenOptions.RefreshTokenDays),
+            DateTime.UtcNow,
+            ct);
 
         // New access token
-        var newAccess = _tokens.CreateAccessToken(user.UserId, user.Email);
+        var newAccess = _tokens.CreateAccessToken(userId, email);
 
         return new RefreshTokenResult(newAccess, newRaw);
     }
