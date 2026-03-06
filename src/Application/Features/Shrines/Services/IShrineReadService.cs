@@ -34,4 +34,6 @@ public interface IShrineReadService
     Task<ImageFullDto?> GetImageByIdAsync(int id, CancellationToken ct);
 
     Task<bool> DoesShrineExistAsync(int shrineId, CancellationToken ct);
+
+    Task<IReadOnlyList<ShrineListCMSDto>> GetShrineListCMSAsync(CancellationToken ct);
 }

@@ -5,11 +5,13 @@ using Application.Features.Shrines.Queries.GetShrineFolkloreBySlug;
 using Application.Features.Shrines.Queries.GetShrineGalleryBySlug;
 using Application.Features.Shrines.Queries.GetShrineHistoryBySlug;
 using Application.Features.Shrines.Queries.GetShrineKamiBySlug;
+using Application.Features.Shrines.Queries.GetShrineListCMS;
 using Application.Features.Shrines.Queries.GetShrineListView;
 using Application.Features.Shrines.Queries.GetShrineMapPoints;
 using Application.Features.Shrines.Queries.GetShrineMetaBySlug;
 using Application.Features.Shrines.Queries.GetShrinePreview;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -120,5 +122,16 @@ public class ShrineReadController : ControllerBase
         return Ok(result.Image);
     }
 
+    // =======
+    // CMS
+    // =======
 
+    // GET /api/shrines/cms/list
+    [HttpGet("cms/list")]
+    [Authorize]
+    public async Task<ActionResult<ShrineListCMSDto>> GetShrineListCMSAsync()
+    {
+        var result = await _mediator.Send(new GetShrineListCMSQuery());
+        return Ok(result);
+    }
 }

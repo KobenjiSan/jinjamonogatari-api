@@ -176,7 +176,7 @@ public class ShrineReadService : IShrineReadService
                 k.NameEn,
                 k.NameJp,
                 k.Desc,
-                k.Image == null 
+                k.Image == null
                     ? null
                     : new ImageCitedDto(
                         k.Image.ImgSource,
@@ -220,7 +220,7 @@ public class ShrineReadService : IShrineReadService
                 h.SortOrder!.Value,
                 h.Title!,
                 h.Information,
-                h.Image == null 
+                h.Image == null
                     ? null
                     : new ImageCitedDto(
                         h.Image.ImgSource,
@@ -260,7 +260,7 @@ public class ShrineReadService : IShrineReadService
                 f.FolkloreId,
                 f.Title!,
                 f.Information!,
-                f.Image == null 
+                f.Image == null
                     ? null
                     : new ImageCitedDto(
                         f.Image.ImgSource,
@@ -324,4 +324,20 @@ public class ShrineReadService : IShrineReadService
         => _db.Shrines
             .AsNoTracking()
             .AnyAsync(s => s.ShrineId == shrineId, ct);
+
+    public async Task<IReadOnlyList<ShrineListCMSDto>> GetShrineListCMSAsync(CancellationToken ct)
+    {
+        return await _db.Shrines
+            .AsNoTracking()
+            .Select(s => new ShrineListCMSDto(
+                s.ShrineId,
+                s.NameEn,
+                s.NameJp,
+                s.Status,
+                s.City,
+                s.Lat,
+                s.Lon,
+                s.UpdatedAt
+            )).ToListAsync(ct);
+    }
 }
