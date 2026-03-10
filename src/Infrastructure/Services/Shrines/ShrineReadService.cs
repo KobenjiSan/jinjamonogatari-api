@@ -325,6 +325,8 @@ public class ShrineReadService : IShrineReadService
             .AsNoTracking()
             .AnyAsync(s => s.ShrineId == shrineId, ct);
 
+    // CMS
+
     public async Task<IReadOnlyList<ShrineListCMSDto>> GetShrineListCMSAsync(CancellationToken ct)
     {
         return await _db.Shrines
@@ -339,5 +341,58 @@ public class ShrineReadService : IShrineReadService
                 s.Lon,
                 s.UpdatedAt
             )).ToListAsync(ct);
+    }
+
+    public async Task<ShrineMetaCMSDto?> GetShrineMetaByIdCMSAsync(int id, CancellationToken ct)
+    {
+        return await _db.Shrines
+            .AsNoTracking()
+            .Where(s => s.ShrineId == id)
+            .Select(s => new ShrineMetaCMSDto(
+                s.ShrineId,
+                s.InputtedId ?? string.Empty,
+                s.Slug,
+                s.NameEn,
+                s.NameJp,
+                s.ShrineDesc,
+                s.Lat,
+                s.Lon,
+                s.Prefecture,
+                s.City,
+                s.Ward,
+                s.Locality,
+                s.PostalCode,
+                s.Country,
+                s.PhoneNumber, 
+                s.Email,
+                s.Website,
+                s.Image == null
+                    ? null
+                    : new ImageFullDto(
+                        s.Image.ImgId,
+                        s.Image.ImgSource,
+                        s.Image.Title,
+                        s.Image.Desc,
+                        s.Image.Citation == null
+                            ? null
+                            : new CitationDto(
+                                s.Image.Citation.CiteId,
+                                s.Image.Citation.Title,
+                                s.Image.Citation.Author,
+                                s.Image.Citation.Url,
+                                s.Image.Citation.Year
+                            )
+                    ),
+                s.Status ?? "Draft",
+                s.PublishedAt,
+                s.CreatedAt,
+                s.UpdatedAt,
+                s.ShrineTags
+                    .Select(st => new TagDto(
+                        st.TagId,
+                        st.Tag.TitleEn,
+                        st.Tag.TitleJp
+                    )).ToList()
+            )).SingleOrDefaultAsync(ct);
     }
 }

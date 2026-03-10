@@ -35,5 +35,7 @@ public interface IShrineReadService
 
     Task<bool> DoesShrineExistAsync(int shrineId, CancellationToken ct);
 
+    // CMS
     Task<IReadOnlyList<ShrineListCMSDto>> GetShrineListCMSAsync(CancellationToken ct);
+    Task<ShrineMetaCMSDto?> GetShrineMetaByIdCMSAsync(int id, CancellationToken ct);
 }

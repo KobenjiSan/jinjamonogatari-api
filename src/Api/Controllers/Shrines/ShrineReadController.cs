@@ -8,6 +8,7 @@ using Application.Features.Shrines.Queries.GetShrineKamiBySlug;
 using Application.Features.Shrines.Queries.GetShrineListCMS;
 using Application.Features.Shrines.Queries.GetShrineListView;
 using Application.Features.Shrines.Queries.GetShrineMapPoints;
+using Application.Features.Shrines.Queries.GetShrineMetaByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineMetaBySlug;
 using Application.Features.Shrines.Queries.GetShrinePreview;
 using MediatR;
@@ -133,5 +134,14 @@ public class ShrineReadController : ControllerBase
     {
         var result = await _mediator.Send(new GetShrineListCMSQuery());
         return Ok(result);
+    }
+
+    // GET /api/shrines/cms/{id}/meta
+    [HttpGet("cms/{id}/meta")]
+    [Authorize]
+    public async Task<ActionResult<ShrineMetaCMSDto>> GetShrineMetaByIdCMSAsync([FromRoute] int id)
+    {
+        var result = await _mediator.Send(new GetShrineMetaByIdCMSQuery(id));
+        return Ok(result.Meta);
     }
 }
