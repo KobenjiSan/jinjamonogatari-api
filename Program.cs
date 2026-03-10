@@ -89,6 +89,7 @@ builder.Services.AddScoped<IUserWriteService, UserWriteService>();
 builder.Services.AddScoped<IEtiquetteReadService, EtiquetteReadService>();
 // Shrines
 builder.Services.AddScoped<IShrineReadService, ShrineReadService>();
+builder.Services.AddScoped<IShrineWriteService, ShrineWriteService>();
 
 
 var app = builder.Build();

@@ -144,4 +144,13 @@ public class ShrineReadController : ControllerBase
         var result = await _mediator.Send(new GetShrineMetaByIdCMSQuery(id));
         return Ok(result.Meta);
     }
+
+    // Returns all tags
+    // GET /api/shrines/cms/tags
+    [HttpGet("cms/tags")]
+    [Authorize]
+    public Task<ActionResult<IReadOnlyList<int>>> GetAllTagsCMSAsync()
+    {
+        throw new NotImplementedException();    // TODO
+    }
 }
