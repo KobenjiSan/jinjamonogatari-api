@@ -363,7 +363,7 @@ public class ShrineReadService : IShrineReadService
                 s.Locality,
                 s.PostalCode,
                 s.Country,
-                s.PhoneNumber, 
+                s.PhoneNumber,
                 s.Email,
                 s.Website,
                 s.Image == null
@@ -394,5 +394,103 @@ public class ShrineReadService : IShrineReadService
                         st.Tag.TitleJp
                     )).ToList()
             )).SingleOrDefaultAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<KamiReadCMSDto>> GetShrineKamiByIdCMSAsync(int id, CancellationToken ct)
+    {
+        return await _db.Shrines
+            .AsNoTracking()
+            .Where(s => s.ShrineId == id)
+            .SelectMany(s => s.ShrineKamis.Select(sk => sk.Kami))
+            .Select(k => new KamiReadCMSDto(
+               k.KamiId,
+            k.NameEn,
+            k.NameJp,
+            k.Desc,
+            k.Status,
+            k.PublishedAt,
+            k.CreatedAt,
+            k.UpdatedAt,
+                k.Image == null
+                ? null
+                : new ImageCMSDto(
+                    k.Image.ImgId,
+                    k.Image.ImgSource,
+                    k.Image.Title,
+                    k.Image.Desc,
+                    k.Image.Citation == null
+                        ? null
+                        : new CitationCMSDto(
+                            k.Image.Citation.CiteId,
+                            k.Image.Citation.Title,
+                            k.Image.Citation.Author,
+                            k.Image.Citation.Url,
+                            k.Image.Citation.Year,
+                            k.Image.Citation.CreatedAt,
+                            k.Image.Citation.UpdatedAt
+                        ),
+                    k.Image.CreatedAt,
+                    k.Image.UpdatedAt
+                ),
+            k.KamiCitations
+                .Where(kc => kc.Citation != null)
+                .Select(kc => new CitationCMSDto(
+                    kc.Citation.CiteId,
+                    kc.Citation.Title,
+                    kc.Citation.Author,
+                    kc.Citation.Url,
+                    kc.Citation.Year,
+                    kc.Citation.CreatedAt,
+                    kc.Citation.UpdatedAt
+                )).ToList()
+        )).ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<KamiReadCMSDto>> GetAllKamiListCMSAsync(CancellationToken ct)
+    {
+        return await _db.Kamis
+            .AsNoTracking()
+            .Select(k => new KamiReadCMSDto(
+               k.KamiId,
+                k.NameEn,
+                k.NameJp,
+                k.Desc,
+                k.Status,
+                k.PublishedAt,
+                k.CreatedAt,
+                k.UpdatedAt,
+                    k.Image == null
+                    ? null
+                    : new ImageCMSDto(
+                        k.Image.ImgId,
+                        k.Image.ImgSource,
+                        k.Image.Title,
+                        k.Image.Desc,
+                        k.Image.Citation == null
+                            ? null
+                            : new CitationCMSDto(
+                                k.Image.Citation.CiteId,
+                                k.Image.Citation.Title,
+                                k.Image.Citation.Author,
+                                k.Image.Citation.Url,
+                                k.Image.Citation.Year,
+                                k.Image.Citation.CreatedAt,
+                                k.Image.Citation.UpdatedAt
+                            ),
+                        k.Image.CreatedAt,
+                        k.Image.UpdatedAt
+                    ),
+                k.KamiCitations
+                    .Where(kc => kc.Citation != null)
+                    .Select(kc => new CitationCMSDto(
+                        kc.Citation.CiteId,
+                        kc.Citation.Title,
+                        kc.Citation.Author,
+                        kc.Citation.Url,
+                        kc.Citation.Year,
+                        kc.Citation.CreatedAt,
+                        kc.Citation.UpdatedAt
+                    )).ToList()
+        )).ToListAsync(ct);
     }
 }

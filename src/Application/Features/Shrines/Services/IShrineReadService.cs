@@ -38,4 +38,7 @@ public interface IShrineReadService
     // CMS
     Task<IReadOnlyList<ShrineListCMSDto>> GetShrineListCMSAsync(CancellationToken ct);
     Task<ShrineMetaCMSDto?> GetShrineMetaByIdCMSAsync(int id, CancellationToken ct);
+    Task<IReadOnlyList<KamiReadCMSDto>> GetShrineKamiByIdCMSAsync(int id, CancellationToken ct);
+
+    Task<IReadOnlyList<KamiReadCMSDto>> GetAllKamiListCMSAsync(CancellationToken ct);
 }

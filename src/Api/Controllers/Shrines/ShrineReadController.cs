@@ -1,9 +1,11 @@
 using Application.Common.Models.Images;
 using Application.Features.Shrines.Models;
+using Application.Features.Shrines.Queries.GetAllKamiListCMS;
 using Application.Features.Shrines.Queries.GetImageById;
 using Application.Features.Shrines.Queries.GetShrineFolkloreBySlug;
 using Application.Features.Shrines.Queries.GetShrineGalleryBySlug;
 using Application.Features.Shrines.Queries.GetShrineHistoryBySlug;
+using Application.Features.Shrines.Queries.GetShrineKamiByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineKamiBySlug;
 using Application.Features.Shrines.Queries.GetShrineListCMS;
 using Application.Features.Shrines.Queries.GetShrineListView;
@@ -143,6 +145,24 @@ public class ShrineReadController : ControllerBase
     {
         var result = await _mediator.Send(new GetShrineMetaByIdCMSQuery(id));
         return Ok(result.Meta);
+    }
+
+    // GET /api/shrines/cms/{id}/kami
+    [HttpGet("cms/{id}/kami")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<KamiReadCMSDto>>> GetShrineKamiByIdCMSAsync([FromRoute] int id)
+    {
+        var result = await _mediator.Send(new GetShrineKamiByIdCMSQuery(id));
+        return Ok(result.Kami);
+    }
+
+    // GET /api/shrines/cms/kami
+    [HttpGet("cms/kami")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<KamiReadCMSDto>>> GetAllKamiListCMSAsync()
+    {
+        var result = await _mediator.Send(new GetAllKamiListCMSQuery());
+        return Ok(result.Kami);
     }
 
     // Returns all tags
