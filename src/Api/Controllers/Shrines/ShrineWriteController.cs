@@ -1,3 +1,7 @@
+using Application.Features.Shrines.Commands.CreateKamiInShrine;
+using Application.Features.Shrines.Commands.LinkKamiToShrine;
+using Application.Features.Shrines.Commands.UnlinkKamiToShrine;
+using Application.Features.Shrines.Commands.UpdateKami;
 using Application.Features.Shrines.Commands.UpdateShrineMeta;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -5,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/shrines")]
+[Authorize]
 public class ShrineWriteController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -14,16 +19,67 @@ public class ShrineWriteController : ControllerBase
         _mediator = mediator;
     }
 
-    // Meta
+    // META
     // PUT /api/shrines/cms/{id}/meta
     [HttpPut("cms/{id}/meta")]
-    [Authorize]
     public async Task<IActionResult> UpdateShrineMeta(
         [FromRoute] int id,
         [FromBody] UpdateShrineMetaRequest request
     )
     {
         var command = new UpdateShrineMetaCommand(id, request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // KAMI
+
+    // POST /api/shrines/cms/{shrineId}/kami/ (kami in body)
+    // Create a new global Kami then link it automatically to shrine
+    [HttpPost("cms/{shrineId}/kami")]
+    public async Task<IActionResult> CreateKamiInShrine(
+        [FromRoute] int shrineId,
+        [FromBody] CreateKamiInShrineRequest request
+    )
+    {
+        var command = new CreateKamiInShrineCommand(shrineId, request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // POST /api/shrines/cms/{shrineId}/kami/{kamiId}
+    // link exisiting Kami to shrine
+    [HttpPost("cms/{shrineId}/kami/{kamiId}")]
+    public async Task<IActionResult> LinkKamiToShrine(
+        [FromRoute] int shrineId,
+        [FromRoute] int kamiId
+    )
+    {
+        var command = new LinkKamiToShrineCommand(shrineId, kamiId);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // DELETE /api/shrines/cms/{shrineId}/kami/{kamiId}
+    // unlink kami from shrine
+    [HttpDelete("cms/{shrineId}/kami/{kamiId}")]
+    public async Task<IActionResult> UnlinkKamiToShrine(
+        [FromRoute] int shrineId,
+        [FromRoute] int kamiId
+    )
+    {
+        var command = new UnlinkKamiToShrineCommand(shrineId, kamiId);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // To be moved later into Kami Controller
+    // PUT /api/shrines/cms/kami/{kamiId} (kami in body)
+    // Update kami from shrine editor
+    [HttpPut("cms/kami/{kamiId}")]
+    public async Task<IActionResult> UpdateKami([FromRoute] int kamiId, [FromBody] UpdateKamiRequest request)
+    {
+        var command = new UpdateKamiCommand(kamiId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -35,7 +91,7 @@ public class ShrineWriteController : ControllerBase
 public record UpdateShrineMetaRequest(
     BasicMetaUpdateRequest Basic,
     TagChangesRequest Tags,
-    HeroImageChangeRequest HeroImage
+    ImageChangeRequest HeroImage
 );
 
 public record BasicMetaUpdateRequest(
@@ -72,17 +128,68 @@ public record UpdateTagRequest(
     string? TitleJp
 );
 
-// Hero Image Changes
-public record HeroImageChangeRequest(
+// IMAGES
+public record ImageRequest(
+    int ImgId,
+    string? ImageUrl,
+    string? Title,
+    string? Desc,
+    CitationRequest? Citation
+);
+public record ImageChangeRequest(
     string Action,
     string? ImgSource,
     string? Title,
     string? Desc,
-    HeroImageCitationRequest? Citation
+    CitationRequest? Citation
 );
-public record HeroImageCitationRequest(
+public record CreateImageRequest(
+    string? ImgSource,
+    string? Title,
+    string? Desc,
+    CreateCitationRequest? Citation
+);
+
+// CITATIONS
+public record CitationRequest(
+    int CiteId,
     string? Title,
     string? Author,
     string? Url,
     int? Year
+);
+public record CitationListChangesRequest(
+    IReadOnlyList<CreateCitationRequest> Create,
+    IReadOnlyList<CitationRequest> Update,
+    IReadOnlyList<int> Delete
+);
+public record CreateCitationRequest(
+    string? Title,
+    string? Author,
+    string? Url,
+    int? Year
+);
+
+// KAMI
+// CREATE KAMI
+public record CreateKamiInShrineRequest(
+    string? NameEn,
+    string? NameJp,
+    string? Desc,
+    CreateImageRequest? Image,
+    IReadOnlyList<CreateCitationRequest> Citations
+);
+
+
+// UPDATE KAMI
+public record UpdateKamiRequest(
+    BasicKamiUpdateRequest Basic,
+    ImageChangeRequest Image,
+    CitationListChangesRequest Citations
+);
+
+public record BasicKamiUpdateRequest(
+    string? NameEn,
+    string? NameJp,
+    string? Desc
 );

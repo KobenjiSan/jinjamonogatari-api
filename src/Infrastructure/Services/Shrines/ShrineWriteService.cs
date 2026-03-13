@@ -164,4 +164,288 @@ public class ShrineWriteService : IShrineWriteService
 
         await _db.SaveChangesAsync(ct);
     }
+
+    // =======================================================================
+    // KAMI
+    // =======================================================================
+
+    // CREATE KAMI
+    public async Task CreateKamiInShrineAsync(
+        int shrineId,
+        CreateKamiInShrineRequest request,
+        CancellationToken ct
+    )
+    {
+        // Load shrine
+        var shrine = await _db.Shrines
+            .Include(s => s.ShrineKamis)
+            .FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+
+        // Validate shrine exists
+        if (shrine is null)
+            throw new NotFoundException("Shrine not found.");
+
+        // Create kami
+        var kami = new Kami
+        {
+            NameEn = request.NameEn,
+            NameJp = request.NameJp,
+            Desc = request.Desc,
+            Status = "draft"
+        };
+
+        // Create hero image if provided
+        if (request.Image is not null)
+        {
+            var image = new Image
+            {
+                ImgSource = request.Image.ImgSource,
+                Title = request.Image.Title,
+                Desc = request.Image.Desc
+            };
+
+            if (request.Image.Citation is not null)
+            {
+                image.Citation = new Citation
+                {
+                    Title = request.Image.Citation.Title,
+                    Author = request.Image.Citation.Author,
+                    Url = request.Image.Citation.Url,
+                    Year = request.Image.Citation.Year
+                };
+            }
+
+            kami.Image = image;
+        }
+
+        // Create citations if provided
+        if (request.Citations is not null && request.Citations.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations)
+            {
+                var citation = new Citation
+                {
+                    Title = citationRequest.Title,
+                    Author = citationRequest.Author,
+                    Url = citationRequest.Url,
+                    Year = citationRequest.Year
+                };
+
+                kami.KamiCitations.Add(new KamiCitation
+                {
+                    Kami = kami,
+                    Citation = citation
+                });
+            }
+        }
+
+        // Link kami to shrine
+        shrine.ShrineKamis.Add(new ShrineKami
+        {
+            ShrineId = shrine.ShrineId,
+            Shrine = shrine,
+            Kami = kami
+        });
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    // LINK KAMI
+    public async Task LinkKamiToShrineAsync(int shrineId, int kamiId, CancellationToken ct)
+    {
+        // Load shrine with existing kami links
+        var shrine = await _db.Shrines
+            .Include(s => s.ShrineKamis)
+            .FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+
+        if (shrine is null)
+            throw new NotFoundException("Shrine not found.");
+
+        // Validate kami exists
+        var kamiExists = await _db.Kamis
+            .AnyAsync(k => k.KamiId == kamiId, ct);
+
+        if (!kamiExists)
+            throw new NotFoundException("Kami not found.");
+
+        // Prevent duplicate link
+        var alreadyLinked = shrine.ShrineKamis.Any(sk => sk.KamiId == kamiId);
+
+        if (alreadyLinked)
+            return;
+
+        // Create link
+        shrine.ShrineKamis.Add(new ShrineKami
+        {
+            ShrineId = shrineId,
+            KamiId = kamiId
+        });
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    // UNLINK KAMI
+    public async Task UnlinkKamiToShrineAsync(int shrineId, int kamiId, CancellationToken ct)
+    {
+        var shrineExists = await _db.Shrines
+            .AnyAsync(s => s.ShrineId == shrineId, ct);
+
+        if (!shrineExists)
+            throw new NotFoundException("Shrine not found.");
+
+        var shrineKami = await _db.Set<ShrineKami>()
+            .FirstOrDefaultAsync(
+                sk => sk.ShrineId == shrineId && sk.KamiId == kamiId,
+                ct
+            );
+
+        if (shrineKami is null)
+            throw new NotFoundException("Kami link not found for this shrine.");
+
+        _db.Set<ShrineKami>().Remove(shrineKami);
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    // UPDATE KAMI
+    public async Task UpdateKamiAsync(int kamiId, UpdateKamiRequest request, CancellationToken ct)
+    {
+        // Load kami / related data
+        var kami = await _db.Kamis
+            .Include(k => k.Image!)
+                .ThenInclude(i => i.Citation)
+            .Include(k => k.KamiCitations)
+                .ThenInclude(kc => kc.Citation)
+            .FirstOrDefaultAsync(k => k.KamiId == kamiId, ct);
+
+        // Validate kami exists
+        if (kami is null)
+            throw new NotFoundException("Kami not found.");
+
+        // Update basic fields
+        kami.NameEn = request.Basic.NameEn;
+        kami.NameJp = request.Basic.NameJp;
+        kami.Desc = request.Basic.Desc;
+
+        // Delete image
+        if (request.Image.Action == "delete")
+        {
+            kami.Image = null;
+            kami.ImgId = null;
+        }
+
+        // Create image
+        if (request.Image.Action == "create")
+        {
+            var image = new Image
+            {
+                ImgSource = request.Image.ImgSource,
+                Title = request.Image.Title,
+                Desc = request.Image.Desc
+            };
+
+            if (request.Image.Citation is not null)
+            {
+                image.Citation = new Citation
+                {
+                    Title = request.Image.Citation.Title,
+                    Author = request.Image.Citation.Author,
+                    Url = request.Image.Citation.Url,
+                    Year = request.Image.Citation.Year
+                };
+            }
+
+            kami.Image = image;
+        }
+
+        // Update image
+        if (request.Image.Action == "update")
+        {
+            if (kami.Image is null)
+                throw new NotFoundException("Kami image not found.");
+
+            kami.Image.ImgSource = request.Image.ImgSource;
+            kami.Image.Title = request.Image.Title;
+            kami.Image.Desc = request.Image.Desc;
+
+            if (request.Image.Citation is null)
+            {
+                kami.Image.Citation = null;
+                kami.Image.CiteId = null;
+            }
+            else if (kami.Image.Citation is null)
+            {
+                kami.Image.Citation = new Citation
+                {
+                    Title = request.Image.Citation.Title,
+                    Author = request.Image.Citation.Author,
+                    Url = request.Image.Citation.Url,
+                    Year = request.Image.Citation.Year
+                };
+            }
+            else
+            {
+                kami.Image.Citation.Title = request.Image.Citation.Title;
+                kami.Image.Citation.Author = request.Image.Citation.Author;
+                kami.Image.Citation.Url = request.Image.Citation.Url;
+                kami.Image.Citation.Year = request.Image.Citation.Year;
+            }
+        }
+
+        // Delete citations
+        if (request.Citations.Delete.Count > 0)
+        {
+            var kamiCitationsToRemove = kami.KamiCitations
+                .Where(kc => request.Citations.Delete.Contains(kc.CiteId))
+                .ToList();
+
+            foreach (var kamiCitation in kamiCitationsToRemove)
+            {
+                kami.KamiCitations.Remove(kamiCitation);
+                _db.Citations.Remove(kamiCitation.Citation);
+            }
+        }
+
+        // Create citations
+        if (request.Citations.Create.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations.Create)
+            {
+                var citation = new Citation
+                {
+                    Title = citationRequest.Title,
+                    Author = citationRequest.Author,
+                    Url = citationRequest.Url,
+                    Year = citationRequest.Year
+                };
+
+                kami.KamiCitations.Add(new KamiCitation
+                {
+                    KamiId = kami.KamiId,
+                    Kami = kami,
+                    Citation = citation
+                });
+            }
+        }
+
+        // Update citations
+        if (request.Citations.Update.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations.Update)
+            {
+                var existingKamiCitation = kami.KamiCitations
+                    .FirstOrDefault(kc => kc.CiteId == citationRequest.CiteId);
+
+                if (existingKamiCitation is null)
+                    continue;
+
+                existingKamiCitation.Citation.Title = citationRequest.Title;
+                existingKamiCitation.Citation.Author = citationRequest.Author;
+                existingKamiCitation.Citation.Url = citationRequest.Url;
+                existingKamiCitation.Citation.Year = citationRequest.Year;
+            }
+        }
+
+        await _db.SaveChangesAsync(ct);
+    }
 }
