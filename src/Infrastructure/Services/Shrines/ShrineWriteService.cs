@@ -448,4 +448,271 @@ public class ShrineWriteService : IShrineWriteService
 
         await _db.SaveChangesAsync(ct);
     }
+
+    // =======================================================================
+    // HISTORY
+    // =======================================================================
+
+    // CREATE HISTORY
+    public async Task CreateHistoryAsync(int shrineId, CreateHistoryRequest request, CancellationToken ct)
+    {
+        // Load shrine
+        var shrine = await _db.Shrines
+            .Include(s => s.ShrineHistories)
+            .FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+
+        // Validate shrine exists
+        if(shrine is null)
+            throw new NotFoundException("Shrine not found.");
+
+        // Create History
+        var history = new History
+        {
+            ShrineId = shrine.ShrineId,
+            EventDate = request.EventDate,
+            SortOrder = request.SortOrder,
+            Title = request.Title,
+            Information = request.Information,
+            Status = "draft"
+        };
+
+        // Create hero image if provided
+        if(request.Image is not null)
+        {
+            var image = new Image
+            {
+                ImgSource = request.Image.ImgSource,
+                Title = request.Image.Title,
+                Desc = request.Image.Desc
+            };
+
+            if (request.Image.Citation is not null)
+            {
+                image.Citation = new Citation
+                {
+                    Title = request.Image.Citation.Title,
+                    Author = request.Image.Citation.Author,
+                    Url = request.Image.Citation.Url,
+                    Year = request.Image.Citation.Year
+                };
+            }
+
+            history.Image = image;
+        }
+
+        // Create citations if provided
+        if (request.Citations is not null && request.Citations.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations)
+            {
+                var citation = new Citation
+                {
+                    Title = citationRequest.Title,
+                    Author = citationRequest.Author,
+                    Url = citationRequest.Url,
+                    Year = citationRequest.Year
+                };
+
+                history.HistoryCitations.Add(new HistoryCitation
+                {
+                    History = history,
+                    Citation = citation
+                });
+            }
+        }
+
+        // Link history to shrine
+        shrine.ShrineHistories.Add(history);
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    // DELETE HISTORY
+    public async Task DeleteHistoryAsync(int historyId, CancellationToken ct)
+    {
+        // Load history with related data
+        var history = await _db.Histories
+            .Include(h => h.Image!)
+                .ThenInclude(i => i.Citation)
+            .Include(h => h.HistoryCitations)
+                .ThenInclude(hc => hc.Citation)
+            .FirstOrDefaultAsync(h => h.HistoryId == historyId, ct);
+
+        // Validate history exists
+        if (history is null)
+            throw new NotFoundException("History not found.");
+
+        // Remove history citations + underlying citations
+        if (history.HistoryCitations.Count > 0)
+        {
+            foreach (var historyCitation in history.HistoryCitations.ToList())
+            {
+                _db.Citations.Remove(historyCitation.Citation);
+            }
+        }
+
+        // Remove image citation if present
+        if (history.Image?.Citation is not null)
+        {
+            _db.Citations.Remove(history.Image.Citation);
+        }
+
+        // Remove image if present
+        if (history.Image is not null)
+        {
+            _db.Images.Remove(history.Image);
+        }
+
+        // Remove history
+        _db.Histories.Remove(history);
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    // UPDATE HISTORY
+    public async Task UpdateHistoryAsync(int historyId, UpdateHistoryRequest request, CancellationToken ct)
+    {
+        // Load history / related data
+        var history = await _db.Histories
+            .Include(h => h.Image!)
+                .ThenInclude(i => i.Citation)
+            .Include(h => h.HistoryCitations)
+                .ThenInclude(hc => hc.Citation)
+            .FirstOrDefaultAsync(h => h.HistoryId == historyId, ct);
+
+        // Validate history exists
+        if (history is null)
+            throw new NotFoundException("History not found.");
+
+        // Update basic fields
+        history.EventDate = request.Basic.EventDate;
+        history.SortOrder = request.Basic.SortOrder;
+        history.Title = request.Basic.Title;
+        history.Information = request.Basic.Information;
+
+        // Delete image
+        if (request.Image.Action == "delete" && history.Image is not null)
+        {
+            if (history.Image.Citation is not null)
+                _db.Citations.Remove(history.Image.Citation);
+
+            _db.Images.Remove(history.Image);
+            history.Image = null;
+            history.ImgId = null;
+        }
+
+        // Create image
+        if (request.Image.Action == "create")
+        {
+            var image = new Image
+            {
+                ImgSource = request.Image.ImgSource,
+                Title = request.Image.Title,
+                Desc = request.Image.Desc
+            };
+
+            if (request.Image.Citation is not null)
+            {
+                image.Citation = new Citation
+                {
+                    Title = request.Image.Citation.Title,
+                    Author = request.Image.Citation.Author,
+                    Url = request.Image.Citation.Url,
+                    Year = request.Image.Citation.Year
+                };
+            }
+
+            history.Image = image;
+        }
+
+        // Update image
+        if (request.Image.Action == "update")
+        {
+            if (history.Image is null)
+                throw new NotFoundException("History image not found.");
+
+            history.Image.ImgSource = request.Image.ImgSource;
+            history.Image.Title = request.Image.Title;
+            history.Image.Desc = request.Image.Desc;
+
+            if (request.Image.Citation is null)
+            {
+                history.Image.Citation = null;
+                history.Image.CiteId = null;
+            }
+            else if (history.Image.Citation is null)
+            {
+                history.Image.Citation = new Citation
+                {
+                    Title = request.Image.Citation.Title,
+                    Author = request.Image.Citation.Author,
+                    Url = request.Image.Citation.Url,
+                    Year = request.Image.Citation.Year
+                };
+            }
+            else
+            {
+                history.Image.Citation.Title = request.Image.Citation.Title;
+                history.Image.Citation.Author = request.Image.Citation.Author;
+                history.Image.Citation.Url = request.Image.Citation.Url;
+                history.Image.Citation.Year = request.Image.Citation.Year;
+            }
+        }
+
+        // Delete citations
+        if (request.Citations.Delete.Count > 0)
+        {
+            var historyCitationsToRemove = history.HistoryCitations
+                .Where(hc => request.Citations.Delete.Contains(hc.CiteId))
+                .ToList();
+
+            foreach (var historyCitation in historyCitationsToRemove)
+            {
+                history.HistoryCitations.Remove(historyCitation);
+                _db.Citations.Remove(historyCitation.Citation);
+            }
+        }
+
+        // Create citations
+        if (request.Citations.Create.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations.Create)
+            {
+                var citation = new Citation
+                {
+                    Title = citationRequest.Title,
+                    Author = citationRequest.Author,
+                    Url = citationRequest.Url,
+                    Year = citationRequest.Year
+                };
+
+                history.HistoryCitations.Add(new HistoryCitation
+                {
+                    HistoryId = history.HistoryId,
+                    History = history,
+                    Citation = citation
+                });
+            }
+        }
+
+        // Update citations
+        if (request.Citations.Update.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations.Update)
+            {
+                var existingHistoryCitation = history.HistoryCitations
+                    .FirstOrDefault(hc => hc.CiteId == citationRequest.CiteId);
+
+                if (existingHistoryCitation is null)
+                    continue;
+
+                existingHistoryCitation.Citation.Title = citationRequest.Title;
+                existingHistoryCitation.Citation.Author = citationRequest.Author;
+                existingHistoryCitation.Citation.Url = citationRequest.Url;
+                existingHistoryCitation.Citation.Year = citationRequest.Year;
+            }
+        }
+
+        await _db.SaveChangesAsync(ct);
+    }
 }

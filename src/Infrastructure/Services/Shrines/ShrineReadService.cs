@@ -493,4 +493,56 @@ public class ShrineReadService : IShrineReadService
                     )).ToList()
         )).ToListAsync(ct);
     }
+
+    public async Task<IReadOnlyList<HistoryReadCMSDto>> GetShrineHistoryByIdCMSAsync(int id, CancellationToken ct)
+    {
+         return await _db.Histories
+            .AsNoTracking()
+            .Where(h => h.ShrineId == id)
+            .OrderBy(h => h.SortOrder)
+            .ThenBy(h => h.EventDate)
+            .Select(h => new HistoryReadCMSDto(
+                h.HistoryId,
+                h.EventDate,
+                h.SortOrder,
+                h.Title,
+                h.Information,
+                h.Status,
+                h.PublishedAt,
+                h.CreatedAt,
+                h.UpdatedAt,
+                h.Image == null
+                ? null
+                : new ImageCMSDto(
+                    h.Image.ImgId,
+                    h.Image.ImgSource,
+                    h.Image.Title,
+                    h.Image.Desc,
+                    h.Image.Citation == null
+                        ? null
+                        : new CitationCMSDto(
+                            h.Image.Citation.CiteId,
+                            h.Image.Citation.Title,
+                            h.Image.Citation.Author,
+                            h.Image.Citation.Url,
+                            h.Image.Citation.Year,
+                            h.Image.Citation.CreatedAt,
+                            h.Image.Citation.UpdatedAt
+                        ),
+                    h.Image.CreatedAt,
+                    h.Image.UpdatedAt
+                ),
+                h.HistoryCitations
+                .Where(hc => hc.Citation != null)
+                .Select(hc => new CitationCMSDto(
+                    hc.Citation.CiteId,
+                    hc.Citation.Title,
+                    hc.Citation.Author,
+                    hc.Citation.Url,
+                    hc.Citation.Year,
+                    hc.Citation.CreatedAt,
+                    hc.Citation.UpdatedAt
+                )).ToList()
+            )).ToListAsync(ct);
+    }
 }

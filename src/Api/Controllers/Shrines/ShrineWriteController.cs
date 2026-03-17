@@ -1,6 +1,9 @@
+using Application.Features.Shrines.Commands.CreateHistory;
 using Application.Features.Shrines.Commands.CreateKamiInShrine;
+using Application.Features.Shrines.Commands.DeleteHistory;
 using Application.Features.Shrines.Commands.LinkKamiToShrine;
 using Application.Features.Shrines.Commands.UnlinkKamiToShrine;
+using Application.Features.Shrines.Commands.UpdateHistory;
 using Application.Features.Shrines.Commands.UpdateKami;
 using Application.Features.Shrines.Commands.UpdateShrineMeta;
 using MediatR;
@@ -80,6 +83,38 @@ public class ShrineWriteController : ControllerBase
     public async Task<IActionResult> UpdateKami([FromRoute] int kamiId, [FromBody] UpdateKamiRequest request)
     {
         var command = new UpdateKamiCommand(kamiId, request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // HISTORY
+
+    // POST /api/shrines/cms/{shrineId}/history/ (history in body)
+    // Create a new history item linked automatically to shrine
+    [HttpPost("cms/{shrineId}/history")]
+    public async Task<IActionResult> CreateHistory([FromRoute] int shrineId, [FromBody] CreateHistoryRequest request)
+    {
+        var command = new CreateHistoryCommand(shrineId, request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // PUT /api/shrines/cms/history/{historyId} (history in body)
+    // Update history
+    [HttpPut("cms/history/{historyId}")]
+    public async Task<IActionResult> UpdateHistory([FromRoute] int historyId, [FromBody] UpdateHistoryRequest request)
+    {
+        var command = new UpdateHistoryCommand(historyId, request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // DELETE /api/shrines/cms/history/{historyId}
+    // fully delete history from shrine
+    [HttpDelete("cms/history/{historyId}")]
+    public async Task<IActionResult> DeleteHistory([FromRoute] int historyId)
+    {
+        var command = new DeleteHistoryCommand(historyId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -192,4 +227,29 @@ public record BasicKamiUpdateRequest(
     string? NameEn,
     string? NameJp,
     string? Desc
+);
+
+
+// HISTORY
+// CREATE HISTORY
+public record CreateHistoryRequest(
+    DateOnly? EventDate,
+    int? SortOrder,
+    string? Title,
+    string? Information,
+    CreateImageRequest? Image,
+    IReadOnlyList<CreateCitationRequest> Citations
+);
+
+// UPDATE HISTORY
+public record UpdateHistoryRequest(
+    BasicHistoryUpdateRequest Basic,
+    ImageChangeRequest Image,
+    CitationListChangesRequest Citations
+);
+public record BasicHistoryUpdateRequest(
+    DateOnly? EventDate,
+    int? SortOrder,
+    string? Title,
+    string? Information
 );
