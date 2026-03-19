@@ -2,6 +2,7 @@ using Application.Common.Models.Images;
 using Application.Features.Shrines.Models;
 using Application.Features.Shrines.Queries.GetAllKamiListCMS;
 using Application.Features.Shrines.Queries.GetImageById;
+using Application.Features.Shrines.Queries.GetShrineFolkloreByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineFolkloreBySlug;
 using Application.Features.Shrines.Queries.GetShrineGalleryBySlug;
 using Application.Features.Shrines.Queries.GetShrineHistoryByIdCMS;
@@ -173,6 +174,15 @@ public class ShrineReadController : ControllerBase
     {
         var result = await _mediator.Send(new GetShrineHistoryByIdCMSQuery(id));
         return Ok(result.History);
+    }
+
+    // GET /api/shrines/cms/{id}/folklore
+    [HttpGet("cms/{id}/folklore")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<FolkloreReadCMSDto>>> GetShrineFolkloreByIdCMSAsync([FromRoute] int id)
+    {
+        var result = await _mediator.Send(new GetShrineFolkloreByIdCMSQuery(id));
+        return Ok(result.Folklore);
     }
 
     // Returns all tags

@@ -1,8 +1,11 @@
+using Application.Features.Shrines.Commands.CreateFolklore;
 using Application.Features.Shrines.Commands.CreateHistory;
 using Application.Features.Shrines.Commands.CreateKamiInShrine;
+using Application.Features.Shrines.Commands.DeleteFolklore;
 using Application.Features.Shrines.Commands.DeleteHistory;
 using Application.Features.Shrines.Commands.LinkKamiToShrine;
 using Application.Features.Shrines.Commands.UnlinkKamiToShrine;
+using Application.Features.Shrines.Commands.UpdateFolklore;
 using Application.Features.Shrines.Commands.UpdateHistory;
 using Application.Features.Shrines.Commands.UpdateKami;
 using Application.Features.Shrines.Commands.UpdateShrineMeta;
@@ -115,6 +118,38 @@ public class ShrineWriteController : ControllerBase
     public async Task<IActionResult> DeleteHistory([FromRoute] int historyId)
     {
         var command = new DeleteHistoryCommand(historyId);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // FOLKLORE
+
+    // POST /api/shrines/cms/{shrineId}/folklore/ (folklore in body)
+    // Create a new folklore item linked automatically to shrine
+    [HttpPost("cms/{shrineId}/folklore")]
+    public async Task<IActionResult> CreateFolklore([FromRoute] int shrineId, [FromBody] CreateFolkloreRequest request)
+    {
+        var command = new CreateFolkloreCommand(shrineId, request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // PUT /api/shrines/cms/folklore/{folkloreId} (folklore in body)
+    // Update folklore
+    [HttpPut("cms/folklore/{folkloreId}")]
+    public async Task<IActionResult> UpdateFolklore([FromRoute] int folkloreId, [FromBody] UpdateFolkloreRequest request)
+    {
+        var command = new UpdateFolkloreCommand(folkloreId, request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // DELETE /api/shrines/cms/folklore/{folkloreId}
+    // fully delete folklore from shrine
+    [HttpDelete("cms/folklore/{folkloreId}")]
+    public async Task<IActionResult> DeleteFolklore([FromRoute] int folkloreId)
+    {
+        var command = new DeleteFolkloreCommand(folkloreId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -248,6 +283,30 @@ public record UpdateHistoryRequest(
     CitationListChangesRequest Citations
 );
 public record BasicHistoryUpdateRequest(
+    DateOnly? EventDate,
+    int? SortOrder,
+    string? Title,
+    string? Information
+);
+
+
+// FOLKLORE
+// CREATE FOLKLORE
+public record CreateFolkloreRequest(
+    int? SortOrder,
+    string? Title,
+    string? Information,
+    CreateImageRequest? Image,
+    IReadOnlyList<CreateCitationRequest> Citations
+);
+
+// UPDATE FOLKLORE
+public record UpdateFolkloreRequest(
+    BasicFolkloreUpdateRequest Basic,
+    ImageChangeRequest Image,
+    CitationListChangesRequest Citations
+);
+public record BasicFolkloreUpdateRequest(
     DateOnly? EventDate,
     int? SortOrder,
     string? Title,

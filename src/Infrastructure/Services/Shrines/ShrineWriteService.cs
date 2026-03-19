@@ -715,4 +715,269 @@ public class ShrineWriteService : IShrineWriteService
 
         await _db.SaveChangesAsync(ct);
     }
+
+    // =======================================================================
+    // FOLKLORE
+    // =======================================================================
+
+    // CREATE FOLKLORE
+    public async Task CreateFolkloreAsync(int shrineId, CreateFolkloreRequest request, CancellationToken ct)
+    {
+        // Load shrine
+        var shrine = await _db.Shrines
+            .Include(s => s.ShrineFolklores)
+            .FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+
+        // Validate shrine exists
+        if(shrine is null)
+            throw new NotFoundException("Shrine not found.");
+
+        // Create Folklore
+        var folklore = new Folklore
+        {
+            ShrineId = shrine.ShrineId,
+            SortOrder = request.SortOrder,
+            Title = request.Title,
+            Information = request.Information,
+            Status = "draft"
+        };
+
+        // Create hero image if provided
+        if(request.Image is not null)
+        {
+            var image = new Image
+            {
+                ImgSource = request.Image.ImgSource,
+                Title = request.Image.Title,
+                Desc = request.Image.Desc
+            };
+
+            if (request.Image.Citation is not null)
+            {
+                image.Citation = new Citation
+                {
+                    Title = request.Image.Citation.Title,
+                    Author = request.Image.Citation.Author,
+                    Url = request.Image.Citation.Url,
+                    Year = request.Image.Citation.Year
+                };
+            }
+
+            folklore.Image = image;
+        }
+
+        // Create citations if provided
+        if (request.Citations is not null && request.Citations.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations)
+            {
+                var citation = new Citation
+                {
+                    Title = citationRequest.Title,
+                    Author = citationRequest.Author,
+                    Url = citationRequest.Url,
+                    Year = citationRequest.Year
+                };
+
+                folklore.FolkloreCitations.Add(new FolkloreCitation
+                {
+                    Folklore = folklore,
+                    Citation = citation
+                });
+            }
+        }
+
+        // Link folklore to shrine
+        shrine.ShrineFolklores.Add(folklore);
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    // DELETE FOLKLORE
+    public async Task DeleteFolkloreAsync(int folkloreId, CancellationToken ct)
+    {
+        // Load folklore with related data
+        var folklore = await _db.Folklores
+            .Include(f => f.Image!)
+                .ThenInclude(i => i.Citation)
+            .Include(f => f.FolkloreCitations)
+                .ThenInclude(fc => fc.Citation)
+            .FirstOrDefaultAsync(f => f.FolkloreId == folkloreId, ct);
+
+        // Validate folklore exists
+        if (folklore is null)
+            throw new NotFoundException("Folklore not found.");
+
+        // Remove Folklore citations + underlying citations
+        if (folklore.FolkloreCitations.Count > 0)
+        {
+            foreach (var FolkloreCitation in folklore.FolkloreCitations.ToList())
+            {
+                _db.Citations.Remove(FolkloreCitation.Citation);
+            }
+        }
+
+        // Remove image citation if present
+        if (folklore.Image?.Citation is not null)
+        {
+            _db.Citations.Remove(folklore.Image.Citation);
+        }
+
+        // Remove image if present
+        if (folklore.Image is not null)
+        {
+            _db.Images.Remove(folklore.Image);
+        }
+
+        // Remove folklore
+        _db.Folklores.Remove(folklore);
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    // UPDATE FOLKLORE
+    public async Task UpdateFolkloreAsync(int folkloreId, UpdateFolkloreRequest request, CancellationToken ct)
+    {
+        // Load folklore / related data
+        var folklore = await _db.Folklores
+            .Include(f => f.Image!)
+                .ThenInclude(i => i.Citation)
+            .Include(f => f.FolkloreCitations)
+                .ThenInclude(fc => fc.Citation)
+            .FirstOrDefaultAsync(f => f.FolkloreId == folkloreId, ct);
+
+        // Validate folklore exists
+        if (folklore is null)
+            throw new NotFoundException("Folklore not found.");
+
+        // Update basic fields
+        folklore.SortOrder = request.Basic.SortOrder;
+        folklore.Title = request.Basic.Title;
+        folklore.Information = request.Basic.Information;
+
+        // Delete image
+        if (request.Image.Action == "delete" && folklore.Image is not null)
+        {
+            if (folklore.Image.Citation is not null)
+                _db.Citations.Remove(folklore.Image.Citation);
+
+            _db.Images.Remove(folklore.Image);
+            folklore.Image = null;
+            folklore.ImgId = null;
+        }
+
+        // Create image
+        if (request.Image.Action == "create")
+        {
+            var image = new Image
+            {
+                ImgSource = request.Image.ImgSource,
+                Title = request.Image.Title,
+                Desc = request.Image.Desc
+            };
+
+            if (request.Image.Citation is not null)
+            {
+                image.Citation = new Citation
+                {
+                    Title = request.Image.Citation.Title,
+                    Author = request.Image.Citation.Author,
+                    Url = request.Image.Citation.Url,
+                    Year = request.Image.Citation.Year
+                };
+            }
+
+            folklore.Image = image;
+        }
+
+        // Update image
+        if (request.Image.Action == "update")
+        {
+            if (folklore.Image is null)
+                throw new NotFoundException("Folklore image not found.");
+
+            folklore.Image.ImgSource = request.Image.ImgSource;
+            folklore.Image.Title = request.Image.Title;
+            folklore.Image.Desc = request.Image.Desc;
+
+            if (request.Image.Citation is null)
+            {
+                folklore.Image.Citation = null;
+                folklore.Image.CiteId = null;
+            }
+            else if (folklore.Image.Citation is null)
+            {
+                folklore.Image.Citation = new Citation
+                {
+                    Title = request.Image.Citation.Title,
+                    Author = request.Image.Citation.Author,
+                    Url = request.Image.Citation.Url,
+                    Year = request.Image.Citation.Year
+                };
+            }
+            else
+            {
+                folklore.Image.Citation.Title = request.Image.Citation.Title;
+                folklore.Image.Citation.Author = request.Image.Citation.Author;
+                folklore.Image.Citation.Url = request.Image.Citation.Url;
+                folklore.Image.Citation.Year = request.Image.Citation.Year;
+            }
+        }
+
+        // Delete citations
+        if (request.Citations.Delete.Count > 0)
+        {
+            var folkloreCitationsToRemove = folklore.FolkloreCitations
+                .Where(fc => request.Citations.Delete.Contains(fc.CiteId))
+                .ToList();
+
+            foreach (var folkloreCitation in folkloreCitationsToRemove)
+            {
+                folklore.FolkloreCitations.Remove(folkloreCitation);
+                _db.Citations.Remove(folkloreCitation.Citation);
+            }
+        }
+
+        // Create citations
+        if (request.Citations.Create.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations.Create)
+            {
+                var citation = new Citation
+                {
+                    Title = citationRequest.Title,
+                    Author = citationRequest.Author,
+                    Url = citationRequest.Url,
+                    Year = citationRequest.Year
+                };
+
+                folklore.FolkloreCitations.Add(new FolkloreCitation
+                {
+                    FolkloreId = folklore.FolkloreId,
+                    Folklore = folklore,
+                    Citation = citation
+                });
+            }
+        }
+
+        // Update citations
+        if (request.Citations.Update.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations.Update)
+            {
+                var existingFolkloreCitation = folklore.FolkloreCitations
+                    .FirstOrDefault(hc => hc.CiteId == citationRequest.CiteId);
+
+                if (existingFolkloreCitation is null)
+                    continue;
+
+                existingFolkloreCitation.Citation.Title = citationRequest.Title;
+                existingFolkloreCitation.Citation.Author = citationRequest.Author;
+                existingFolkloreCitation.Citation.Url = citationRequest.Url;
+                existingFolkloreCitation.Citation.Year = citationRequest.Year;
+            }
+        }
+
+        await _db.SaveChangesAsync(ct);
+    }
 }

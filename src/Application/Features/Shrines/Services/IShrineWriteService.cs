@@ -24,4 +24,12 @@ public interface IShrineWriteService
     Task DeleteHistoryAsync(int historyId, CancellationToken ct);
     Task UpdateHistoryAsync(int historyId, UpdateHistoryRequest request, CancellationToken ct);
 
+    // FOLKLORE
+    Task CreateFolkloreAsync(
+        int shrineId,
+        CreateFolkloreRequest request,
+        CancellationToken ct
+    );
+    Task DeleteFolkloreAsync(int folkloreId, CancellationToken ct);
+    Task UpdateFolkloreAsync(int folkloreId, UpdateFolkloreRequest request, CancellationToken ct);
 }
