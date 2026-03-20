@@ -32,4 +32,13 @@ public interface IShrineWriteService
     );
     Task DeleteFolkloreAsync(int folkloreId, CancellationToken ct);
     Task UpdateFolkloreAsync(int folkloreId, UpdateFolkloreRequest request, CancellationToken ct);
+
+    // GALLERY
+    Task CreateGalleryImageAsync(
+        int shrineId,
+        CreateImageRequest request,
+        CancellationToken ct
+    );
+    Task DeleteGalleryImageAsync(int imageId, CancellationToken ct);
+    Task UpdateGalleryImageAsync(int imageId, ImageRequest request, CancellationToken ct);
 }

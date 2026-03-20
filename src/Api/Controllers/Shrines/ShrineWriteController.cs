@@ -1,11 +1,15 @@
+using System.ComponentModel.DataAnnotations;
 using Application.Features.Shrines.Commands.CreateFolklore;
+using Application.Features.Shrines.Commands.CreateGalleryImage;
 using Application.Features.Shrines.Commands.CreateHistory;
 using Application.Features.Shrines.Commands.CreateKamiInShrine;
 using Application.Features.Shrines.Commands.DeleteFolklore;
+using Application.Features.Shrines.Commands.DeleteGalleryImage;
 using Application.Features.Shrines.Commands.DeleteHistory;
 using Application.Features.Shrines.Commands.LinkKamiToShrine;
 using Application.Features.Shrines.Commands.UnlinkKamiToShrine;
 using Application.Features.Shrines.Commands.UpdateFolklore;
+using Application.Features.Shrines.Commands.UpdateGalleryImage;
 using Application.Features.Shrines.Commands.UpdateHistory;
 using Application.Features.Shrines.Commands.UpdateKami;
 using Application.Features.Shrines.Commands.UpdateShrineMeta;
@@ -25,7 +29,9 @@ public class ShrineWriteController : ControllerBase
         _mediator = mediator;
     }
 
-    // META
+
+    #region META
+
     // PUT /api/shrines/cms/{id}/meta
     [HttpPut("cms/{id}/meta")]
     public async Task<IActionResult> UpdateShrineMeta(
@@ -38,7 +44,9 @@ public class ShrineWriteController : ControllerBase
         return Ok(result);
     }
 
-    // KAMI
+    #endregion
+
+    #region KAMI
 
     // POST /api/shrines/cms/{shrineId}/kami/ (kami in body)
     // Create a new global Kami then link it automatically to shrine
@@ -90,7 +98,9 @@ public class ShrineWriteController : ControllerBase
         return Ok(result);
     }
 
-    // HISTORY
+    #endregion
+    
+    #region HISTORY
 
     // POST /api/shrines/cms/{shrineId}/history/ (history in body)
     // Create a new history item linked automatically to shrine
@@ -122,7 +132,9 @@ public class ShrineWriteController : ControllerBase
         return Ok(result);
     }
 
-    // FOLKLORE
+    #endregion
+    
+    #region FOLKLORE
 
     // POST /api/shrines/cms/{shrineId}/folklore/ (folklore in body)
     // Create a new folklore item linked automatically to shrine
@@ -153,11 +165,49 @@ public class ShrineWriteController : ControllerBase
         var result = await _mediator.Send(command);
         return Ok(result);
     }
+
+    #endregion
+
+    #region GALLERY
+
+    // POST /api/shrines/cms/{shrineId}/gallery/ (image in body)
+    // Create a new image linked automatically to shrine gallery
+    [HttpPost("cms/{shrineId}/gallery")]
+    public async Task<IActionResult> CreateGalleryImage([FromRoute] int shrineId, [FromBody] CreateImageRequest request)
+    {
+        var command = new CreateGalleryImageCommand(shrineId, request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // PUT /api/shrines/cms/gallery/{imageId} (image in body)
+    // Update image
+    [HttpPut("cms/gallery/{imageId}")]
+    public async Task<IActionResult> UpdateGalleryImage([FromRoute] int imageId, [FromBody] ImageRequest request)
+    {
+        if (request.ImgId != imageId)
+            throw new ValidationException("Route ID and body ID do not match.");
+
+        var command = new UpdateGalleryImageCommand(imageId, request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // DELETE /api/shrines/cms/gallery/{imageId}
+    [HttpDelete("cms/gallery/{imageId}")]
+    public async Task<IActionResult> DeleteGalleryImage([FromRoute] int imageId)
+    {
+        var command = new DeleteGalleryImageCommand(imageId);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    #endregion
 }
 
-// Request DTOs
 
-// Meta
+#region Meta Request
+
 public record UpdateShrineMetaRequest(
     BasicMetaUpdateRequest Basic,
     TagChangesRequest Tags,
@@ -182,6 +232,10 @@ public record BasicMetaUpdateRequest(
     string? Website
 );
 
+#endregion
+
+#region Tags Request
+
 // Tag Changes
 public record TagChangesRequest(
     IReadOnlyList<CreateTagRequest> Create,
@@ -198,7 +252,10 @@ public record UpdateTagRequest(
     string? TitleJp
 );
 
-// IMAGES
+#endregion
+
+#region Images Request
+
 public record ImageRequest(
     int ImgId,
     string? ImageUrl,
@@ -220,7 +277,10 @@ public record CreateImageRequest(
     CreateCitationRequest? Citation
 );
 
-// CITATIONS
+#endregion
+
+#region Citations Request
+
 public record CitationRequest(
     int CiteId,
     string? Title,
@@ -240,7 +300,10 @@ public record CreateCitationRequest(
     int? Year
 );
 
-// KAMI
+#endregion
+
+#region Kami Request
+
 // CREATE KAMI
 public record CreateKamiInShrineRequest(
     string? NameEn,
@@ -264,8 +327,10 @@ public record BasicKamiUpdateRequest(
     string? Desc
 );
 
+#endregion
 
-// HISTORY
+#region History Request
+
 // CREATE HISTORY
 public record CreateHistoryRequest(
     DateOnly? EventDate,
@@ -289,8 +354,10 @@ public record BasicHistoryUpdateRequest(
     string? Information
 );
 
+#endregion
 
-// FOLKLORE
+#region Folklore Request
+
 // CREATE FOLKLORE
 public record CreateFolkloreRequest(
     int? SortOrder,
@@ -312,3 +379,5 @@ public record BasicFolkloreUpdateRequest(
     string? Title,
     string? Information
 );
+
+#endregion

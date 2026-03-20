@@ -595,4 +595,31 @@ public class ShrineReadService : IShrineReadService
                 )).ToList()
             )).ToListAsync(ct);
     }
+
+    public async Task<IReadOnlyList<ImageCMSDto>> GetShrineGalleryByIdCMSAsync(int id, CancellationToken ct)
+    {
+        return await _db.Shrines
+            .AsNoTracking()
+            .Where(s => s.ShrineId == id)
+            .SelectMany(s => s.ShrineGalleries.Select(sg => sg.Image))
+            .Select(i => new ImageCMSDto(
+               i.ImgId,
+                i.ImgSource,
+                i.Title,
+                i.Desc,
+                i.Citation == null
+                    ? null
+                    : new CitationCMSDto(
+                        i.Citation.CiteId,
+                        i.Citation.Title,
+                        i.Citation.Author,
+                        i.Citation.Url,
+                        i.Citation.Year,
+                        i.Citation.CreatedAt,
+                        i.Citation.UpdatedAt
+                    ),
+                i.CreatedAt,
+                i.UpdatedAt
+            )).ToListAsync(ct);
+    }
 }

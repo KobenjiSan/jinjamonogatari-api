@@ -14,6 +14,8 @@ public class ShrineWriteService : IShrineWriteService
         _db = db;
     }
 
+    #region UPDATE META
+
     public async Task UpdateShrineMetaAsync(int shrineId, UpdateShrineMetaRequest request, CancellationToken ct)
     {
         // Load shrine / related data
@@ -165,11 +167,10 @@ public class ShrineWriteService : IShrineWriteService
         await _db.SaveChangesAsync(ct);
     }
 
-    // =======================================================================
-    // KAMI
-    // =======================================================================
+    #endregion
 
-    // CREATE KAMI
+    #region CREATE KAMI
+
     public async Task CreateKamiInShrineAsync(
         int shrineId,
         CreateKamiInShrineRequest request,
@@ -250,7 +251,10 @@ public class ShrineWriteService : IShrineWriteService
         await _db.SaveChangesAsync(ct);
     }
 
-    // LINK KAMI
+    #endregion
+
+    #region LINK KAMI
+
     public async Task LinkKamiToShrineAsync(int shrineId, int kamiId, CancellationToken ct)
     {
         // Load shrine with existing kami links
@@ -284,7 +288,10 @@ public class ShrineWriteService : IShrineWriteService
         await _db.SaveChangesAsync(ct);
     }
 
-    // UNLINK KAMI
+    #endregion
+
+    #region UNLINK KAMI
+
     public async Task UnlinkKamiToShrineAsync(int shrineId, int kamiId, CancellationToken ct)
     {
         var shrineExists = await _db.Shrines
@@ -307,7 +314,10 @@ public class ShrineWriteService : IShrineWriteService
         await _db.SaveChangesAsync(ct);
     }
 
-    // UPDATE KAMI
+    #endregion
+
+    #region UPDATE KAMI
+
     public async Task UpdateKamiAsync(int kamiId, UpdateKamiRequest request, CancellationToken ct)
     {
         // Load kami / related data
@@ -449,11 +459,10 @@ public class ShrineWriteService : IShrineWriteService
         await _db.SaveChangesAsync(ct);
     }
 
-    // =======================================================================
-    // HISTORY
-    // =======================================================================
+    #endregion
 
-    // CREATE HISTORY
+    #region CREATE HISTORY
+
     public async Task CreateHistoryAsync(int shrineId, CreateHistoryRequest request, CancellationToken ct)
     {
         // Load shrine
@@ -462,7 +471,7 @@ public class ShrineWriteService : IShrineWriteService
             .FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
 
         // Validate shrine exists
-        if(shrine is null)
+        if (shrine is null)
             throw new NotFoundException("Shrine not found.");
 
         // Create History
@@ -477,7 +486,7 @@ public class ShrineWriteService : IShrineWriteService
         };
 
         // Create hero image if provided
-        if(request.Image is not null)
+        if (request.Image is not null)
         {
             var image = new Image
             {
@@ -527,7 +536,10 @@ public class ShrineWriteService : IShrineWriteService
         await _db.SaveChangesAsync(ct);
     }
 
-    // DELETE HISTORY
+    #endregion
+
+    #region DELETE HISTORY
+
     public async Task DeleteHistoryAsync(int historyId, CancellationToken ct)
     {
         // Load history with related data
@@ -569,7 +581,10 @@ public class ShrineWriteService : IShrineWriteService
         await _db.SaveChangesAsync(ct);
     }
 
-    // UPDATE HISTORY
+    #endregion
+
+    #region UPDATE HISTORY
+
     public async Task UpdateHistoryAsync(int historyId, UpdateHistoryRequest request, CancellationToken ct)
     {
         // Load history / related data
@@ -716,11 +731,10 @@ public class ShrineWriteService : IShrineWriteService
         await _db.SaveChangesAsync(ct);
     }
 
-    // =======================================================================
-    // FOLKLORE
-    // =======================================================================
+    #endregion
 
-    // CREATE FOLKLORE
+    #region CREATE FOLKLORE
+
     public async Task CreateFolkloreAsync(int shrineId, CreateFolkloreRequest request, CancellationToken ct)
     {
         // Load shrine
@@ -729,7 +743,7 @@ public class ShrineWriteService : IShrineWriteService
             .FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
 
         // Validate shrine exists
-        if(shrine is null)
+        if (shrine is null)
             throw new NotFoundException("Shrine not found.");
 
         // Create Folklore
@@ -743,7 +757,7 @@ public class ShrineWriteService : IShrineWriteService
         };
 
         // Create hero image if provided
-        if(request.Image is not null)
+        if (request.Image is not null)
         {
             var image = new Image
             {
@@ -793,7 +807,10 @@ public class ShrineWriteService : IShrineWriteService
         await _db.SaveChangesAsync(ct);
     }
 
-    // DELETE FOLKLORE
+    #endregion
+
+    #region DELETE FOLKLORE
+
     public async Task DeleteFolkloreAsync(int folkloreId, CancellationToken ct)
     {
         // Load folklore with related data
@@ -835,7 +852,10 @@ public class ShrineWriteService : IShrineWriteService
         await _db.SaveChangesAsync(ct);
     }
 
-    // UPDATE FOLKLORE
+    #endregion
+
+    #region UPDATE FOLKLORE
+
     public async Task UpdateFolkloreAsync(int folkloreId, UpdateFolkloreRequest request, CancellationToken ct)
     {
         // Load folklore / related data
@@ -980,4 +1000,135 @@ public class ShrineWriteService : IShrineWriteService
 
         await _db.SaveChangesAsync(ct);
     }
+
+    #endregion
+
+    #region CREATE GALLERY IMAGE
+
+    public async Task CreateGalleryImageAsync(
+        int shrineId,
+        CreateImageRequest request,
+        CancellationToken ct
+    )
+    {
+        var shrine = await _db.Shrines
+            .Include(s => s.ShrineGalleries)
+            .FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+
+        if (shrine is null)
+            throw new NotFoundException("Shrine not found.");
+
+        var image = new Image
+        {
+            ImgSource = request.ImgSource,
+            Title = request.Title,
+            Desc = request.Desc
+        };
+
+        if (request.Citation is not null)
+        {
+            image.Citation = new Citation
+            {
+                Title = request.Citation.Title,
+                Author = request.Citation.Author,
+                Url = request.Citation.Url,
+                Year = request.Citation.Year
+            };
+        }
+
+        shrine.ShrineGalleries.Add(new ShrineGallery
+        {
+            ShrineId = shrine.ShrineId,
+            Shrine = shrine,
+            Image = image
+        });
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region DELETE GALLERY IMAGE
+
+    public async Task DeleteGalleryImageAsync(int imageId, CancellationToken ct)
+    {
+        var image = await _db.Images
+            .Include(i => i.Citation)
+            .FirstOrDefaultAsync(i => i.ImgId == imageId, ct);
+
+        if (image is null)
+            throw new NotFoundException("Gallery image not found.");
+
+        var shrineGalleryLinks = await _db.ShrineGalleries
+            .Where(sg => sg.ImgId == imageId)
+            .ToListAsync(ct);
+
+        if (shrineGalleryLinks.Count > 0)
+        {
+            _db.ShrineGalleries.RemoveRange(shrineGalleryLinks);
+        }
+
+        if (image.Citation is not null)
+        {
+            _db.Citations.Remove(image.Citation);
+        }
+
+        _db.Images.Remove(image);
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region UPDATE GALLERY IMAGE
+
+    public async Task UpdateGalleryImageAsync(
+        int imageId,
+        ImageRequest request,
+        CancellationToken ct
+    )
+    {
+        var image = await _db.Images
+            .Include(i => i.Citation)
+            .FirstOrDefaultAsync(i => i.ImgId == imageId, ct);
+
+        if (image is null)
+            throw new NotFoundException("Gallery image not found.");
+
+        image.ImgSource = request.ImageUrl;
+        image.Title = request.Title;
+        image.Desc = request.Desc;
+
+        if (request.Citation is null)
+        {
+            if (image.Citation is not null)
+            {
+                _db.Citations.Remove(image.Citation);
+                image.Citation = null;
+                image.CiteId = null;
+            }
+        }
+        else if (image.Citation is null)
+        {
+            image.Citation = new Citation
+            {
+                Title = request.Citation.Title,
+                Author = request.Citation.Author,
+                Url = request.Citation.Url,
+                Year = request.Citation.Year
+            };
+        }
+        else
+        {
+            image.Citation.Title = request.Citation.Title;
+            image.Citation.Author = request.Citation.Author;
+            image.Citation.Url = request.Citation.Url;
+            image.Citation.Year = request.Citation.Year;
+        }
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
 }
