@@ -1,8 +1,10 @@
+using Application.Common.Models.Citations;
 using Application.Common.Models.Images;
 using Application.Features.Shrines.Models;
 using Application.Features.Shrines.Queries.GetAllKamiListCMS;
 using Application.Features.Shrines.Queries.GetImageById;
 using Application.Features.Shrines.Queries.GetShrineAudit;
+using Application.Features.Shrines.Queries.GetShrineCitationsByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineFolkloreByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineFolkloreBySlug;
 using Application.Features.Shrines.Queries.GetShrineGalleryByIdCMS;
@@ -215,5 +217,18 @@ public class ShrineReadController : ControllerBase
         
         var result = await _mediator.Send(new GetShrineAuditQuery(id));
         return Ok(result);
+    }
+
+    // Returns citations linked to shrine
+    // GET /api/shrines/cms/{id}/citations
+    [Authorize]
+    [HttpGet("cms/{id}/citations")]
+    public async Task<ActionResult<IReadOnlyList<ShrineCitationCMSDto>>> GetShrineCitationsByIdCMSAsync([FromRoute] int id)
+    {
+        if (id <= 0)
+            return BadRequest("Invalid shrine id.");
+        
+        var result = await _mediator.Send(new GetShrineCitationsByIdCMSQuery(id));
+        return Ok(result.Citations);
     }
 }

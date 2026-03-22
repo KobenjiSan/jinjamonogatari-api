@@ -8,3 +8,15 @@ public record CitationCMSDto(
     DateTime CreatedAt,
     DateTime UpdatedAt
 );
+
+public record ShrineCitationCMSDto(
+    CitationCMSDto Citation,
+    int UsageCount,
+    List<CitationLinkedItemDto> LinkedTo
+);
+
+public record CitationLinkedItemDto(
+    string Type,
+    int Id,
+    string Name
+);
