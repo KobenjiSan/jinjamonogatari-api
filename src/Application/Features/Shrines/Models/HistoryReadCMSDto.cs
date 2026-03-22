@@ -14,5 +14,6 @@ public record HistoryReadCMSDto(
     DateTime CreatedAt,
     DateTime UpdatedAt,
     ImageCMSDto? Image,
-    IReadOnlyList<CitationCMSDto> Citations
+    IReadOnlyList<CitationCMSDto> Citations,
+    EntityAuditDto? Audit = null
 );

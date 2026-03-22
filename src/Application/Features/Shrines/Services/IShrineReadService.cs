@@ -47,5 +47,7 @@ public interface IShrineReadService
     Task<IReadOnlyList<FolkloreReadCMSDto>> GetShrineFolkloreByIdCMSAsync(int id, CancellationToken ct);
     
     Task<IReadOnlyList<ImageCMSDto>> GetShrineGalleryByIdCMSAsync(int id, CancellationToken ct);
+
+    Task<ShrineAuditSnapshot?> GetShrineAuditSnapshotAsync(int shrineId, CancellationToken ct);
     
 }

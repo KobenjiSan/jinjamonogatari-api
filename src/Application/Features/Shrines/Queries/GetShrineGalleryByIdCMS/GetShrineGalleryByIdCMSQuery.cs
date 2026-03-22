@@ -7,4 +7,4 @@ namespace Application.Features.Shrines.Queries.GetShrineGalleryByIdCMS;
 public record GetShrineGalleryByIdCMSQuery(int Id) : IRequest<GetShrineGalleryByIdCMSResult>;
 
 // RESULTS
-public record GetShrineGalleryByIdCMSResult(IReadOnlyList<ImageCMSDto> Images);
+public record GetShrineGalleryByIdCMSResult(IReadOnlyList<ImageCMSAuditDto> Images);

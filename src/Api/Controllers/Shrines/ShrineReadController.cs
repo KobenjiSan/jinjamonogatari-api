@@ -2,6 +2,7 @@ using Application.Common.Models.Images;
 using Application.Features.Shrines.Models;
 using Application.Features.Shrines.Queries.GetAllKamiListCMS;
 using Application.Features.Shrines.Queries.GetImageById;
+using Application.Features.Shrines.Queries.GetShrineAudit;
 using Application.Features.Shrines.Queries.GetShrineFolkloreByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineFolkloreBySlug;
 using Application.Features.Shrines.Queries.GetShrineGalleryByIdCMS;
@@ -188,7 +189,7 @@ public class ShrineReadController : ControllerBase
 
     // GET /api/shrines/cms/{id}/gallery
     [HttpGet("cms/{id}/gallery")]
-    public async Task<ActionResult<IReadOnlyList<ImageCMSDto>>> GetShrineGalleryByIdCMSAsync([FromRoute] int id)
+    public async Task<ActionResult<IReadOnlyList<ImageCMSAuditDto>>> GetShrineGalleryByIdCMSAsync([FromRoute] int id)
     {
         var result = await _mediator.Send(new GetShrineGalleryByIdCMSQuery(id));
         return Ok(result.Images);
@@ -201,5 +202,18 @@ public class ShrineReadController : ControllerBase
     public Task<ActionResult<IReadOnlyList<int>>> GetAllTagsCMSAsync()
     {
         throw new NotImplementedException();    // TODO
+    }
+
+    // Returns audit of shrine
+    // GET /api/shrines/cms/{id}/audit
+    [Authorize]
+    [HttpGet("cms/{id}/audit")]
+    public async Task<ActionResult<ShrineAuditDto>> GetShrineAudit([FromRoute] int id)
+    {
+        if (id <= 0)
+            return BadRequest("Invalid shrine id.");
+        
+        var result = await _mediator.Send(new GetShrineAuditQuery(id));
+        return Ok(result);
     }
 }

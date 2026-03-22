@@ -403,14 +403,14 @@ public class ShrineReadService : IShrineReadService
             .Where(s => s.ShrineId == id)
             .SelectMany(s => s.ShrineKamis.Select(sk => sk.Kami))
             .Select(k => new KamiReadCMSDto(
-               k.KamiId,
-            k.NameEn,
-            k.NameJp,
-            k.Desc,
-            k.Status,
-            k.PublishedAt,
-            k.CreatedAt,
-            k.UpdatedAt,
+                k.KamiId,
+                k.NameEn,
+                k.NameJp,
+                k.Desc,
+                k.Status,
+                k.PublishedAt,
+                k.CreatedAt,
+                k.UpdatedAt,
                 k.Image == null
                 ? null
                 : new ImageCMSDto(
@@ -432,17 +432,18 @@ public class ShrineReadService : IShrineReadService
                     k.Image.CreatedAt,
                     k.Image.UpdatedAt
                 ),
-            k.KamiCitations
-                .Where(kc => kc.Citation != null)
-                .Select(kc => new CitationCMSDto(
-                    kc.Citation.CiteId,
-                    kc.Citation.Title,
-                    kc.Citation.Author,
-                    kc.Citation.Url,
-                    kc.Citation.Year,
-                    kc.Citation.CreatedAt,
-                    kc.Citation.UpdatedAt
-                )).ToList()
+                k.KamiCitations
+                    .Where(kc => kc.Citation != null)
+                    .Select(kc => new CitationCMSDto(
+                        kc.Citation.CiteId,
+                        kc.Citation.Title,
+                        kc.Citation.Author,
+                        kc.Citation.Url,
+                        kc.Citation.Year,
+                        kc.Citation.CreatedAt,
+                        kc.Citation.UpdatedAt
+                    )).ToList(),
+                null    // Nulling Audit
         )).ToListAsync(ct);
     }
 
@@ -451,7 +452,7 @@ public class ShrineReadService : IShrineReadService
         return await _db.Kamis
             .AsNoTracking()
             .Select(k => new KamiReadCMSDto(
-               k.KamiId,
+                k.KamiId,
                 k.NameEn,
                 k.NameJp,
                 k.Desc,
@@ -490,7 +491,8 @@ public class ShrineReadService : IShrineReadService
                         kc.Citation.Year,
                         kc.Citation.CreatedAt,
                         kc.Citation.UpdatedAt
-                    )).ToList()
+                    )).ToList(),
+                null    // Nulling Audit
         )).ToListAsync(ct);
     }
 
@@ -542,7 +544,8 @@ public class ShrineReadService : IShrineReadService
                     hc.Citation.Year,
                     hc.Citation.CreatedAt,
                     hc.Citation.UpdatedAt
-                )).ToList()
+                )).ToList(),
+                null    // Nulling Audit
             )).ToListAsync(ct);
     }
 
@@ -592,7 +595,8 @@ public class ShrineReadService : IShrineReadService
                     hc.Citation.Year,
                     hc.Citation.CreatedAt,
                     hc.Citation.UpdatedAt
-                )).ToList()
+                )).ToList(),
+                null    // Nulling Audit
             )).ToListAsync(ct);
     }
 
@@ -621,5 +625,184 @@ public class ShrineReadService : IShrineReadService
                 i.CreatedAt,
                 i.UpdatedAt
             )).ToListAsync(ct);
+    }
+
+     public async Task<ShrineAuditSnapshot?> GetShrineAuditSnapshotAsync(int shrineId, CancellationToken ct)
+    {
+        return await _db.Shrines
+            .AsNoTracking()
+            .Where(s => s.ShrineId == shrineId)
+            .Select(s => new ShrineAuditSnapshot
+            {
+                ShrineId = s.ShrineId,
+                InputtedId = s.InputtedId,
+                Slug = s.Slug,
+                NameEn = s.NameEn,
+                NameJp = s.NameJp,
+                ShrineDesc = s.ShrineDesc,
+                Lat = s.Lat,
+                Lon = s.Lon,
+
+                Prefecture = s.Prefecture,
+                City = s.City,
+                Ward = s.Ward,
+                Locality = s.Locality,
+                PostalCode = s.PostalCode,
+                Country = s.Country,
+
+                PhoneNumber = s.PhoneNumber,
+                Email = s.Email,
+                Website = s.Website,
+
+                HeroImage = s.Image == null ? null : new ImageAuditSnapshot
+                {
+                    ImgId = s.Image.ImgId,
+                    ImgSource = s.Image.ImgSource,
+                    Title = s.Image.Title,
+                    Desc = s.Image.Desc,
+                    Citation = s.Image.Citation == null ? null : new CitationAuditSnapshot
+                    {
+                        CiteId = s.Image.Citation.CiteId,
+                        Title = s.Image.Citation.Title,
+                        Author = s.Image.Citation.Author,
+                        Url = s.Image.Citation.Url,
+                        Year = s.Image.Citation.Year
+                    }
+                },
+
+                Tags = s.ShrineTags
+                    .Select(st => new TagAuditSnapshot
+                    {
+                        TagId = st.Tag.TagId,
+                        TitleEn = st.Tag.TitleEn,
+                        TitleJp = st.Tag.TitleJp
+                    })
+                    .ToList(),
+
+                Kami = s.ShrineKamis
+                    .Select(sk => new KamiAuditSnapshot
+                    {
+                        KamiId = sk.Kami.KamiId,
+                        NameEn = sk.Kami.NameEn,
+                        NameJp = sk.Kami.NameJp,
+                        Desc = sk.Kami.Desc,
+                        Image = sk.Kami.Image == null ? null : new ImageAuditSnapshot
+                        {
+                            ImgId = sk.Kami.Image.ImgId,
+                            ImgSource = sk.Kami.Image.ImgSource,
+                            Title = sk.Kami.Image.Title,
+                            Desc = sk.Kami.Image.Desc,
+                            Citation = sk.Kami.Image.Citation == null ? null : new CitationAuditSnapshot
+                            {
+                                CiteId = sk.Kami.Image.Citation.CiteId,
+                                Title = sk.Kami.Image.Citation.Title,
+                                Author = sk.Kami.Image.Citation.Author,
+                                Url = sk.Kami.Image.Citation.Url,
+                                Year = sk.Kami.Image.Citation.Year
+                            }
+                        },
+                        Citations = sk.Kami.KamiCitations
+                            .Select(kc => new CitationAuditSnapshot
+                            {
+                                CiteId = kc.Citation.CiteId,
+                                Title = kc.Citation.Title,
+                                Author = kc.Citation.Author,
+                                Url = kc.Citation.Url,
+                                Year = kc.Citation.Year
+                            })
+                            .ToList()
+                    })
+                    .ToList(),
+
+                Histories = s.ShrineHistories
+                    .Select(h => new HistoryAuditSnapshot
+                    {
+                        HistoryId = h.HistoryId,
+                        EventDate = h.EventDate,
+                        SortOrder = h.SortOrder,
+                        Title = h.Title,
+                        Information = h.Information,
+                        Image = h.Image == null ? null : new ImageAuditSnapshot
+                        {
+                            ImgId = h.Image.ImgId,
+                            ImgSource = h.Image.ImgSource,
+                            Title = h.Image.Title,
+                            Desc = h.Image.Desc,
+                            Citation = h.Image.Citation == null ? null : new CitationAuditSnapshot
+                            {
+                                CiteId = h.Image.Citation.CiteId,
+                                Title = h.Image.Citation.Title,
+                                Author = h.Image.Citation.Author,
+                                Url = h.Image.Citation.Url,
+                                Year = h.Image.Citation.Year
+                            }
+                        },
+                        Citations = h.HistoryCitations
+                            .Select(hc => new CitationAuditSnapshot
+                            {
+                                CiteId = hc.Citation.CiteId,
+                                Title = hc.Citation.Title,
+                                Author = hc.Citation.Author,
+                                Url = hc.Citation.Url,
+                                Year = hc.Citation.Year
+                            })
+                            .ToList()
+                    })
+                    .ToList(),
+
+                Folklores = s.ShrineFolklores
+                    .Select(f => new FolkloreAuditSnapshot
+                    {
+                        FolkloreId = f.FolkloreId,
+                        SortOrder = f.SortOrder,
+                        Title = f.Title,
+                        Information = f.Information,
+                        Image = f.Image == null ? null : new ImageAuditSnapshot
+                        {
+                            ImgId = f.Image.ImgId,
+                            ImgSource = f.Image.ImgSource,
+                            Title = f.Image.Title,
+                            Desc = f.Image.Desc,
+                            Citation = f.Image.Citation == null ? null : new CitationAuditSnapshot
+                            {
+                                CiteId = f.Image.Citation.CiteId,
+                                Title = f.Image.Citation.Title,
+                                Author = f.Image.Citation.Author,
+                                Url = f.Image.Citation.Url,
+                                Year = f.Image.Citation.Year
+                            }
+                        },
+                        Citations = f.FolkloreCitations
+                            .Select(fc => new CitationAuditSnapshot
+                            {
+                                CiteId = fc.Citation.CiteId,
+                                Title = fc.Citation.Title,
+                                Author = fc.Citation.Author,
+                                Url = fc.Citation.Url,
+                                Year = fc.Citation.Year
+                            })
+                            .ToList()
+                    })
+                    .ToList(),
+
+                GalleryImages = s.ShrineGalleries
+                    .Select(g => new ImageAuditSnapshot
+                    {
+                        ImgId = g.Image.ImgId,
+                        ImgSource = g.Image.ImgSource,
+                        Title = g.Image.Title,
+                        Desc = g.Image.Desc,
+                        Citation = g.Image.Citation == null ? null : new CitationAuditSnapshot
+                        {
+                            CiteId = g.Image.Citation.CiteId,
+                            Title = g.Image.Citation.Title,
+                            Author = g.Image.Citation.Author,
+                            Url = g.Image.Citation.Url,
+                            Year = g.Image.Citation.Year
+                        }
+                    })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync(ct);
     }
 }
