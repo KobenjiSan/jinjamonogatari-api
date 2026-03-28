@@ -5,7 +5,6 @@ using System.Text;
 
 using Infrastructure;
 using Infrastructure.Options;
-using Infrastructure.Persistence.Seeding;
 
 using MediatR;
 using Infrastructure.Services.Auth;
@@ -109,11 +108,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-
-    // Seed (dev only)
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DevDataSeeder.SeedAsync(db);
 }
 
 app.UseAuthentication();

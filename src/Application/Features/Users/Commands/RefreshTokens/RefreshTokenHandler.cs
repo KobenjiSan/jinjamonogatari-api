@@ -31,7 +31,7 @@ public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, RefreshT
         var newRaw = _tokens.CreateRefreshToken();
         var newHash = _tokens.HashRefreshToken(newRaw);
 
-        var (userId, email) = await _writeService.RotateRefreshTokenAsync(
+        var (userId, email, role) = await _writeService.RotateRefreshTokenAsync(
             incomingHash,
             newHash,
             DateTime.UtcNow.AddDays(_tokenOptions.RefreshTokenDays),
@@ -39,7 +39,7 @@ public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, RefreshT
             ct);
 
         // New access token
-        var newAccess = _tokens.CreateAccessToken(userId, email);
+        var newAccess = _tokens.CreateAccessToken(userId, email, role);
 
         return new RefreshTokenResult(newAccess, newRaw);
     }

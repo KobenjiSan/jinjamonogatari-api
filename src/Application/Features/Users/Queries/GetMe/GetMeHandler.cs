@@ -26,7 +26,8 @@ public class GetMeHandler : IRequestHandler<GetMeQuery, GetMeResult>
             user.Username,
             user.Phone,
             user.FirstName,
-            user.LastName
+            user.LastName,
+            user.Role!.Name
         );
     }
 }

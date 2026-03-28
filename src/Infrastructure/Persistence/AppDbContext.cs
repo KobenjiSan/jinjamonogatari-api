@@ -37,6 +37,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<UserCollection> UserCollections => Set<UserCollection>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Role> Roles => Set<Role>();
 
     // Etiquette
     public DbSet<EtiquetteTopic> EtiquetteTopics => Set<EtiquetteTopic>();

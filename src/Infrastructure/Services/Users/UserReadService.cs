@@ -22,12 +22,17 @@ public class UserReadService : IUserReadService
         => _db.Users.AsNoTracking().AnyAsync(u => u.Username == username, ct);
 
     public Task<User?> FindByEmailOrUsernameAsync(string identifierLower, CancellationToken ct)
-        => _db.Users.AsNoTracking()
-            .FirstOrDefaultAsync(u =>
-                u.Email.ToLower() == identifierLower || u.Username.ToLower() == identifierLower, ct);
+        => _db.Users
+            .AsNoTracking()
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(
+                u => u.Email.ToLower() == identifierLower || u.Username.ToLower() == identifierLower,
+                ct);
 
     public Task<User?> FindByIdAsync(int userId, CancellationToken ct)
-        => _db.Users.AsNoTracking()
+        => _db.Users
+            .AsNoTracking()
+            .Include(u => u.Role)
             .FirstOrDefaultAsync(u => u.UserId == userId, ct);
 
     public Task<bool> IsShrineInCollectionAsync(int userId, int shrineId, CancellationToken ct)

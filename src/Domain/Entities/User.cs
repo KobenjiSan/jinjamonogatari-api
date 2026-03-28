@@ -17,8 +17,9 @@ public class User : IHasTimestamps
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
 
-    // TODO: not implemented yet
-    public int? RoleId { get; set; }
+    // Roles
+    public int RoleId { get; set; } = 1;
+    public Role Role { get; set; } = default!;
 
     // Timestamps
     public DateTime CreatedAt { get; set; }

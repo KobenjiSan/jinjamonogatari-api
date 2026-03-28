@@ -27,8 +27,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         e.Property(x => x.FirstName).HasColumnName("first_name").HasMaxLength(100);
         e.Property(x => x.LastName).HasColumnName("last_name").HasMaxLength(100);
 
-        // TODO: not implemented yet
-        e.Property(x => x.RoleId).HasColumnName("role_id");
+        // Roles
+        e.Property(x => x.RoleId).HasColumnName("role_id").HasDefaultValue(1).IsRequired();
 
         // timestamps
         e.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone").IsRequired();
@@ -36,5 +36,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         e.Property(x => x.LastLoginAt).HasColumnName("last_login_at").HasColumnType("timestamp with time zone");
 
         // Relationship config:
+        e.HasOne(x => x.Role)
+            .WithMany(r => r.Users)
+            .HasForeignKey(x => x.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

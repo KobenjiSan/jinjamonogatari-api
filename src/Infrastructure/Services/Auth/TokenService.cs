@@ -18,13 +18,14 @@ public class TokenService : ITokenService
         _jwt = jwtOptions.Value;
     }
 
-    public string CreateAccessToken(int userId, string email)
+    public string CreateAccessToken(int userId, string email, string role)
     {
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new(JwtRegisteredClaimNames.Email, email),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(ClaimTypes.Role, role),
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));

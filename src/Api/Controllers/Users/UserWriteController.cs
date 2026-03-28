@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Application.Features.Users.Commands.LogoutUser;
 using Application.Features.Users.Commands.UpdateMyProfile;
 using System.Text.Json;
+using Application.Features.Users.Commands.LoginUserCMS;
 
 namespace Api.Controllers.Users;
 
@@ -35,6 +36,20 @@ public class UserWriteController : ControllerBase
             throw new ArgumentException("Password is required.");
 
         var result = await _mediator.Send(new LoginUserCommand(request.Identifier, request.Password));
+        return Ok(result);
+    }
+
+    // POST /api/users/login/cms
+    [HttpPost("login/cms")]
+    public async Task<ActionResult<LoginUserCMSResult>> LoginCMSAsync([FromBody] LoginUserRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Identifier))
+            throw new ArgumentException("Username or Email is required.");
+
+        if (string.IsNullOrWhiteSpace(request.Password))
+            throw new ArgumentException("Password is required.");
+
+        var result = await _mediator.Send(new LoginUserCMSCommand(request.Identifier, request.Password));
         return Ok(result);
     }
 

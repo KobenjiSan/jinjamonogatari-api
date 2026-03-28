@@ -10,5 +10,6 @@ public record GetMeResult(
     string Username,
     string? Phone,
     string? FirstName,
-    string? LastName
+    string? LastName,
+    string Role
 );

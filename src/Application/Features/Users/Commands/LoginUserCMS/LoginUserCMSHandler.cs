@@ -4,9 +4,9 @@ using Application.Common.Interfaces;
 using Domain.Entities;
 using MediatR;
 
-namespace Application.Features.Users.Commands.LoginUser;
+namespace Application.Features.Users.Commands.LoginUserCMS;
 
-public class LoginUserHandler : IRequestHandler<LoginUserCommand, LoginUserResult>
+public class LoginUserCMSHandler : IRequestHandler<LoginUserCMSCommand, LoginUserCMSResult>
 {
     private readonly IUserReadService _readService;
     private readonly IUserWriteService _writeService;
@@ -14,7 +14,7 @@ public class LoginUserHandler : IRequestHandler<LoginUserCommand, LoginUserResul
     private readonly IPasswordHasher _passwords;
     private readonly ITokenOptions _tokenOptions;
 
-    public LoginUserHandler(
+    public LoginUserCMSHandler(
         IUserReadService readService,
         IUserWriteService writeService,
         ITokenService tokens,
@@ -28,7 +28,7 @@ public class LoginUserHandler : IRequestHandler<LoginUserCommand, LoginUserResul
         _tokenOptions = tokenOptions;
     }
 
-    public async Task<LoginUserResult> Handle(LoginUserCommand request, CancellationToken ct)
+    public async Task<LoginUserCMSResult> Handle(LoginUserCMSCommand request, CancellationToken ct)
     {
         var identifier = request.Identifier.Trim().ToLowerInvariant();
 
@@ -39,6 +39,12 @@ public class LoginUserHandler : IRequestHandler<LoginUserCommand, LoginUserResul
 
         if (!_passwords.Verify(user.PassHash, request.Password))
             throw new UnauthorizedAccessException("Invalid credentials.");
+
+        if (user.Role is null)
+            throw new UnauthorizedAccessException("User role not found.");
+
+        if (user.Role?.Name is not ("Admin" or "Editor"))
+            throw new UnauthorizedAccessException("Unauthorized User.");
 
         await _writeService.UpdateLastLoginAsync(user.UserId, ct);
 
@@ -54,6 +60,6 @@ public class LoginUserHandler : IRequestHandler<LoginUserCommand, LoginUserResul
             DateTime.UtcNow.AddDays(_tokenOptions.RefreshTokenDays),
             ct);
 
-        return new LoginUserResult(accessToken, rawRefresh);
+        return new LoginUserCMSResult(accessToken, rawRefresh, user.Role!.Name);
     }
 }

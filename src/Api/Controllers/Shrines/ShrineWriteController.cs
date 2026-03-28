@@ -19,7 +19,7 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/shrines")]
-[Authorize]
+[Authorize(Roles = "Admin,Editor")]
 public class ShrineWriteController : ControllerBase
 {
     private readonly IMediator _mediator;

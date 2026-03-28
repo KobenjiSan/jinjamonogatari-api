@@ -103,7 +103,7 @@ public class UserWriteService : IUserWriteService
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task<(int UserId, string Email)> RotateRefreshTokenAsync(
+    public async Task<(int UserId, string Email, string Role)> RotateRefreshTokenAsync(
         string incomingTokenHash,
         string newTokenHash,
         DateTime newExpiresAtUtc,
@@ -137,7 +137,7 @@ public class UserWriteService : IUserWriteService
 
         await _db.SaveChangesAsync(ct);
 
-        return (user.UserId, user.Email);
+        return (user.UserId, user.Email, user.Role!.Name);
     }
 
     public async Task<User> UpdateMyProfileAsync(

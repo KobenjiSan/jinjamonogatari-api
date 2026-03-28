@@ -20,7 +20,7 @@ public interface IUserWriteService
 
     Task RevokeRefreshTokenAsync(string tokenHash, DateTime revokedAtUtc, CancellationToken ct);
 
-    Task<(int UserId, string Email)> RotateRefreshTokenAsync(
+    Task<(int UserId, string Email, string Role)> RotateRefreshTokenAsync(
         string incomingTokenHash,
         string newTokenHash,
         DateTime newExpiresAtUtc,

@@ -42,7 +42,7 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, Register
 
         var user = await _writeService.CreateUserAsync(email, username, passHash, ct);
 
-        var accessToken = _tokens.CreateAccessToken(user.UserId, user.Email);
+        var accessToken = _tokens.CreateAccessToken(user.UserId, user.Email, user.Role!.Name);
 
         // Refresh token issuance
         var rawRefresh = _tokens.CreateRefreshToken();
