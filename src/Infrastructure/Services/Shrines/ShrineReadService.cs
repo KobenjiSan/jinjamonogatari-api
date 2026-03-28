@@ -367,10 +367,17 @@ public class ShrineReadService : IShrineReadService
 
     #region CMS Shrine List
 
-    public async Task<IReadOnlyList<ShrineListCMSDto>> GetShrineListCMSAsync(CancellationToken ct)
+    public async Task<IReadOnlyList<ShrineListCMSDto>> GetShrineListCMSAsync(string? status, CancellationToken ct)
     {
-        return await _db.Shrines
-            .AsNoTracking()
+        var query = _db.Shrines
+            .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(s => s.Status == status);
+        }
+        
+        return await query
             .Select(s => new ShrineListCMSDto(
                 s.ShrineId,
                 s.NameEn,
@@ -1106,5 +1113,23 @@ public class ShrineReadService : IShrineReadService
             .ToList();
     }
     
+    #endregion
+
+    #region CMS Shrine Status 
+
+    public async Task<string> GetShrineStatusByIdCMSAsync(int id, CancellationToken ct)
+    {
+        var status = await _db.Shrines
+            .AsNoTracking()
+            .Where(s => s.ShrineId == id)
+            .Select(s => s.Status)
+            .SingleOrDefaultAsync(ct);
+
+        if (status is null)
+            throw new KeyNotFoundException($"Shrine with id {id} not found.");
+
+        return status;
+    }
+
     #endregion
 }

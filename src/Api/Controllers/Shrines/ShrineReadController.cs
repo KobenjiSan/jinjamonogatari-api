@@ -19,6 +19,7 @@ using Application.Features.Shrines.Queries.GetShrineMapPoints;
 using Application.Features.Shrines.Queries.GetShrineMetaByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineMetaBySlug;
 using Application.Features.Shrines.Queries.GetShrinePreview;
+using Application.Features.Shrines.Queries.GetShrineStatusByIdCMS;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -135,12 +136,12 @@ public class ShrineReadController : ControllerBase
     // CMS
     // =======
 
-    // GET /api/shrines/cms/list
+    // GET /api/shrines/cms/list?status=...
     [HttpGet("cms/list")]
     [Authorize]
-    public async Task<ActionResult<ShrineListCMSDto>> GetShrineListCMSAsync()
+    public async Task<ActionResult<ShrineListCMSDto>> GetShrineListCMSAsync([FromQuery] string? status)
     {
-        var result = await _mediator.Send(new GetShrineListCMSQuery());
+        var result = await _mediator.Send(new GetShrineListCMSQuery(status));
         return Ok(result);
     }
 
@@ -230,5 +231,17 @@ public class ShrineReadController : ControllerBase
         
         var result = await _mediator.Send(new GetShrineCitationsByIdCMSQuery(id));
         return Ok(result.Citations);
+    }
+
+    // Returns shrine status
+    [Authorize]
+    [HttpGet("cms/{id}/status")]
+    public async Task<ActionResult<string>> GetShrineStatusByIdCMSAsync([FromRoute] int id)
+    {
+        if (id <= 0)
+            return BadRequest("Invalid shrine id.");
+
+        var result = await _mediator.Send(new GetShrineStatusByIdCMSQuery(id));
+        return Ok(result.Status);
     }
 }

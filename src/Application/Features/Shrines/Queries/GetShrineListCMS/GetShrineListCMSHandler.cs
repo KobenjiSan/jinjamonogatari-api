@@ -14,7 +14,7 @@ public class GetShrineListCMSHandler : IRequestHandler<GetShrineListCMSQuery, Ge
 
     public async Task<GetShrineListCMSResult> Handle(GetShrineListCMSQuery request, CancellationToken ct)
     {
-        var shrines = await _readService.GetShrineListCMSAsync(ct);
+        var shrines = await _readService.GetShrineListCMSAsync(request.Status, ct);
         return new GetShrineListCMSResult(shrines);
     }
 }
