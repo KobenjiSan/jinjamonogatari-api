@@ -53,5 +53,7 @@ public interface IShrineReadService
     Task<List<ShrineCitationCMSDto>> GetShrineCitationsByIdCMSAsync(int shrineId, CancellationToken ct);
 
     Task<string> GetShrineStatusByIdCMSAsync(int id, CancellationToken ct);
-    
+    Task<int> GetShrineIdByHistoryIdCMSAsync(int HistoryId, CancellationToken ct);
+    Task<int> GetShrineIdByFolkloreIdCMSAsync(int FolkloreId, CancellationToken ct);
+    Task<int> GetShrineIdByImageIdCMSAsync(int ImageId, CancellationToken ct);
 }

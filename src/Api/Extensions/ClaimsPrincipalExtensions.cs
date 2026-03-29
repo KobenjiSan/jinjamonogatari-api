@@ -15,4 +15,16 @@ public static class ClaimsPrincipalExtensions
 
         return userId;
     }
+
+    public static string GetUserRole(this ClaimsPrincipal user)
+    {
+        var role = 
+            user.FindFirstValue(ClaimTypes.Role) ??
+            user.FindFirstValue("role");
+
+        if (string.IsNullOrWhiteSpace(role))
+            throw new UnauthorizedAccessException("User role missing.");
+
+        return role;
+    }
 }

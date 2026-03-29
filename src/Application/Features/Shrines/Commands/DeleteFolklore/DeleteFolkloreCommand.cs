@@ -3,4 +3,4 @@ using MediatR;
 namespace Application.Features.Shrines.Commands.DeleteFolklore;
 
 // COMMAND
-public record DeleteFolkloreCommand(int FolkloreId) : IRequest<Unit>;
+public record DeleteFolkloreCommand(string UserRole, int FolkloreId) : IRequest<Unit>;

@@ -1132,4 +1132,58 @@ public class ShrineReadService : IShrineReadService
     }
 
     #endregion
+
+    #region CMS Shrine by HistoryId
+
+    public async Task<int> GetShrineIdByHistoryIdCMSAsync(int historyId, CancellationToken ct)
+    {
+        var shrineId = await _db.Histories
+            .AsNoTracking()
+            .Where(h => h.HistoryId == historyId)
+            .Select(h => h.ShrineId)
+            .SingleOrDefaultAsync(ct);
+
+        if (shrineId == 0)
+            throw new KeyNotFoundException($"History with id {historyId} not found.");
+
+        return shrineId;
+    }
+
+    #endregion
+
+    #region CMS Shrine by FolkloreId
+
+    public async Task<int> GetShrineIdByFolkloreIdCMSAsync(int folkloreId, CancellationToken ct)
+    {
+        var shrineId = await _db.Folklores
+            .AsNoTracking()
+            .Where(f => f.FolkloreId == folkloreId)
+            .Select(f => f.ShrineId)
+            .SingleOrDefaultAsync(ct);
+
+        if (shrineId == 0)
+            throw new KeyNotFoundException($"Folklore with id {folkloreId} not found.");
+
+        return shrineId;
+    }
+
+    #endregion
+
+    #region CMS Shrine by ImageId
+
+    public async Task<int> GetShrineIdByImageIdCMSAsync(int imageId, CancellationToken ct)
+    {
+        var shrineId = await _db.ShrineGalleries
+            .AsNoTracking()
+            .Where(i => i.ImgId == imageId)
+            .Select(i => i.ShrineId)
+            .SingleOrDefaultAsync(ct);
+
+        if (shrineId == 0)
+            throw new KeyNotFoundException($"Image with id {imageId} not found.");
+
+        return shrineId;
+    }
+
+    #endregion
 }

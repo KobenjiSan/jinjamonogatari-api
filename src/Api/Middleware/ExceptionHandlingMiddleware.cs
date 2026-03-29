@@ -25,6 +25,7 @@ public class ExceptionHandlingMiddleware
                 UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
                 ArgumentException => StatusCodes.Status400BadRequest,
                 NotFoundException => StatusCodes.Status404NotFound,
+                ForbiddenException => StatusCodes.Status403Forbidden,
                 _ => StatusCodes.Status500InternalServerError
             };
 

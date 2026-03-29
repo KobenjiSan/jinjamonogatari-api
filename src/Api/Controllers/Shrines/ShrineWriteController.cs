@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using API.Extensions;
 using Application.Features.Shrines.Commands.CreateFolklore;
 using Application.Features.Shrines.Commands.CreateGalleryImage;
 using Application.Features.Shrines.Commands.CreateHistory;
@@ -39,7 +40,8 @@ public class ShrineWriteController : ControllerBase
         [FromBody] UpdateShrineMetaRequest request
     )
     {
-        var command = new UpdateShrineMetaCommand(id, request);
+        var role = User.GetUserRole();
+        var command = new UpdateShrineMetaCommand(role, id, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -56,7 +58,8 @@ public class ShrineWriteController : ControllerBase
         [FromBody] CreateKamiInShrineRequest request
     )
     {
-        var command = new CreateKamiInShrineCommand(shrineId, request);
+        var role = User.GetUserRole();
+        var command = new CreateKamiInShrineCommand(role, shrineId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -69,7 +72,8 @@ public class ShrineWriteController : ControllerBase
         [FromRoute] int kamiId
     )
     {
-        var command = new LinkKamiToShrineCommand(shrineId, kamiId);
+        var role = User.GetUserRole();
+        var command = new LinkKamiToShrineCommand(role, shrineId, kamiId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -82,7 +86,8 @@ public class ShrineWriteController : ControllerBase
         [FromRoute] int kamiId
     )
     {
-        var command = new UnlinkKamiToShrineCommand(shrineId, kamiId);
+        var role = User.GetUserRole();
+        var command = new UnlinkKamiToShrineCommand(role, shrineId, kamiId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -107,7 +112,8 @@ public class ShrineWriteController : ControllerBase
     [HttpPost("cms/{shrineId}/history")]
     public async Task<IActionResult> CreateHistory([FromRoute] int shrineId, [FromBody] CreateHistoryRequest request)
     {
-        var command = new CreateHistoryCommand(shrineId, request);
+        var role = User.GetUserRole();
+        var command = new CreateHistoryCommand(role, shrineId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -117,7 +123,8 @@ public class ShrineWriteController : ControllerBase
     [HttpPut("cms/history/{historyId}")]
     public async Task<IActionResult> UpdateHistory([FromRoute] int historyId, [FromBody] UpdateHistoryRequest request)
     {
-        var command = new UpdateHistoryCommand(historyId, request);
+        var role = User.GetUserRole();
+        var command = new UpdateHistoryCommand(role, historyId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -127,7 +134,8 @@ public class ShrineWriteController : ControllerBase
     [HttpDelete("cms/history/{historyId}")]
     public async Task<IActionResult> DeleteHistory([FromRoute] int historyId)
     {
-        var command = new DeleteHistoryCommand(historyId);
+        var role = User.GetUserRole();
+        var command = new DeleteHistoryCommand(role, historyId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -141,7 +149,8 @@ public class ShrineWriteController : ControllerBase
     [HttpPost("cms/{shrineId}/folklore")]
     public async Task<IActionResult> CreateFolklore([FromRoute] int shrineId, [FromBody] CreateFolkloreRequest request)
     {
-        var command = new CreateFolkloreCommand(shrineId, request);
+        var role = User.GetUserRole();
+        var command = new CreateFolkloreCommand(role, shrineId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -151,7 +160,8 @@ public class ShrineWriteController : ControllerBase
     [HttpPut("cms/folklore/{folkloreId}")]
     public async Task<IActionResult> UpdateFolklore([FromRoute] int folkloreId, [FromBody] UpdateFolkloreRequest request)
     {
-        var command = new UpdateFolkloreCommand(folkloreId, request);
+        var role = User.GetUserRole();
+        var command = new UpdateFolkloreCommand(role, folkloreId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -161,7 +171,8 @@ public class ShrineWriteController : ControllerBase
     [HttpDelete("cms/folklore/{folkloreId}")]
     public async Task<IActionResult> DeleteFolklore([FromRoute] int folkloreId)
     {
-        var command = new DeleteFolkloreCommand(folkloreId);
+        var role = User.GetUserRole();
+        var command = new DeleteFolkloreCommand(role, folkloreId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -175,7 +186,8 @@ public class ShrineWriteController : ControllerBase
     [HttpPost("cms/{shrineId}/gallery")]
     public async Task<IActionResult> CreateGalleryImage([FromRoute] int shrineId, [FromBody] CreateImageRequest request)
     {
-        var command = new CreateGalleryImageCommand(shrineId, request);
+        var role = User.GetUserRole();
+        var command = new CreateGalleryImageCommand(role, shrineId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -188,7 +200,8 @@ public class ShrineWriteController : ControllerBase
         if (request.ImgId != imageId)
             throw new ValidationException("Route ID and body ID do not match.");
 
-        var command = new UpdateGalleryImageCommand(imageId, request);
+        var role = User.GetUserRole();
+        var command = new UpdateGalleryImageCommand(role, imageId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -197,7 +210,8 @@ public class ShrineWriteController : ControllerBase
     [HttpDelete("cms/gallery/{imageId}")]
     public async Task<IActionResult> DeleteGalleryImage([FromRoute] int imageId)
     {
-        var command = new DeleteGalleryImageCommand(imageId);
+        var role = User.GetUserRole();
+        var command = new DeleteGalleryImageCommand(role, imageId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
