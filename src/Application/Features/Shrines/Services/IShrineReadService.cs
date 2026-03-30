@@ -56,4 +56,6 @@ public interface IShrineReadService
     Task<int> GetShrineIdByHistoryIdCMSAsync(int HistoryId, CancellationToken ct);
     Task<int> GetShrineIdByFolkloreIdCMSAsync(int FolkloreId, CancellationToken ct);
     Task<int> GetShrineIdByImageIdCMSAsync(int ImageId, CancellationToken ct);
+
+    Task<List<string>> GetExistingImportIdsAsync(List<string> importIds, CancellationToken ct);
 }

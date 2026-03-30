@@ -3,6 +3,7 @@ using Application.Common.Models.Images;
 using Application.Features.Shrines.Models;
 using Application.Features.Shrines.Queries.GetAllKamiListCMS;
 using Application.Features.Shrines.Queries.GetImageById;
+using Application.Features.Shrines.Queries.GetImportPreviewCMS;
 using Application.Features.Shrines.Queries.GetShrineAudit;
 using Application.Features.Shrines.Queries.GetShrineCitationsByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineFolkloreByIdCMS;
@@ -20,6 +21,7 @@ using Application.Features.Shrines.Queries.GetShrineMetaByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineMetaBySlug;
 using Application.Features.Shrines.Queries.GetShrinePreview;
 using Application.Features.Shrines.Queries.GetShrineStatusByIdCMS;
+using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -244,4 +246,26 @@ public class ShrineReadController : ControllerBase
         var result = await _mediator.Send(new GetShrineStatusByIdCMSQuery(id));
         return Ok(result.Status);
     }
+
+    // Returns import preview
+    // POST /api/shrines/cms/import-preview
+    [Authorize]
+    [HttpPost("cms/import-preview")]
+    public async Task<ActionResult<IReadOnlyList<ImportPreviewItemDto>>> GetImportPreviewCMSAsync([FromBody] ImportPreviewRequest request)
+    {
+        // validate request items
+        if (request is null) return BadRequest("Request body is required."); 
+        if (string.IsNullOrWhiteSpace(request.Location)) return BadRequest("Location is required.");
+        if (!Enum.IsDefined(typeof(SearchSize), request.SearchSize)) return BadRequest("Invalid search size.");
+        if (request.MaxResults <= 0 || request.MaxResults > 100) return BadRequest("MaxResults must be between 1 and 100.");
+
+        var result = await _mediator.Send(new GetImportPreviewCMSQuery(request));
+        return Ok(result.Preview);
+    }
 }
+
+public record ImportPreviewRequest(
+    string Location,
+    SearchSize SearchSize,
+    int MaxResults
+);

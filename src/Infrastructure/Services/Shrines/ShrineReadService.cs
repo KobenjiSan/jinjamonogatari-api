@@ -1186,4 +1186,21 @@ public class ShrineReadService : IShrineReadService
     }
 
     #endregion
+
+
+    #region CMS Shrine by ImageId
+
+    public async Task<List<string>> GetExistingImportIdsAsync(List<string> importIds, CancellationToken ct)
+    {
+        if (importIds == null || importIds.Count == 0)
+            return new List<string>();
+
+        return await _db.Shrines
+            .AsNoTracking()
+            .Where(s => s.InputtedId != null && importIds.Contains(s.InputtedId))
+            .Select(s => s.InputtedId!) 
+            .ToListAsync(ct);
+    }
+
+    #endregion
 }

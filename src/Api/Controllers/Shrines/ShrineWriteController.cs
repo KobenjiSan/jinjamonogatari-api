@@ -4,9 +4,11 @@ using Application.Features.Shrines.Commands.CreateFolklore;
 using Application.Features.Shrines.Commands.CreateGalleryImage;
 using Application.Features.Shrines.Commands.CreateHistory;
 using Application.Features.Shrines.Commands.CreateKamiInShrine;
+using Application.Features.Shrines.Commands.CreateShrine;
 using Application.Features.Shrines.Commands.DeleteFolklore;
 using Application.Features.Shrines.Commands.DeleteGalleryImage;
 using Application.Features.Shrines.Commands.DeleteHistory;
+using Application.Features.Shrines.Commands.ImportShrines;
 using Application.Features.Shrines.Commands.LinkKamiToShrine;
 using Application.Features.Shrines.Commands.UnlinkKamiToShrine;
 using Application.Features.Shrines.Commands.UpdateFolklore;
@@ -217,6 +219,32 @@ public class ShrineWriteController : ControllerBase
     }
 
     #endregion
+
+    #region IMPORT
+
+    // POST /api/shrines/cms/import
+    [HttpPost("cms/import")]
+    public async Task<IActionResult> ImportShrinesAsync([FromBody] ImportShrinesRequest request)
+    {
+        var command = new ImportShrinesCommand(request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    #endregion
+
+    #region CREATE SHRINE
+
+    // POST /api/shrines/cms/create
+    [HttpPost("cms/create")]
+    public async Task<IActionResult> CreateShrineAsync([FromBody] CreateShrineRequest request)
+    {
+        var command = new CreateShrineCommand(request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    #endregion
 }
 
 
@@ -392,6 +420,33 @@ public record BasicFolkloreUpdateRequest(
     int? SortOrder,
     string? Title,
     string? Information
+);
+
+#endregion
+
+#region Import Request
+
+public record ImportShrinesRequest(
+    IReadOnlyList<ImportPreviewItemRequest> Previews
+);
+
+public record ImportPreviewItemRequest(
+    string ImportId,
+    string? Name,
+    double Lat,
+    double Lon
+);
+
+#endregion
+
+#region Create Shrine Request
+
+public record CreateShrineRequest(
+    string? NameEn,
+    string? NameJp,
+    string? Address,
+    double? Lat,
+    double? Lon
 );
 
 #endregion

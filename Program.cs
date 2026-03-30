@@ -16,6 +16,7 @@ using Infrastructure.Services.Etiquette;
 using Application.Features.Shrines.Services;
 using Infrastructure.Services.Shrines;
 using Application.Features.Shrines.Services.ShrineAudit;
+using Application.Features.Shrines.Services.ExternalGeo;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -92,6 +93,8 @@ builder.Services.AddScoped<IShrineReadService, ShrineReadService>();
 builder.Services.AddScoped<IShrineWriteService, ShrineWriteService>();
 // Audit
 builder.Services.AddScoped<IShrineAuditService, ShrineAuditService>();
+// ExternalGeo
+builder.Services.AddHttpClient<IExternalGeoService, ExternalGeoService>();
 
 
 var app = builder.Build();

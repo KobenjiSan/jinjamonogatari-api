@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Application.Common.Exceptions;
 using Application.Features.Shrines.Services;
 using Domain.Entities;
@@ -1131,4 +1132,48 @@ public class ShrineWriteService : IShrineWriteService
 
     #endregion
 
+    #region IMPORT SHRINES
+
+    public async Task ImportShrinesAsync(ImportShrinesRequest request, CancellationToken ct)
+    {
+        if (request.Previews is null || request.Previews.Count == 0)
+            return;
+
+        var shrines = request.Previews.Select(preview => new Shrine
+        {
+            InputtedId = preview.ImportId.Trim(),
+            NameEn = "Unnamed Shrine",
+            NameJp = string.IsNullOrWhiteSpace(preview.Name) ? "" : preview.Name.Trim(),
+            Lat = (decimal?)preview.Lat,
+            Lon = (decimal?)preview.Lon,
+            Status = "import"
+        }).ToList();
+
+        await _db.Shrines.AddRangeAsync(shrines, ct);
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region CREATE SHRINE
+
+    public async Task CreateShrineAsync(CreateShrineRequest request, CancellationToken ct)
+    {
+        if (request.Lat is null || request.Lon is null)
+            throw new ValidationException("Shrine coordinates are required.");
+
+        var shrine = new Shrine
+        {
+            NameEn = request.NameEn,
+            NameJp = request.NameJp,
+            Lat = (decimal)request.Lat.Value,
+            Lon = (decimal)request.Lon.Value,
+            Status = "draft"
+        };
+
+        _db.Add(shrine);
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
 }

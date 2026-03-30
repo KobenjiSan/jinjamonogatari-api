@@ -234,9 +234,6 @@ public class ShrineAuditService : IShrineAuditService
 
     private static void AuditShrineMeta(ShrineAuditSnapshot shrine, List<AuditIssueDto> issues)
     {
-        if (string.IsNullOrWhiteSpace(shrine.InputtedId))
-            AddError(issues, "ShrineMeta", null, "ShrineMeta.InputtedId", "Shrine is missing inputted id.");
-
         if (string.IsNullOrWhiteSpace(shrine.Slug))
         {
             AddError(issues, "ShrineMeta", null, "ShrineMeta.Slug", "Shrine is missing slug.");

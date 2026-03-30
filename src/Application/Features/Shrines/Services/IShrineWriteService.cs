@@ -41,4 +41,8 @@ public interface IShrineWriteService
     );
     Task DeleteGalleryImageAsync(int imageId, CancellationToken ct);
     Task UpdateGalleryImageAsync(int imageId, ImageRequest request, CancellationToken ct);
+
+    Task ImportShrinesAsync(ImportShrinesRequest request, CancellationToken ct);
+
+    Task CreateShrineAsync(CreateShrineRequest request, CancellationToken ct);
 }
