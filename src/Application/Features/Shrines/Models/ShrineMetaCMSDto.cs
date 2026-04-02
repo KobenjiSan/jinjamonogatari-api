@@ -42,6 +42,9 @@ public record ShrineMetaCMSDto(
     DateTime CreatedAt,
     DateTime UpdatedAt,
 
+    // Notes
+    String? Notes,
+
     // Tags
     IReadOnlyList<TagDto> Tags
 );

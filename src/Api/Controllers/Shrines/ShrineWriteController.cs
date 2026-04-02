@@ -8,6 +8,7 @@ using Application.Features.Shrines.Commands.CreateShrine;
 using Application.Features.Shrines.Commands.DeleteFolklore;
 using Application.Features.Shrines.Commands.DeleteGalleryImage;
 using Application.Features.Shrines.Commands.DeleteHistory;
+using Application.Features.Shrines.Commands.DeleteShrine;
 using Application.Features.Shrines.Commands.ImportShrines;
 using Application.Features.Shrines.Commands.LinkKamiToShrine;
 using Application.Features.Shrines.Commands.UnlinkKamiToShrine;
@@ -240,6 +241,20 @@ public class ShrineWriteController : ControllerBase
     public async Task<IActionResult> CreateShrineAsync([FromBody] CreateShrineRequest request)
     {
         var command = new CreateShrineCommand(request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    #endregion
+
+    #region DELETE SHRINE
+
+    // Delete /api/shrines/cms/delete/{shrineId}
+    [HttpDelete("cms/delete/{shrineId}")]
+    [Authorize(Roles = "Admin")]    // Admins only
+    public async Task<IActionResult> DeleteShrineAsync([FromRoute] int shrineId)
+    {
+        var command = new DeleteShrineCommand(shrineId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }

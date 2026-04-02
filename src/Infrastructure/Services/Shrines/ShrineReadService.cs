@@ -484,6 +484,7 @@ public class ShrineReadService : IShrineReadService
                 s.PublishedAt,
                 s.CreatedAt,
                 s.UpdatedAt,
+                s.Notes,
                 s.ShrineTags
                     .Select(st => new TagDto(
                         st.TagId,

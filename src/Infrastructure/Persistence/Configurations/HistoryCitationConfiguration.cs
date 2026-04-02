@@ -32,6 +32,6 @@ public class HistoryCitationConfiguration : IEntityTypeConfiguration<HistoryCita
         e.HasOne(x => x.Citation)
             .WithMany(x => x.HistoryCitations)
             .HasForeignKey(x => x.CiteId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

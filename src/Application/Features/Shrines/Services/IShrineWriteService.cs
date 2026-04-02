@@ -45,4 +45,5 @@ public interface IShrineWriteService
     Task ImportShrinesAsync(ImportShrinesRequest request, CancellationToken ct);
 
     Task CreateShrineAsync(CreateShrineRequest request, CancellationToken ct);
+    Task DeleteShrineAsync(int shrineId, CancellationToken ct);
 }

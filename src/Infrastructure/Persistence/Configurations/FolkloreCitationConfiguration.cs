@@ -32,6 +32,6 @@ public class FolkloreCitationConfiguration : IEntityTypeConfiguration<FolkloreCi
         e.HasOne(x => x.Citation)
             .WithMany(x => x.FolkloreCitations)
             .HasForeignKey(x => x.CiteId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

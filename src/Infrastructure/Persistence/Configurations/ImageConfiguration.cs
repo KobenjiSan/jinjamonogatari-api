@@ -31,6 +31,6 @@ public class ImageConfiguration : IEntityTypeConfiguration<Image>
         e.HasOne(x => x.Citation)
             .WithMany(c => c.ImagesAttributed)
             .HasForeignKey(x => x.CiteId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.SetNull); // Images own their own ciation
     }
 }

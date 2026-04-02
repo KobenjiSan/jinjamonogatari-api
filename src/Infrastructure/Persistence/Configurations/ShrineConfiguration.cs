@@ -62,6 +62,8 @@ public class ShrineConfiguration : IEntityTypeConfiguration<Shrine>
         e.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone").IsRequired();
         e.Property(x => x.UpdatedAt).HasColumnName("updated_at").HasColumnType("timestamp with time zone").IsRequired();
 
+        e.Property(x => x.Notes).HasColumnName("notes").HasColumnType("text").HasMaxLength(10000);
+
         // Relationship config:
         
         e.HasOne(x => x.Image)                      // shrine has one image

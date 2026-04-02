@@ -31,6 +31,6 @@ public class ShrineGalleryConfiguration : IEntityTypeConfiguration<ShrineGallery
         e.HasOne(x => x.Image)
             .WithMany()
             .HasForeignKey(x => x.ImgId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

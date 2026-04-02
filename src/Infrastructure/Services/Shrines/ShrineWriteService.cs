@@ -1176,4 +1176,60 @@ public class ShrineWriteService : IShrineWriteService
     }
 
     #endregion
+
+    #region DELETE SHRINE
+
+    public async Task DeleteShrineAsync(int shrineId, CancellationToken ct)
+    {
+        var shrine = await _db.Shrines
+            .Include(s => s.ShrineHistories)
+                .ThenInclude(h => h.HistoryCitations)
+            .Include(s => s.ShrineFolklores)
+                .ThenInclude(f => f.FolkloreCitations)
+            .FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+
+        if(shrine is null) throw new NotFoundException($"Shrine {shrineId} was not found.");
+
+        // Collect citation ids tied to shrine
+        var citationIds = new HashSet<int>();
+
+        foreach(var h in shrine.ShrineHistories)
+            foreach(var hc in h.HistoryCitations)
+                citationIds.Add(hc.CiteId);
+
+        foreach (var f in shrine.ShrineFolklores)
+            foreach (var fc in f.FolkloreCitations)
+                citationIds.Add(fc.CiteId);
+
+        _db.Shrines.Remove(shrine);
+        await _db.SaveChangesAsync(ct);
+
+        if (citationIds.Count == 0) return;
+
+        // Find citations that are no longer referenced anywhere
+        var orphanCitationIds = new List<int>();
+
+        foreach (var citeId in citationIds)
+        {
+            bool stillUsed =
+                await _db.HistoryCitations.AnyAsync(x => x.CiteId == citeId, ct) ||
+                await _db.FolkloreCitations.AnyAsync(x => x.CiteId == citeId, ct) ||
+                await _db.Images.AnyAsync(x => x.CiteId == citeId, ct);
+
+            if (!stillUsed)
+                orphanCitationIds.Add(citeId);
+        }
+
+        if (orphanCitationIds.Count > 0)
+        {
+            var citations = await _db.Citations
+                .Where(c => orphanCitationIds.Contains(c.CiteId))
+                .ToListAsync(ct);
+
+            _db.Citations.RemoveRange(citations);
+            await _db.SaveChangesAsync(ct);
+        }
+    }
+
+    #endregion
 }
