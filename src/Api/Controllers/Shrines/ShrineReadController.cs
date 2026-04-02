@@ -138,12 +138,19 @@ public class ShrineReadController : ControllerBase
     // CMS
     // =======
 
-    // GET /api/shrines/cms/list?status=...
+    // GET /api/shrines/cms/list?status=...&prefecture=...&searchQuery=...&sort=...&page=...&pageSize=...
     [HttpGet("cms/list")]
     [Authorize]
-    public async Task<ActionResult<ShrineListCMSDto>> GetShrineListCMSAsync([FromQuery] string? status)
+    public async Task<ActionResult<GetShrineListCMSResult>> GetShrineListCMSAsync(
+        [FromQuery] string? status,
+        [FromQuery] string? prefecture = null,
+        [FromQuery] string? searchQuery = null,
+        [FromQuery] ShrineSort? sort = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5
+    )
     {
-        var result = await _mediator.Send(new GetShrineListCMSQuery(status));
+        var result = await _mediator.Send(new GetShrineListCMSQuery(status, prefecture, searchQuery, sort, page, pageSize));
         return Ok(result);
     }
 

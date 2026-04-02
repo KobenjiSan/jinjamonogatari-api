@@ -12,5 +12,7 @@ public record ShrineListCMSDto(
     decimal? Lat,
     decimal? Lon,
     // Last Updated
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    // Issues
+    int? ErrorCount
 );

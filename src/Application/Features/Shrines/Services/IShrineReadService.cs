@@ -1,6 +1,7 @@
 using Application.Common.Models.Citations;
 using Application.Common.Models.Images;
 using Application.Features.Shrines.Models;
+using Application.Features.Shrines.Queries.GetShrineListCMS;
 
 namespace Application.Features.Shrines.Services;
 
@@ -37,7 +38,7 @@ public interface IShrineReadService
     Task<bool> DoesShrineExistAsync(int shrineId, CancellationToken ct);
 
     // CMS
-    Task<IReadOnlyList<ShrineListCMSDto>> GetShrineListCMSAsync(string? status, CancellationToken ct);
+    Task<(IReadOnlyList<ShrineListCMSDto>, int)> GetShrineListCMSAsync(GetShrineListCMSQuery request, CancellationToken ct);
     Task<ShrineMetaCMSDto?> GetShrineMetaByIdCMSAsync(int id, CancellationToken ct);
     Task<IReadOnlyList<KamiReadCMSDto>> GetShrineKamiByIdCMSAsync(int id, CancellationToken ct);
 

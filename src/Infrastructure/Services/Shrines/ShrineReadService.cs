@@ -1,7 +1,9 @@
 using Application.Common.Models.Citations;
 using Application.Common.Models.Images;
 using Application.Features.Shrines.Models;
+using Application.Features.Shrines.Queries.GetShrineListCMS;
 using Application.Features.Shrines.Services;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 
@@ -367,17 +369,58 @@ public class ShrineReadService : IShrineReadService
 
     #region CMS Shrine List
 
-    public async Task<IReadOnlyList<ShrineListCMSDto>> GetShrineListCMSAsync(string? status, CancellationToken ct)
+    public async Task<(IReadOnlyList<ShrineListCMSDto>, int)> GetShrineListCMSAsync(GetShrineListCMSQuery request, CancellationToken ct)
     {
         var query = _db.Shrines
             .AsNoTracking();
 
-        if (!string.IsNullOrWhiteSpace(status))
+        // Sort Status
+        if (!string.IsNullOrWhiteSpace(request.Status))
         {
-            query = query.Where(s => s.Status == status);
+            query = query.Where(s => s.Status == request.Status);
         }
+
+        // Sort Prefecture
+        if (!string.IsNullOrWhiteSpace(request.Prefecture))
+        {
+            query = query.Where(s =>
+                s.Prefecture != null && s.Prefecture.ToLower() == request.Prefecture.ToLower()
+            );
+        }
+
+        // Search Query
+        if (!string.IsNullOrWhiteSpace(request.SearchQuery))
+        {
+            var search = request.SearchQuery.Trim().ToLower();
+
+            query = query.Where(s =>
+                (s.NameEn != null && s.NameEn.ToLower().Contains(search)) ||
+                (s.NameJp != null && s.NameJp.ToLower().Contains(search)) ||
+                (s.ShrineDesc != null && s.ShrineDesc.ToLower().Contains(search))
+            );
+        }
+
+        // Sort Type / Direction
+        var sort = request.Sort ?? ShrineSort.UpdatedAsc;
+        query = sort switch
+        {
+            ShrineSort.TitleAsc     => query.OrderBy(s => s.NameEn),
+            ShrineSort.TitleDesc    => query.OrderByDescending(s => s.NameEn),
+            ShrineSort.UpdatedAsc   => query.OrderBy(s => s.UpdatedAt),
+            ShrineSort.UpdatedDesc  => query.OrderByDescending(s => s.UpdatedAt),
+            _ => query
+        };
+
+        // Get total count
+        var totalCount = await query.CountAsync(ct);
+
+        // Pagination
+        var skip = (request.Page - 1) * request.PageSize;
+        query = query
+            .Skip(skip)
+            .Take(request.PageSize);
         
-        return await query
+        var items = await query
             .Select(s => new ShrineListCMSDto(
                 s.ShrineId,
                 s.NameEn,
@@ -386,8 +429,11 @@ public class ShrineReadService : IShrineReadService
                 s.City,
                 s.Lat,
                 s.Lon,
-                s.UpdatedAt
+                s.UpdatedAt,
+                null
             )).ToListAsync(ct);
+
+        return (items, totalCount);
     }
 
     #endregion
