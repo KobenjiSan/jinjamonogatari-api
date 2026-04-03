@@ -4,6 +4,9 @@ public interface IShrineWriteService
 {
     // META
     Task UpdateShrineMetaAsync(int shrineId, UpdateShrineMetaRequest request, CancellationToken ct);
+
+    // NOTES
+    Task UpdateShrineNotesAsync(int shrineId, string notes, CancellationToken ct);
     
     // KAMI
     Task CreateKamiInShrineAsync(

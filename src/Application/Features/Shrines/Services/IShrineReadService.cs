@@ -40,9 +40,12 @@ public interface IShrineReadService
     // CMS
     Task<(IReadOnlyList<ShrineListCMSDto>, int)> GetShrineListCMSAsync(GetShrineListCMSQuery request, CancellationToken ct);
     Task<ShrineMetaCMSDto?> GetShrineMetaByIdCMSAsync(int id, CancellationToken ct);
+    Task<string?> GetShrineNotesByIdCMSAsync(int id, CancellationToken ct);
     Task<IReadOnlyList<KamiReadCMSDto>> GetShrineKamiByIdCMSAsync(int id, CancellationToken ct);
 
     Task<IReadOnlyList<KamiReadCMSDto>> GetAllKamiListCMSAsync(CancellationToken ct);
+    
+    Task<IReadOnlyList<TagDto>> GetAllTagsListCMSAsync(CancellationToken ct);
 
     Task<IReadOnlyList<HistoryReadCMSDto>> GetShrineHistoryByIdCMSAsync(int id, CancellationToken ct);
     
@@ -52,6 +55,8 @@ public interface IShrineReadService
 
     Task<ShrineAuditSnapshot?> GetShrineAuditSnapshotAsync(int shrineId, CancellationToken ct);
     Task<List<ShrineCitationCMSDto>> GetShrineCitationsByIdCMSAsync(int shrineId, CancellationToken ct);
+
+    Task<List<CitationCMSDto>> GetShrineCitationsDropdownByIdCMSAsync(int shrineId, CancellationToken ct);
 
     Task<string> GetShrineStatusByIdCMSAsync(int id, CancellationToken ct);
     Task<int> GetShrineIdByHistoryIdCMSAsync(int HistoryId, CancellationToken ct);

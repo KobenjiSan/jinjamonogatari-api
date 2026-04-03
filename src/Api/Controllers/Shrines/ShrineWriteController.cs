@@ -17,6 +17,7 @@ using Application.Features.Shrines.Commands.UpdateGalleryImage;
 using Application.Features.Shrines.Commands.UpdateHistory;
 using Application.Features.Shrines.Commands.UpdateKami;
 using Application.Features.Shrines.Commands.UpdateShrineMeta;
+using Application.Features.Shrines.Commands.UpdateShrineNotes;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -47,6 +48,23 @@ public class ShrineWriteController : ControllerBase
         var command = new UpdateShrineMetaCommand(role, id, request);
         var result = await _mediator.Send(command);
         return Ok(result);
+    }
+
+    #endregion
+
+    #region NOTES
+
+    // PUT /api/shrines/cms/{id}/notes
+    [HttpPut("cms/{id}/notes")]
+    public async Task<IActionResult> UpdateShrineNotes(
+        [FromRoute] int id,
+        [FromBody] UpdateShrineNotesRequest request
+    )
+    {
+        var role = User.GetUserRole();
+        var command = new UpdateShrineNotesCommand(role, id, request.Notes);
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     #endregion
@@ -267,7 +285,7 @@ public class ShrineWriteController : ControllerBase
 
 public record UpdateShrineMetaRequest(
     BasicMetaUpdateRequest Basic,
-    TagChangesRequest Tags,
+    TagLinkChangesRequest Tags,
     ImageChangeRequest HeroImage
 );
 
@@ -294,19 +312,9 @@ public record BasicMetaUpdateRequest(
 #region Tags Request
 
 // Tag Changes
-public record TagChangesRequest(
-    IReadOnlyList<CreateTagRequest> Create,
-    IReadOnlyList<UpdateTagRequest> Update,
-    IReadOnlyList<int> Delete
-);
-public record CreateTagRequest(
-    string TitleEn,
-    string? TitleJp
-);
-public record UpdateTagRequest(
-    int TagId,
-    string TitleEn,
-    string? TitleJp
+public record TagLinkChangesRequest(
+    IReadOnlyList<int> Link,
+    IReadOnlyList<int> Unlink
 );
 
 #endregion
@@ -345,17 +353,39 @@ public record CitationRequest(
     string? Url,
     int? Year
 );
-public record CitationListChangesRequest(
-    IReadOnlyList<CreateCitationRequest> Create,
-    IReadOnlyList<CitationRequest> Update,
-    IReadOnlyList<int> Delete
-);
+
 public record CreateCitationRequest(
     string? Title,
     string? Author,
     string? Url,
     int? Year
 );
+
+public record LinkExistingCitationRequest(
+    int CiteId,
+    string? Title,
+    string? Author,
+    string? Url,
+    int? Year
+);
+
+public record CitationCreateChangesRequest(
+    IReadOnlyList<CreateCitationRequest> Create,
+    IReadOnlyList<LinkExistingCitationRequest> LinkExisting
+);
+
+public record CitationListChangesRequest(
+    IReadOnlyList<CreateCitationRequest> Create,
+    IReadOnlyList<CitationRequest> Update,
+    IReadOnlyList<LinkExistingCitationRequest> LinkExisting,
+    IReadOnlyList<int> Delete
+);
+
+#endregion
+
+#region Notes Request
+
+public record UpdateShrineNotesRequest(string Notes);
 
 #endregion
 
@@ -367,7 +397,7 @@ public record CreateKamiInShrineRequest(
     string? NameJp,
     string? Desc,
     CreateImageRequest? Image,
-    IReadOnlyList<CreateCitationRequest> Citations
+    CitationCreateChangesRequest Citations
 );
 
 
@@ -395,7 +425,7 @@ public record CreateHistoryRequest(
     string? Title,
     string? Information,
     CreateImageRequest? Image,
-    IReadOnlyList<CreateCitationRequest> Citations
+    CitationCreateChangesRequest Citations
 );
 
 // UPDATE HISTORY
@@ -421,7 +451,7 @@ public record CreateFolkloreRequest(
     string? Title,
     string? Information,
     CreateImageRequest? Image,
-    IReadOnlyList<CreateCitationRequest> Citations
+    CitationCreateChangesRequest Citations
 );
 
 // UPDATE FOLKLORE
@@ -431,7 +461,6 @@ public record UpdateFolkloreRequest(
     CitationListChangesRequest Citations
 );
 public record BasicFolkloreUpdateRequest(
-    DateOnly? EventDate,
     int? SortOrder,
     string? Title,
     string? Information

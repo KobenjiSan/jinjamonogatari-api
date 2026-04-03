@@ -15,6 +15,32 @@ public class ShrineWriteService : IShrineWriteService
         _db = db;
     }
 
+    #region CITATION HELPERS
+
+    private static Citation BuildCitation(CreateCitationRequest request)
+    {
+        return new Citation
+        {
+            Title = request.Title,
+            Author = request.Author,
+            Url = request.Url,
+            Year = request.Year
+        };
+    }
+
+    private async Task<Citation> GetExistingCitationOrThrowAsync(int citeId, CancellationToken ct)
+    {
+        var citation = await _db.Citations
+            .FirstOrDefaultAsync(c => c.CiteId == citeId, ct);
+
+        if (citation is null)
+            throw new NotFoundException($"Citation {citeId} was not found.");
+
+        return citation;
+    }
+
+    #endregion
+
     #region UPDATE META
 
     public async Task UpdateShrineMetaAsync(int shrineId, UpdateShrineMetaRequest request, CancellationToken ct)
@@ -51,11 +77,11 @@ public class ShrineWriteService : IShrineWriteService
         shrine.Email = request.Basic.Email;
         shrine.Website = request.Basic.Website;
 
-        // Delete Tags (remove from shrine, not globaly)
-        if (request.Tags.Delete.Count > 0)
+        // Unlink Tags
+        if (request.Tags.Unlink.Count > 0)
         {
             var shrineTagsToRemove = shrine.ShrineTags
-                .Where(st => request.Tags.Delete.Contains(st.TagId))
+                .Where(st => request.Tags.Unlink.Contains(st.TagId))
                 .ToList();
 
             foreach (var shrineTag in shrineTagsToRemove)
@@ -64,39 +90,26 @@ public class ShrineWriteService : IShrineWriteService
             }
         }
 
-        // Create Tag
-        if (request.Tags.Create.Count > 0)
+        // Link Tags
+        if (request.Tags.Link.Count > 0)
         {
-            foreach (var tagRequest in request.Tags.Create)
-            {
-                var newTag = new Tag
-                {
-                    TitleEn = tagRequest.TitleEn,
-                    TitleJp = tagRequest.TitleJp
-                };
+            var existingLinkedTagIds = shrine.ShrineTags
+                .Select(st => st.TagId)
+                .ToHashSet();
 
+            var tagIdsToLink = request.Tags.Link
+                .Where(tagId => !existingLinkedTagIds.Contains(tagId))
+                .Distinct()
+                .ToList();
+
+            foreach (var tagId in tagIdsToLink)
+            {
                 shrine.ShrineTags.Add(new ShrineTag
                 {
                     ShrineId = shrine.ShrineId,
                     Shrine = shrine,
-                    Tag = newTag
+                    TagId = tagId
                 });
-            }
-        }
-
-        // Update Tag
-        if (request.Tags.Update.Count > 0)
-        {
-            foreach (var tagRequest in request.Tags.Update)
-            {
-                var existingShrineTag = shrine.ShrineTags
-                    .FirstOrDefault(st => st.TagId == tagRequest.TagId);
-
-                if (existingShrineTag is null)
-                    continue;
-
-                existingShrineTag.Tag.TitleEn = tagRequest.TitleEn;
-                existingShrineTag.Tag.TitleJp = tagRequest.TitleJp;
             }
         }
 
@@ -165,6 +178,29 @@ public class ShrineWriteService : IShrineWriteService
             }
         }
 
+        // force shrine timestamp to update                                                                                                                  
+        shrine.UpdatedAt = DateTime.UtcNow;
+        _db.Entry(shrine).Property(s => s.UpdatedAt).IsModified = true;
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region UPDATE NOTES
+
+    public async Task UpdateShrineNotesAsync(int shrineId, string notes, CancellationToken ct)
+    {
+        // Load shrine
+        var shrine = await _db.Shrines.FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+
+        // validate shrine exists
+        if (shrine is null)
+            throw new NotFoundException("Shrine not found.");
+
+        // update notes
+        shrine.Notes = notes;
+
         await _db.SaveChangesAsync(ct);
     }
 
@@ -220,23 +256,42 @@ public class ShrineWriteService : IShrineWriteService
             kami.Image = image;
         }
 
-        // Create citations if provided
-        if (request.Citations is not null && request.Citations.Count > 0)
+        // Create new citations
+        if (request.Citations.Create.Count > 0)
         {
-            foreach (var citationRequest in request.Citations)
+            foreach (var citationRequest in request.Citations.Create)
             {
-                var citation = new Citation
-                {
-                    Title = citationRequest.Title,
-                    Author = citationRequest.Author,
-                    Url = citationRequest.Url,
-                    Year = citationRequest.Year
-                };
+                var citation = BuildCitation(citationRequest);
 
                 kami.KamiCitations.Add(new KamiCitation
                 {
                     Kami = kami,
                     Citation = citation
+                });
+            }
+        }
+
+        // Link existing citations
+        if (request.Citations.LinkExisting.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations.LinkExisting)
+            {
+                var citation = await GetExistingCitationOrThrowAsync(citationRequest.CiteId, ct);
+
+                // apply any edits sent along with the reuse request
+                citation.Title = citationRequest.Title;
+                citation.Author = citationRequest.Author;
+                citation.Url = citationRequest.Url;
+                citation.Year = citationRequest.Year;
+
+                var alreadyLinked = kami.KamiCitations.Any(kc => kc.CiteId == citation.CiteId);
+                if (alreadyLinked) continue;
+
+                kami.KamiCitations.Add(new KamiCitation
+                {
+                    Kami = kami,
+                    Citation = citation,
+                    CiteId = citation.CiteId
                 });
             }
         }
@@ -403,7 +458,7 @@ public class ShrineWriteService : IShrineWriteService
             }
         }
 
-        // Delete citations
+        // Delete citations (unlink only)
         if (request.Citations.Delete.Count > 0)
         {
             var kamiCitationsToRemove = kami.KamiCitations
@@ -413,7 +468,7 @@ public class ShrineWriteService : IShrineWriteService
             foreach (var kamiCitation in kamiCitationsToRemove)
             {
                 kami.KamiCitations.Remove(kamiCitation);
-                _db.Citations.Remove(kamiCitation.Citation);
+                _db.Set<KamiCitation>().Remove(kamiCitation);
             }
         }
 
@@ -435,6 +490,31 @@ public class ShrineWriteService : IShrineWriteService
                     KamiId = kami.KamiId,
                     Kami = kami,
                     Citation = citation
+                });
+            }
+        }
+
+        // Link existing citations
+        if (request.Citations.LinkExisting.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations.LinkExisting)
+            {
+                var citation = await GetExistingCitationOrThrowAsync(citationRequest.CiteId, ct);
+
+                citation.Title = citationRequest.Title;
+                citation.Author = citationRequest.Author;
+                citation.Url = citationRequest.Url;
+                citation.Year = citationRequest.Year;
+
+                var alreadyLinked = kami.KamiCitations.Any(kc => kc.CiteId == citation.CiteId);
+                if (alreadyLinked) continue;
+
+                kami.KamiCitations.Add(new KamiCitation
+                {
+                    KamiId = kami.KamiId,
+                    Kami = kami,
+                    Citation = citation,
+                    CiteId = citation.CiteId
                 });
             }
         }
@@ -510,23 +590,41 @@ public class ShrineWriteService : IShrineWriteService
             history.Image = image;
         }
 
-        // Create citations if provided
-        if (request.Citations is not null && request.Citations.Count > 0)
+        // Create new citations
+        if (request.Citations.Create.Count > 0)
         {
-            foreach (var citationRequest in request.Citations)
+            foreach (var citationRequest in request.Citations.Create)
             {
-                var citation = new Citation
-                {
-                    Title = citationRequest.Title,
-                    Author = citationRequest.Author,
-                    Url = citationRequest.Url,
-                    Year = citationRequest.Year
-                };
+                var citation = BuildCitation(citationRequest);
 
                 history.HistoryCitations.Add(new HistoryCitation
                 {
                     History = history,
                     Citation = citation
+                });
+            }
+        }
+
+        // Link existing citations
+        if (request.Citations.LinkExisting.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations.LinkExisting)
+            {
+                var citation = await GetExistingCitationOrThrowAsync(citationRequest.CiteId, ct);
+
+                citation.Title = citationRequest.Title;
+                citation.Author = citationRequest.Author;
+                citation.Url = citationRequest.Url;
+                citation.Year = citationRequest.Year;
+
+                var alreadyLinked = history.HistoryCitations.Any(hc => hc.CiteId == citation.CiteId);
+                if (alreadyLinked) continue;
+
+                history.HistoryCitations.Add(new HistoryCitation
+                {
+                    History = history,
+                    Citation = citation,
+                    CiteId = citation.CiteId
                 });
             }
         }
@@ -555,12 +653,12 @@ public class ShrineWriteService : IShrineWriteService
         if (history is null)
             throw new NotFoundException("History not found.");
 
-        // Remove history citations + underlying citations
+        // Remove history citation links only
         if (history.HistoryCitations.Count > 0)
         {
             foreach (var historyCitation in history.HistoryCitations.ToList())
             {
-                _db.Citations.Remove(historyCitation.Citation);
+                _db.Set<HistoryCitation>().Remove(historyCitation);
             }
         }
 
@@ -675,7 +773,7 @@ public class ShrineWriteService : IShrineWriteService
             }
         }
 
-        // Delete citations
+        // Delete citations (unlink only)
         if (request.Citations.Delete.Count > 0)
         {
             var historyCitationsToRemove = history.HistoryCitations
@@ -685,7 +783,7 @@ public class ShrineWriteService : IShrineWriteService
             foreach (var historyCitation in historyCitationsToRemove)
             {
                 history.HistoryCitations.Remove(historyCitation);
-                _db.Citations.Remove(historyCitation.Citation);
+                _db.Set<HistoryCitation>().Remove(historyCitation);
             }
         }
 
@@ -707,6 +805,31 @@ public class ShrineWriteService : IShrineWriteService
                     HistoryId = history.HistoryId,
                     History = history,
                     Citation = citation
+                });
+            }
+        }
+
+        // Link existing citations
+        if (request.Citations.LinkExisting.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations.LinkExisting)
+            {
+                var citation = await GetExistingCitationOrThrowAsync(citationRequest.CiteId, ct);
+
+                citation.Title = citationRequest.Title;
+                citation.Author = citationRequest.Author;
+                citation.Url = citationRequest.Url;
+                citation.Year = citationRequest.Year;
+
+                var alreadyLinked = history.HistoryCitations.Any(hc => hc.CiteId == citation.CiteId);
+                if (alreadyLinked) continue;
+
+                history.HistoryCitations.Add(new HistoryCitation
+                {
+                    HistoryId = history.HistoryId,
+                    History = history,
+                    Citation = citation,
+                    CiteId = citation.CiteId
                 });
             }
         }
@@ -781,23 +904,41 @@ public class ShrineWriteService : IShrineWriteService
             folklore.Image = image;
         }
 
-        // Create citations if provided
-        if (request.Citations is not null && request.Citations.Count > 0)
+        // Create new citations
+        if (request.Citations.Create.Count > 0)
         {
-            foreach (var citationRequest in request.Citations)
+            foreach (var citationRequest in request.Citations.Create)
             {
-                var citation = new Citation
-                {
-                    Title = citationRequest.Title,
-                    Author = citationRequest.Author,
-                    Url = citationRequest.Url,
-                    Year = citationRequest.Year
-                };
+                var citation = BuildCitation(citationRequest);
 
                 folklore.FolkloreCitations.Add(new FolkloreCitation
                 {
                     Folklore = folklore,
                     Citation = citation
+                });
+            }
+        }
+
+        // Link existing citations
+        if (request.Citations.LinkExisting.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations.LinkExisting)
+            {
+                var citation = await GetExistingCitationOrThrowAsync(citationRequest.CiteId, ct);
+
+                citation.Title = citationRequest.Title;
+                citation.Author = citationRequest.Author;
+                citation.Url = citationRequest.Url;
+                citation.Year = citationRequest.Year;
+
+                var alreadyLinked = folklore.FolkloreCitations.Any(fc => fc.CiteId == citation.CiteId);
+                if (alreadyLinked) continue;
+
+                folklore.FolkloreCitations.Add(new FolkloreCitation
+                {
+                    Folklore = folklore,
+                    Citation = citation,
+                    CiteId = citation.CiteId
                 });
             }
         }
@@ -826,12 +967,12 @@ public class ShrineWriteService : IShrineWriteService
         if (folklore is null)
             throw new NotFoundException("Folklore not found.");
 
-        // Remove Folklore citations + underlying citations
+        // Remove folklore citation links only
         if (folklore.FolkloreCitations.Count > 0)
         {
-            foreach (var FolkloreCitation in folklore.FolkloreCitations.ToList())
+            foreach (var folkloreCitation in folklore.FolkloreCitations.ToList())
             {
-                _db.Citations.Remove(FolkloreCitation.Citation);
+                _db.Set<FolkloreCitation>().Remove(folkloreCitation);
             }
         }
 
@@ -945,7 +1086,7 @@ public class ShrineWriteService : IShrineWriteService
             }
         }
 
-        // Delete citations
+        // Delete citations (unlink only)
         if (request.Citations.Delete.Count > 0)
         {
             var folkloreCitationsToRemove = folklore.FolkloreCitations
@@ -955,7 +1096,7 @@ public class ShrineWriteService : IShrineWriteService
             foreach (var folkloreCitation in folkloreCitationsToRemove)
             {
                 folklore.FolkloreCitations.Remove(folkloreCitation);
-                _db.Citations.Remove(folkloreCitation.Citation);
+                _db.Set<FolkloreCitation>().Remove(folkloreCitation);
             }
         }
 
@@ -977,6 +1118,31 @@ public class ShrineWriteService : IShrineWriteService
                     FolkloreId = folklore.FolkloreId,
                     Folklore = folklore,
                     Citation = citation
+                });
+            }
+        }
+
+        // Link existing citations
+        if (request.Citations.LinkExisting.Count > 0)
+        {
+            foreach (var citationRequest in request.Citations.LinkExisting)
+            {
+                var citation = await GetExistingCitationOrThrowAsync(citationRequest.CiteId, ct);
+
+                citation.Title = citationRequest.Title;
+                citation.Author = citationRequest.Author;
+                citation.Url = citationRequest.Url;
+                citation.Year = citationRequest.Year;
+
+                var alreadyLinked = folklore.FolkloreCitations.Any(fc => fc.CiteId == citation.CiteId);
+                if (alreadyLinked) continue;
+
+                folklore.FolkloreCitations.Add(new FolkloreCitation
+                {
+                    FolkloreId = folklore.FolkloreId,
+                    Folklore = folklore,
+                    Citation = citation,
+                    CiteId = citation.CiteId
                 });
             }
         }
@@ -1188,13 +1354,13 @@ public class ShrineWriteService : IShrineWriteService
                 .ThenInclude(f => f.FolkloreCitations)
             .FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
 
-        if(shrine is null) throw new NotFoundException($"Shrine {shrineId} was not found.");
+        if (shrine is null) throw new NotFoundException($"Shrine {shrineId} was not found.");
 
         // Collect citation ids tied to shrine
         var citationIds = new HashSet<int>();
 
-        foreach(var h in shrine.ShrineHistories)
-            foreach(var hc in h.HistoryCitations)
+        foreach (var h in shrine.ShrineHistories)
+            foreach (var hc in h.HistoryCitations)
                 citationIds.Add(hc.CiteId);
 
         foreach (var f in shrine.ShrineFolklores)

@@ -2,10 +2,12 @@ using Application.Common.Models.Citations;
 using Application.Common.Models.Images;
 using Application.Features.Shrines.Models;
 using Application.Features.Shrines.Queries.GetAllKamiListCMS;
+using Application.Features.Shrines.Queries.GetAllTagsListCMS;
 using Application.Features.Shrines.Queries.GetImageById;
 using Application.Features.Shrines.Queries.GetImportPreviewCMS;
 using Application.Features.Shrines.Queries.GetShrineAudit;
 using Application.Features.Shrines.Queries.GetShrineCitationsByIdCMS;
+using Application.Features.Shrines.Queries.GetShrineCitationsDropdownByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineFolkloreByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineFolkloreBySlug;
 using Application.Features.Shrines.Queries.GetShrineGalleryByIdCMS;
@@ -19,6 +21,7 @@ using Application.Features.Shrines.Queries.GetShrineListView;
 using Application.Features.Shrines.Queries.GetShrineMapPoints;
 using Application.Features.Shrines.Queries.GetShrineMetaByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineMetaBySlug;
+using Application.Features.Shrines.Queries.GetShrineNotesByIdCMS;
 using Application.Features.Shrines.Queries.GetShrinePreview;
 using Application.Features.Shrines.Queries.GetShrineStatusByIdCMS;
 using Domain.Enums;
@@ -163,6 +166,15 @@ public class ShrineReadController : ControllerBase
         return Ok(result.Meta);
     }
 
+    // GET /api/shrines/cms/{id}/notes
+    [HttpGet("cms/{id}/notes")]
+    [Authorize]
+    public async Task<ActionResult<string>> GetShrineNotesByIdCMSAsync([FromRoute] int id)
+    {
+        var result = await _mediator.Send(new GetShrineNotesByIdCMSQuery(id));
+        return Ok(result.Notes);
+    }
+
     // GET /api/shrines/cms/{id}/kami
     [HttpGet("cms/{id}/kami")]
     [Authorize]
@@ -211,9 +223,10 @@ public class ShrineReadController : ControllerBase
     // GET /api/shrines/cms/tags
     [HttpGet("cms/tags")]
     [Authorize]
-    public Task<ActionResult<IReadOnlyList<int>>> GetAllTagsCMSAsync()
+    public async Task<ActionResult<IReadOnlyList<TagDto>>> GetAllTagsCMSAsync()
     {
-        throw new NotImplementedException();    // TODO
+        var result = await _mediator.Send(new GetAllTagsListCMSQuery());
+        return Ok(result.Tags);
     }
 
     // Returns audit of shrine
@@ -239,6 +252,19 @@ public class ShrineReadController : ControllerBase
             return BadRequest("Invalid shrine id.");
         
         var result = await _mediator.Send(new GetShrineCitationsByIdCMSQuery(id));
+        return Ok(result.Citations);
+    }
+
+    // Returns citations linked to shrine
+    // GET /api/shrines/cms/{id}/citations-dropdown
+    [Authorize]
+    [HttpGet("cms/{id}/citations-dropdown")]
+    public async Task<ActionResult<IReadOnlyList<CitationCMSDto>>> GetShrineCitationsDropdownByIdCMSAsync([FromRoute] int id)
+    {
+        if (id <= 0)
+            return BadRequest("Invalid shrine id.");
+        
+        var result = await _mediator.Send(new GetShrineCitationsDropdownByIdCMSQuery(id));
         return Ok(result.Citations);
     }
 

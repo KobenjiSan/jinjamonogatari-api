@@ -401,13 +401,13 @@ public class ShrineReadService : IShrineReadService
         }
 
         // Sort Type / Direction
-        var sort = request.Sort ?? ShrineSort.UpdatedAsc;
+        var sort = request.Sort ?? ShrineSort.UpdatedDesc;
         query = sort switch
         {
-            ShrineSort.TitleAsc     => query.OrderBy(s => s.NameEn),
-            ShrineSort.TitleDesc    => query.OrderByDescending(s => s.NameEn),
-            ShrineSort.UpdatedAsc   => query.OrderBy(s => s.UpdatedAt),
-            ShrineSort.UpdatedDesc  => query.OrderByDescending(s => s.UpdatedAt),
+            ShrineSort.TitleAsc => query.OrderBy(s => s.NameEn),
+            ShrineSort.TitleDesc => query.OrderByDescending(s => s.NameEn),
+            ShrineSort.UpdatedAsc => query.OrderBy(s => s.UpdatedAt),
+            ShrineSort.UpdatedDesc => query.OrderByDescending(s => s.UpdatedAt),
             _ => query
         };
 
@@ -419,7 +419,7 @@ public class ShrineReadService : IShrineReadService
         query = query
             .Skip(skip)
             .Take(request.PageSize);
-        
+
         var items = await query
             .Select(s => new ShrineListCMSDto(
                 s.ShrineId,
@@ -492,6 +492,18 @@ public class ShrineReadService : IShrineReadService
                         st.Tag.TitleJp
                     )).ToList()
             )).SingleOrDefaultAsync(ct);
+    }
+
+    #endregion
+
+    #region CMS Shrine Notes
+
+    public async Task<string?> GetShrineNotesByIdCMSAsync(int id, CancellationToken ct)
+    {
+        return await _db.Shrines
+            .AsNoTracking()
+            .Where(s => s.ShrineId == id)
+            .Select(s => s.Notes).SingleOrDefaultAsync(ct);
     }
 
     #endregion
@@ -599,6 +611,21 @@ public class ShrineReadService : IShrineReadService
                         kc.Citation.UpdatedAt
                     )).ToList(),
                 null    // Nulling Audit
+        )).ToListAsync(ct);
+    }
+
+    #endregion
+
+    #region CMS All Tags List
+
+    public async Task<IReadOnlyList<TagDto>> GetAllTagsListCMSAsync(CancellationToken ct)
+    {
+        return await _db.Tags
+            .AsNoTracking()
+            .Select(t => new TagDto(
+               t.TagId,
+               t.TitleEn,
+               t.TitleJp
         )).ToListAsync(ct);
     }
 
@@ -1159,7 +1186,150 @@ public class ShrineReadService : IShrineReadService
             .OrderBy(x => x.Citation.Title ?? $"Citation {x.Citation.CiteId}")
             .ToList();
     }
-    
+
+    #endregion
+
+    #region CMS Shrine Citations Dropdown
+
+    public async Task<List<CitationCMSDto>> GetShrineCitationsDropdownByIdCMSAsync(
+    int shrineId,
+    CancellationToken ct)
+    {
+        var shrineData = await _db.Shrines
+            .AsNoTracking()
+            .Where(s => s.ShrineId == shrineId)
+            .Select(s => new
+            {
+                HeroImageCitation = s.Image == null || s.Image.Citation == null
+                    ? null
+                    : new CitationCMSDto(
+                        s.Image.Citation.CiteId,
+                        s.Image.Citation.Title,
+                        s.Image.Citation.Author,
+                        s.Image.Citation.Url,
+                        s.Image.Citation.Year,
+                        s.Image.Citation.CreatedAt,
+                        s.Image.Citation.UpdatedAt
+                    ),
+
+                KamiImageCitations = s.ShrineKamis
+                    .Where(sk => sk.Kami.Image != null && sk.Kami.Image.Citation != null)
+                    .Select(sk => new CitationCMSDto(
+                        sk.Kami.Image!.Citation!.CiteId,
+                        sk.Kami.Image.Citation.Title,
+                        sk.Kami.Image.Citation.Author,
+                        sk.Kami.Image.Citation.Url,
+                        sk.Kami.Image.Citation.Year,
+                        sk.Kami.Image.Citation.CreatedAt,
+                        sk.Kami.Image.Citation.UpdatedAt
+                    ))
+                    .ToList(),
+
+                KamiCitations = s.ShrineKamis
+                    .SelectMany(sk => sk.Kami.KamiCitations)
+                    .Select(kc => new CitationCMSDto(
+                        kc.Citation.CiteId,
+                        kc.Citation.Title,
+                        kc.Citation.Author,
+                        kc.Citation.Url,
+                        kc.Citation.Year,
+                        kc.Citation.CreatedAt,
+                        kc.Citation.UpdatedAt
+                    ))
+                    .ToList(),
+
+                HistoryImageCitations = s.ShrineHistories
+                    .Where(h => h.Image != null && h.Image.Citation != null)
+                    .Select(h => new CitationCMSDto(
+                        h.Image!.Citation!.CiteId,
+                        h.Image.Citation.Title,
+                        h.Image.Citation.Author,
+                        h.Image.Citation.Url,
+                        h.Image.Citation.Year,
+                        h.Image.Citation.CreatedAt,
+                        h.Image.Citation.UpdatedAt
+                    ))
+                    .ToList(),
+
+                HistoryCitations = s.ShrineHistories
+                    .SelectMany(h => h.HistoryCitations)
+                    .Select(hc => new CitationCMSDto(
+                        hc.Citation.CiteId,
+                        hc.Citation.Title,
+                        hc.Citation.Author,
+                        hc.Citation.Url,
+                        hc.Citation.Year,
+                        hc.Citation.CreatedAt,
+                        hc.Citation.UpdatedAt
+                    ))
+                    .ToList(),
+
+                FolkloreImageCitations = s.ShrineFolklores
+                    .Where(f => f.Image != null && f.Image.Citation != null)
+                    .Select(f => new CitationCMSDto(
+                        f.Image!.Citation!.CiteId,
+                        f.Image.Citation.Title,
+                        f.Image.Citation.Author,
+                        f.Image.Citation.Url,
+                        f.Image.Citation.Year,
+                        f.Image.Citation.CreatedAt,
+                        f.Image.Citation.UpdatedAt
+                    ))
+                    .ToList(),
+
+                FolkloreCitations = s.ShrineFolklores
+                    .SelectMany(f => f.FolkloreCitations)
+                    .Select(fc => new CitationCMSDto(
+                        fc.Citation.CiteId,
+                        fc.Citation.Title,
+                        fc.Citation.Author,
+                        fc.Citation.Url,
+                        fc.Citation.Year,
+                        fc.Citation.CreatedAt,
+                        fc.Citation.UpdatedAt
+                    ))
+                    .ToList(),
+
+                GalleryImageCitations = s.ShrineGalleries
+                    .Where(g => g.Image.Citation != null)
+                    .Select(g => new CitationCMSDto(
+                        g.Image.Citation!.CiteId,
+                        g.Image.Citation.Title,
+                        g.Image.Citation.Author,
+                        g.Image.Citation.Url,
+                        g.Image.Citation.Year,
+                        g.Image.Citation.CreatedAt,
+                        g.Image.Citation.UpdatedAt
+                    ))
+                    .ToList()
+            })
+            .FirstOrDefaultAsync(ct);
+
+        if (shrineData == null)
+            return new List<CitationCMSDto>();
+
+        var citations = new List<CitationCMSDto>();
+
+        if (shrineData.HeroImageCitation != null)
+            citations.Add(shrineData.HeroImageCitation);
+
+        citations.AddRange(shrineData.KamiImageCitations);
+        citations.AddRange(shrineData.KamiCitations);
+        citations.AddRange(shrineData.HistoryImageCitations);
+        citations.AddRange(shrineData.HistoryCitations);
+        citations.AddRange(shrineData.FolkloreImageCitations);
+        citations.AddRange(shrineData.FolkloreCitations);
+        citations.AddRange(shrineData.GalleryImageCitations);
+
+        return citations
+            .GroupBy(c => c.CiteId)
+            .Select(g => g.First())
+            .OrderBy(c => string.IsNullOrWhiteSpace(c.Title) ? 1 : 0)
+            .ThenBy(c => c.Title)
+            .ThenBy(c => c.Author)
+            .ToList();
+    }
+
     #endregion
 
     #region CMS Shrine Status 
@@ -1235,7 +1405,7 @@ public class ShrineReadService : IShrineReadService
     #endregion
 
 
-    #region CMS Shrine by ImageId
+    #region Get Exisiting Import Ids
 
     public async Task<List<string>> GetExistingImportIdsAsync(List<string> importIds, CancellationToken ct)
     {
@@ -1245,7 +1415,7 @@ public class ShrineReadService : IShrineReadService
         return await _db.Shrines
             .AsNoTracking()
             .Where(s => s.InputtedId != null && importIds.Contains(s.InputtedId))
-            .Select(s => s.InputtedId!) 
+            .Select(s => s.InputtedId!)
             .ToListAsync(ct);
     }
 
