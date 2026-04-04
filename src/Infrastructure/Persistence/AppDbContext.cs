@@ -12,6 +12,7 @@ public class AppDbContext : DbContext, IAppDbContext
     // DbSets (tables EF Core will track)
     // Shrines
     public DbSet<Shrine> Shrines => Set<Shrine>();
+    public DbSet<ShrineReview> ShrineReviews => Set<ShrineReview>();
 
     // Gallery
     public DbSet<ShrineGallery> ShrineGalleries => Set<ShrineGallery>();

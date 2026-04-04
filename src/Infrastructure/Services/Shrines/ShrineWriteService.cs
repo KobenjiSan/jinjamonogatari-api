@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Application.Common.Exceptions;
 using Application.Features.Shrines.Services;
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services.Shrines;
@@ -1395,6 +1396,125 @@ public class ShrineWriteService : IShrineWriteService
             _db.Citations.RemoveRange(citations);
             await _db.SaveChangesAsync(ct);
         }
+    }
+
+    #endregion
+
+    #region UPDATE SHRINE STATUS
+
+    public async Task UpdateShrineStatus(int shrineId, string status, CancellationToken ct)
+    {
+        var shrine = await _db.Shrines
+            .FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+
+        if (shrine is null) throw new NotFoundException($"Shrine {shrineId} was not found.");
+
+        if (status != "import" && status != "draft" && status != "review" && status != "published")
+            throw new BadRequestException("Could not update shrine status, status presented is invalid.");
+
+        shrine.Status = status;
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region SUBMIT REVIEW SHRINE
+
+    public async Task SubmitShrineForReview(int shrineId, int userId, CancellationToken ct)
+    {
+        // Get shrine and validate it exists
+        var shrine = await _db.Shrines.FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+        if (shrine is null) 
+            throw new NotFoundException($"Shrine {shrineId} was not found.");
+
+        // Check if shrine is already pending review
+        var hasPendingReview = await _db.ShrineReviews
+            .AnyAsync(r => r.ShrineId == shrineId && r.Decision == ReviewDecision.Pending, ct);
+
+        if (hasPendingReview)
+            throw new BadRequestException("Shrine already has a pending review.");
+
+        // New ShrineReview
+        var review = new ShrineReview
+        {
+            ShrineId = shrineId,
+            SubmittedAt = DateTime.UtcNow,
+            SubmittedBy = userId,
+            Decision = ReviewDecision.Pending
+        };
+
+        _db.ShrineReviews.Add(review);
+
+        shrine.Status = "review";
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region REJECT REVIEW SHRINE
+
+    public async Task RejectShrineForReview(int shrineId, int userId, string message, CancellationToken ct)
+    {  
+        if (string.IsNullOrWhiteSpace(message))
+            throw new BadRequestException("Rejection message is required.");
+
+        // Get shrine and validate it exists
+        var shrine = await _db.Shrines.FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+        if (shrine is null) 
+            throw new NotFoundException($"Shrine {shrineId} was not found.");
+        if (shrine.Status != "review")
+            throw new BadRequestException("Only shrines in review can be published.");
+
+        // Get review and validate it exists
+        var review = await _db.ShrineReviews
+            .FirstOrDefaultAsync(r => r.Decision == ReviewDecision.Pending && r.ShrineId == shrineId, ct);
+        if (review is null) 
+            throw new NotFoundException($"Shrine {shrineId} does not have a pending review.");
+
+        // Update review
+        review.ReviewedAt = DateTime.UtcNow;
+        review.ReviewedBy = userId;
+        review.ReviewerComment = message;
+        review.Decision = ReviewDecision.Rejected;
+
+        // Update shrine status
+        if (shrine.InputtedId is null) shrine.Status = "draft";
+        else shrine.Status = "import";
+        
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region PUBLISH REVIEW SHRINE
+
+    public async Task PublishShrineForReview(int shrineId, int userId, CancellationToken ct)
+    {  
+        // Get shrine and validate it exists
+        var shrine = await _db.Shrines.FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+        if (shrine is null) 
+            throw new NotFoundException($"Shrine {shrineId} was not found.");
+        if (shrine.Status != "review")
+            throw new BadRequestException("Only shrines in review can be published.");
+
+        // Get review and validate it exists
+        var review = await _db.ShrineReviews
+            .FirstOrDefaultAsync(r => r.Decision == ReviewDecision.Pending && r.ShrineId == shrineId, ct);
+        if (review is null) 
+            throw new NotFoundException($"Shrine {shrineId} does not have a pending review.");
+
+        // Update review
+        review.ReviewedAt = DateTime.UtcNow;
+        review.ReviewedBy = userId;
+        review.Decision = ReviewDecision.Published;
+
+        // Update shrine status
+        shrine.Status = "published";
+        shrine.PublishedAt = DateTime.UtcNow;
+        
+        await _db.SaveChangesAsync(ct);
     }
 
     #endregion

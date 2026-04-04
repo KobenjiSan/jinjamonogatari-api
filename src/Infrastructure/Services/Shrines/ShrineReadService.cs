@@ -430,7 +430,8 @@ public class ShrineReadService : IShrineReadService
                 s.Lat,
                 s.Lon,
                 s.UpdatedAt,
-                null
+                null,
+                false
             )).ToListAsync(ct);
 
         return (items, totalCount);
@@ -1420,4 +1421,46 @@ public class ShrineReadService : IShrineReadService
     }
 
     #endregion
+
+    #region Get Shrine Review History
+
+    public async Task<IReadOnlyList<ShrineReviewDto>> GetShrineReviewHistoryAsync(int shrineId, CancellationToken ct)
+    {
+        return await _db.ShrineReviews
+            .AsNoTracking()
+            .Where(s => s.ShrineId == shrineId)
+            .OrderByDescending(r => r.SubmittedAt)
+            .Select(r => new ShrineReviewDto
+            (
+                r.ReviewId,
+                r.SubmittedAt,
+                r.SubmittedBy,
+                r.SubmittedByUser.Username,
+                r.ReviewedAt,
+                r.ReviewedBy,
+                r.ReviewedByUser != null ? r.ReviewedByUser.Username : null,
+                r.ReviewerComment,
+                r.Decision.ToString()
+            )).ToListAsync(ct);
+    }
+
+    #endregion
+
+    #region Get Shrine Recently Rejected
+
+    public async Task<bool> IsShrineRecentlyRejectedAsync(int shrineId, CancellationToken ct)
+    {
+        var mostRecentDecision = await _db.ShrineReviews
+        .AsNoTracking()
+        .Where(r => r.ShrineId == shrineId)
+        .OrderByDescending(r => r.SubmittedAt)
+        .Select(r => (ReviewDecision?)r.Decision)
+        .FirstOrDefaultAsync(ct);
+
+        return mostRecentDecision == ReviewDecision.Rejected;
+    }
+
+    #endregion
+
+
 }

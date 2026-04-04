@@ -57,4 +57,5 @@ public class Shrine : IHasTimestamps
     public ICollection<Folklore> ShrineFolklores { get; set; } = new List<Folklore>();
     public ICollection<ShrineGallery> ShrineGalleries { get; set; } = new List<ShrineGallery>();
     public ICollection<UserCollection> UserCollections { get; set; } = new List<UserCollection>();
+    public ICollection<ShrineReview> Reviews { get; set; } = new List<ShrineReview>();
 }

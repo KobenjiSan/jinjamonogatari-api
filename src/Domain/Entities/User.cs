@@ -29,4 +29,7 @@ public class User : IHasTimestamps
     // Relationships (collections)
     public ICollection<UserCollection> UserCollections { get; set; } = new List<UserCollection>();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
+    public ICollection<ShrineReview> SubmittedReviews { get; set; } = new List<ShrineReview>();
+    public ICollection<ShrineReview> ReviewedReviews { get; set; } = new List<ShrineReview>();
 }

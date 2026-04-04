@@ -11,6 +11,9 @@ using Application.Features.Shrines.Commands.DeleteHistory;
 using Application.Features.Shrines.Commands.DeleteShrine;
 using Application.Features.Shrines.Commands.ImportShrines;
 using Application.Features.Shrines.Commands.LinkKamiToShrine;
+using Application.Features.Shrines.Commands.PublishReviewShrine;
+using Application.Features.Shrines.Commands.RejectReviewShrine;
+using Application.Features.Shrines.Commands.SubmitReviewShrine;
 using Application.Features.Shrines.Commands.UnlinkKamiToShrine;
 using Application.Features.Shrines.Commands.UpdateFolklore;
 using Application.Features.Shrines.Commands.UpdateGalleryImage;
@@ -267,7 +270,7 @@ public class ShrineWriteController : ControllerBase
 
     #region DELETE SHRINE
 
-    // Delete /api/shrines/cms/delete/{shrineId}
+    // DELETE /api/shrines/cms/delete/{shrineId}
     [HttpDelete("cms/delete/{shrineId}")]
     [Authorize(Roles = "Admin")]    // Admins only
     public async Task<IActionResult> DeleteShrineAsync([FromRoute] int shrineId)
@@ -275,6 +278,50 @@ public class ShrineWriteController : ControllerBase
         var command = new DeleteShrineCommand(shrineId);
         var result = await _mediator.Send(command);
         return Ok(result);
+    }
+
+    #endregion
+
+    #region SUBMIT REVIEW SHRINE
+
+    // POST /api/shrines/cms/{shrineId}/review/submit
+    [HttpPost("cms/{shrineId}/review/submit")]
+    public async Task<IActionResult> SubmitReviewShrineAsync([FromRoute] int shrineId)
+    {
+        var userId = User.GetUserId();
+        var command = new SubmitReviewShrineCommand(shrineId, userId);
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    #endregion
+
+    #region REJECT REVIEW SHRINE
+
+    // POST /api/shrines/cms/{shrineId}/review/reject
+    [HttpPost("cms/{shrineId}/review/reject")]
+    [Authorize(Roles = "Admin")]    // Admins only
+    public async Task<IActionResult> RejectReviewShrineAsync([FromRoute] int shrineId, [FromBody] RejectShrineRequest request)
+    {
+        var userId = User.GetUserId();
+        var command = new RejectReviewShrineCommand(shrineId, userId, request.Message);
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    #endregion
+
+    #region PUBLISH REVIEW SHRINE
+
+    // POST /api/shrines/cms/{shrineId}/review/publish
+    [HttpPost("cms/{shrineId}/review/publish")]
+    [Authorize(Roles = "Admin")]    // Admins only
+    public async Task<IActionResult> PublishReviewShrineAsync([FromRoute] int shrineId)
+    {
+        var userId = User.GetUserId();
+        var command = new PublishReviewShrineCommand(shrineId, userId);
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     #endregion
@@ -492,5 +539,11 @@ public record CreateShrineRequest(
     double? Lat,
     double? Lon
 );
+
+#endregion
+
+#region Reject Shrine Request
+
+public record RejectShrineRequest(string Message);
 
 #endregion

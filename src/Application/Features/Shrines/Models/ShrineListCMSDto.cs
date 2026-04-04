@@ -14,5 +14,7 @@ public record ShrineListCMSDto(
     // Last Updated
     DateTime UpdatedAt,
     // Issues
-    int? ErrorCount
+    int? ErrorCount,
+    // Rejection flag
+    bool RecentlyRejected = false
 );

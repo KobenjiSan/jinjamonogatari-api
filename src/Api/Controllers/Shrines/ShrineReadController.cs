@@ -23,6 +23,7 @@ using Application.Features.Shrines.Queries.GetShrineMetaByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineMetaBySlug;
 using Application.Features.Shrines.Queries.GetShrineNotesByIdCMS;
 using Application.Features.Shrines.Queries.GetShrinePreview;
+using Application.Features.Shrines.Queries.GetShrineReviewHistory;
 using Application.Features.Shrines.Queries.GetShrineStatusByIdCMS;
 using Domain.Enums;
 using MediatR;
@@ -294,6 +295,16 @@ public class ShrineReadController : ControllerBase
 
         var result = await _mediator.Send(new GetImportPreviewCMSQuery(request));
         return Ok(result.Preview);
+    }
+
+    // Returns shrine review history
+    // GET /api/shrines/cms/{shrineId}/review/history
+    [Authorize]
+    [HttpGet("cms/{shrineId}/review/history")]
+    public async Task<ActionResult<IReadOnlyList<ShrineReviewDto>>> GetShrineReviewHistoryAsync([FromRoute] int shrineId)
+    {
+        var result = await _mediator.Send(new GetShrineReviewHistoryQuery(shrineId));
+        return Ok(result.ReviewHistory);
     }
 }
 

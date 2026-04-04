@@ -22,29 +22,27 @@ public class GetShrineListCMSHandler : IRequestHandler<GetShrineListCMSQuery, Ge
 
         var updatedShrines = new List<ShrineListCMSDto>();
 
-        foreach(var shrine in shrines)
+        foreach (var shrine in shrines)
         {
-            var snapshot = await _readService.GetShrineAuditSnapshotAsync(shrine.ShrineId, ct);
+            var errorCount = 0;
 
-            if (snapshot is null)
+
+            var snapshot = await _readService.GetShrineAuditSnapshotAsync(shrine.ShrineId, ct);
+            if (snapshot is not null)
             {
-                updatedShrines.Add(shrine with
-                {
-                    ErrorCount = 0
-                });
-                continue;
+                var audit = _shrineAuditService.Evaluate(snapshot);
+                errorCount = audit.ErrorCount;
             }
 
-            var audit = _shrineAuditService.Evaluate(snapshot);
+            var recentlyRejected = await _readService.IsShrineRecentlyRejectedAsync(shrine.ShrineId, ct);
 
             updatedShrines.Add(shrine with
             {
-                ErrorCount = audit.ErrorCount
+                ErrorCount = errorCount,
+                RecentlyRejected = recentlyRejected
             });
         }
 
-        shrines = updatedShrines;
-
-        return new GetShrineListCMSResult(shrines, total);
+        return new GetShrineListCMSResult(updatedShrines, total);
     }
 }

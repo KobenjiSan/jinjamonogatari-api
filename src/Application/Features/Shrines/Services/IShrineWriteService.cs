@@ -49,4 +49,10 @@ public interface IShrineWriteService
 
     Task CreateShrineAsync(CreateShrineRequest request, CancellationToken ct);
     Task DeleteShrineAsync(int shrineId, CancellationToken ct);
+
+    Task UpdateShrineStatus(int shrineId, string status, CancellationToken ct);
+
+    Task SubmitShrineForReview(int shrineId, int userId, CancellationToken ct);
+    Task RejectShrineForReview(int shrineId, int userId, string message, CancellationToken ct);
+    Task PublishShrineForReview(int shrineId, int userId, CancellationToken ct);
 }
