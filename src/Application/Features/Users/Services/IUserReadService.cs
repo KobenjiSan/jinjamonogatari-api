@@ -1,4 +1,6 @@
+using Application.Features.Users.Queries.GetUsersList;
 using Application.Features.Shrines.Models;
+using Application.Features.Users.Models;
 using Domain.Entities;
 
 namespace Application.Features.Users.Services;
@@ -23,5 +25,7 @@ public interface IUserReadService
     );
 
     Task<IReadOnlyList<int>> GetShrineCollectionIds(int userId, CancellationToken ct);
+
+    Task<(IReadOnlyList<UserListDto>, int)> GetUsersListAsync(GetUsersListQuery request, CancellationToken ct);
 
 }

@@ -1,3 +1,4 @@
+using Application.Common.Exceptions;
 using Application.Features.Users.Services;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -166,5 +167,32 @@ public class UserWriteService : IUserWriteService
         await _db.SaveChangesAsync(ct);
 
         return user;
+    }
+
+    // Note: This will not work for editors / admins linked to ShrineReviews. (Fix later?)
+    public async Task DeleteUserAsync(int userId, CancellationToken ct)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == userId, ct);
+        if (user is null) throw new NotFoundException($"User {userId} was not found.");
+
+        _db.Users.Remove(user);
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task UpdateUserRoleAsync(int userId, string userRole, CancellationToken ct)
+    {
+        // Get & Validate User
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == userId, ct);
+        if (user is null) throw new ArgumentException("User not found.");
+
+        // Get & Validate Role
+        var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == userRole, ct);
+        if (role is null) throw new BadRequestException($"Role '{userRole}' was not found.");
+
+        // Update Role
+        user.RoleId = role.RoleId;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
     }
 }

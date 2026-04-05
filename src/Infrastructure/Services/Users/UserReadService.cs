@@ -1,6 +1,9 @@
+using Application.Features.Users.Queries.GetUsersList;
 using Application.Features.Shrines.Models;
+using Application.Features.Users.Models;
 using Application.Features.Users.Services;
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 
@@ -108,5 +111,64 @@ public class UserReadService : IUserReadService
             .OrderByDescending(x => x.CreatedAt)
             .Select(x => x.ShrineId)
             .ToListAsync(ct);
+    }
+
+    public async Task<(IReadOnlyList<UserListDto>, int)> GetUsersListAsync(GetUsersListQuery request, CancellationToken ct)
+    {
+        var query = _db.Users.AsNoTracking();
+
+        // Sort role
+        if (!string.IsNullOrWhiteSpace(request.Role))
+        {
+            query = query.Where(u => u.Role.Name.ToLower() == request.Role.ToLower());
+        }
+
+        // Search Query
+        if (!string.IsNullOrWhiteSpace(request.SearchQuery))
+        {
+            var search = request.SearchQuery.Trim().ToLower();
+
+            query = query.Where(u =>
+                (u.Username != null && u.Username.ToLower().Contains(search)) ||
+                (u.Email != null && u.Email.ToLower().Contains(search)) ||
+                (u.Role.Name != null && u.Role.Name.ToLower().Contains(search))
+            );
+        }
+
+        // Sort Type / Direction
+        var sort = request.Sort ?? UserSort.IdAsc;
+        query = sort switch
+        {
+            UserSort.UsernameAsc => query.OrderBy(u => u.Username),
+            UserSort.UsernameDesc => query.OrderByDescending(u => u.Username),
+            UserSort.LastLoginAsc => query.OrderBy(u => u.LastLoginAt),
+            UserSort.LastLoginDesc => query.OrderByDescending(u => u.LastLoginAt),
+            UserSort.IdAsc => query.OrderBy(u => u.UserId),
+            UserSort.IdDesc => query.OrderByDescending(u => u.UserId),
+            _ => query
+        };
+
+        // Get total count
+        var totalCount = await query.CountAsync(ct);
+
+        // Pagination
+        var skip = (request.Page - 1) * request.PageSize;
+        query = query
+            .Skip(skip)
+            .Take(request.PageSize);
+
+        var items = await query
+            .Select(u => new UserListDto(
+                u.UserId,
+                u.Username,
+                u.Email,
+                u.Role.Name,
+                u.CreatedAt,
+                u.UpdatedAt,
+                u.LastLoginAt,
+                u.UserCollections.Count
+            )).ToListAsync(ct);
+
+        return (items, totalCount);
     }
 }

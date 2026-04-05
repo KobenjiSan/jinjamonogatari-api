@@ -11,6 +11,9 @@ using Application.Features.Users.Commands.LogoutUser;
 using Application.Features.Users.Commands.UpdateMyProfile;
 using System.Text.Json;
 using Application.Features.Users.Commands.LoginUserCMS;
+using Application.Features.Users.Commands.DeleteUser;
+using Application.Common.Exceptions;
+using Application.Features.Users.Commands.UpdateUserRole;
 
 namespace Api.Controllers.Users;
 
@@ -146,6 +149,25 @@ public class UserWriteController : ControllerBase
         await _mediator.Send(new RemoveShrineFromCollectionCommand(userId, shrineId));
         return NoContent();
     }
+
+    // DELETE /api/users/admin/{userId}
+    [HttpDelete("admin/{userId}")]
+    [Authorize(Roles = "Admin")]    // Admins only
+    public async Task<IActionResult> DeleteUserAsync([FromRoute] int userId)
+    {
+        await _mediator.Send(new DeleteUserCommand(userId));
+        return NoContent();
+    }
+
+    // PUT /api/users/admin/{userId}
+    [HttpPut("admin/{userId}")]
+    [Authorize(Roles = "Admin")]    // Admins only
+    public async Task<IActionResult> UpdateUserRoleAsync([FromRoute] int userId, [FromBody] UpdateUserRoleRequest request)
+    {
+        if(string.IsNullOrWhiteSpace(request.userRole)) throw new BadRequestException("User role is required.");
+        await _mediator.Send(new UpdateUserRoleCommand(userId, request.userRole));
+        return NoContent();
+    }
 }
 
 // DTOs
@@ -174,3 +196,7 @@ public record UpdateMyProfileRequest
     public JsonElement? LastName { get; init; }
     public JsonElement? Phone { get; init; }
 }
+
+public record UpdateUserRoleRequest(
+    string userRole
+);

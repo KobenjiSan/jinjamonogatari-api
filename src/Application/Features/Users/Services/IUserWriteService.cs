@@ -33,4 +33,7 @@ public interface IUserWriteService
         bool hasLastName, string? lastName,
         bool hasPhone, string? phone,
         CancellationToken ct);
+
+    Task DeleteUserAsync(int userId, CancellationToken ct);
+    Task UpdateUserRoleAsync(int userId, string userRole, CancellationToken ct);
 }

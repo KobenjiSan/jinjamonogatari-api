@@ -2,7 +2,9 @@ using API.Extensions;
 using Application.Features.Collection.Queries.GetIsShrineInCollection;
 using Application.Features.Collection.Queries.GetShrineCollectionCards;
 using Application.Features.Collection.Queries.GetShrineCollectionIds;
+using Application.Features.Users.Queries.GetUsersList;
 using Application.Features.Users.Queries.GetMe;
+using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -62,6 +64,21 @@ public class UserReadController : ControllerBase
     {
         var userId = User.GetUserId();
         var result = await _mediator.Send(new GetIsShrineInCollectionQuery(userId, shrineId));
+        return Ok(result);
+    }
+
+    // GET /api/users/admin/list?page=...&pageSize=...&role=...&searchQuery=...&sort=...
+    [HttpGet("admin/list")]
+    [Authorize(Roles = "Admin")]    // Admins only
+    public async Task<ActionResult<GetUsersListResult>> GetUserListAsync(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5,
+        [FromQuery] string? role = null,
+        [FromQuery] string? searchQuery = null,
+        [FromQuery] UserSort? sort = null
+    )
+    {
+        var result = await _mediator.Send(new GetUsersListQuery(role, searchQuery, sort, page, pageSize));
         return Ok(result);
     }
 }
