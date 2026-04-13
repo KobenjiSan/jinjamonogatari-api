@@ -64,7 +64,7 @@ public class ShrineReadService : IShrineReadService
                 s.Lon.HasValue ? (double?)s.Lon.Value : null,
                 s.NameEn,
                 s.NameJp,
-                s.Image != null ? s.Image.ImgSource : null,
+                s.Image != null ? s.Image.ImageUrl : null,
                 s.ShrineDesc,
                 (hasUserPoint && s.Location != null)
                     ? EF.Functions.Distance(s.Location!, userPoint!, true)
@@ -119,7 +119,7 @@ public class ShrineReadService : IShrineReadService
                 s.Slug!,
                 s.NameEn,
                 s.NameJp,
-                s.Image != null ? s.Image.ImgSource : null,
+                s.Image != null ? s.Image.ImageUrl : null,
                 (hasUserPoint && s.Location != null)
                     ? EF.Functions.Distance(s.Location!, userPoint!, true)
                     : (double?)null
@@ -167,7 +167,7 @@ public class ShrineReadService : IShrineReadService
                 s.PhoneNumber,
                 s.Email,
                 s.Website,
-                s.Image != null ? s.Image.ImgSource : null,
+                s.Image != null ? s.Image.ImageUrl : null,
                 (hasUserPoint && s.Location != null)
                     ? EF.Functions.Distance(s.Location!, userPoint!, true)
                     : (double?)null,
@@ -199,7 +199,7 @@ public class ShrineReadService : IShrineReadService
                 k.Image == null
                     ? null
                     : new ImageCitedDto(
-                        k.Image.ImgSource,
+                        k.Image.ImageUrl,
                         k.Image.Citation == null
                             ? null
                             : new CitationDto(
@@ -247,7 +247,7 @@ public class ShrineReadService : IShrineReadService
                 h.Image == null
                     ? null
                     : new ImageCitedDto(
-                        h.Image.ImgSource,
+                        h.Image.ImageUrl,
                         h.Image.Citation == null
                             ? null
                             : new CitationDto(
@@ -291,7 +291,7 @@ public class ShrineReadService : IShrineReadService
                 f.Image == null
                     ? null
                     : new ImageCitedDto(
-                        f.Image.ImgSource,
+                        f.Image.ImageUrl,
                         f.Image.Citation == null
                             ? null
                             : new CitationDto(
@@ -323,10 +323,10 @@ public class ShrineReadService : IShrineReadService
             .AsNoTracking()
             .Where(s => s.Slug == slug && s.PublishedAt != null)
             .SelectMany(s => s.ShrineGalleries.Select(sg => sg.Image))
-            .Where(i => i.ImgSource != null)
+            .Where(i => i.ImageUrl != null)
             .Select(i => new GalleryListItemDto(
                 i.ImgId,
-                i.ImgSource!
+                i.ImageUrl!
             )).ToListAsync(ct);
     }
 
@@ -341,7 +341,7 @@ public class ShrineReadService : IShrineReadService
             .Where(i => i.ImgId == id)
             .Select(i => new ImageFullDto(
                 i.ImgId,
-                i.ImgSource,
+                i.ImageUrl,
                 i.Title,
                 i.Desc,
                 i.Citation == null
@@ -468,7 +468,7 @@ public class ShrineReadService : IShrineReadService
                     ? null
                     : new ImageFullDto(
                         s.Image.ImgId,
-                        s.Image.ImgSource,
+                        s.Image.ImageUrl,
                         s.Image.Title,
                         s.Image.Desc,
                         s.Image.Citation == null
@@ -530,7 +530,7 @@ public class ShrineReadService : IShrineReadService
                 ? null
                 : new ImageCMSDto(
                     k.Image.ImgId,
-                    k.Image.ImgSource,
+                    k.Image.ImageUrl,
                     k.Image.Title,
                     k.Image.Desc,
                     k.Image.Citation == null
@@ -583,7 +583,7 @@ public class ShrineReadService : IShrineReadService
                     ? null
                     : new ImageCMSDto(
                         k.Image.ImgId,
-                        k.Image.ImgSource,
+                        k.Image.ImageUrl,
                         k.Image.Title,
                         k.Image.Desc,
                         k.Image.Citation == null
@@ -655,7 +655,7 @@ public class ShrineReadService : IShrineReadService
                ? null
                : new ImageCMSDto(
                    h.Image.ImgId,
-                   h.Image.ImgSource,
+                   h.Image.ImageUrl,
                    h.Image.Title,
                    h.Image.Desc,
                    h.Image.Citation == null
@@ -710,7 +710,7 @@ public class ShrineReadService : IShrineReadService
                ? null
                : new ImageCMSDto(
                    h.Image.ImgId,
-                   h.Image.ImgSource,
+                   h.Image.ImageUrl,
                    h.Image.Title,
                    h.Image.Desc,
                    h.Image.Citation == null
@@ -754,7 +754,7 @@ public class ShrineReadService : IShrineReadService
             .SelectMany(s => s.ShrineGalleries.Select(sg => sg.Image))
             .Select(i => new ImageCMSDto(
                i.ImgId,
-                i.ImgSource,
+                i.ImageUrl,
                 i.Title,
                 i.Desc,
                 i.Citation == null
@@ -807,7 +807,7 @@ public class ShrineReadService : IShrineReadService
                 HeroImage = s.Image == null ? null : new ImageAuditSnapshot
                 {
                     ImgId = s.Image.ImgId,
-                    ImgSource = s.Image.ImgSource,
+                    ImageUrl = s.Image.ImageUrl,
                     Title = s.Image.Title,
                     Desc = s.Image.Desc,
                     Citation = s.Image.Citation == null ? null : new CitationAuditSnapshot
@@ -839,7 +839,7 @@ public class ShrineReadService : IShrineReadService
                         Image = sk.Kami.Image == null ? null : new ImageAuditSnapshot
                         {
                             ImgId = sk.Kami.Image.ImgId,
-                            ImgSource = sk.Kami.Image.ImgSource,
+                            ImageUrl = sk.Kami.Image.ImageUrl,
                             Title = sk.Kami.Image.Title,
                             Desc = sk.Kami.Image.Desc,
                             Citation = sk.Kami.Image.Citation == null ? null : new CitationAuditSnapshot
@@ -875,7 +875,7 @@ public class ShrineReadService : IShrineReadService
                         Image = h.Image == null ? null : new ImageAuditSnapshot
                         {
                             ImgId = h.Image.ImgId,
-                            ImgSource = h.Image.ImgSource,
+                            ImageUrl = h.Image.ImageUrl,
                             Title = h.Image.Title,
                             Desc = h.Image.Desc,
                             Citation = h.Image.Citation == null ? null : new CitationAuditSnapshot
@@ -910,7 +910,7 @@ public class ShrineReadService : IShrineReadService
                         Image = f.Image == null ? null : new ImageAuditSnapshot
                         {
                             ImgId = f.Image.ImgId,
-                            ImgSource = f.Image.ImgSource,
+                            ImageUrl = f.Image.ImageUrl,
                             Title = f.Image.Title,
                             Desc = f.Image.Desc,
                             Citation = f.Image.Citation == null ? null : new CitationAuditSnapshot
@@ -939,7 +939,7 @@ public class ShrineReadService : IShrineReadService
                     .Select(g => new ImageAuditSnapshot
                     {
                         ImgId = g.Image.ImgId,
-                        ImgSource = g.Image.ImgSource,
+                        ImageUrl = g.Image.ImageUrl,
                         Title = g.Image.Title,
                         Desc = g.Image.Desc,
                         Citation = g.Image.Citation == null ? null : new CitationAuditSnapshot
@@ -1462,5 +1462,16 @@ public class ShrineReadService : IShrineReadService
 
     #endregion
 
+    #region Get PublicId
 
+    public async Task<string?> GetImagePublicIdCMSAsync(int imageId, CancellationToken ct)
+    {
+        return await _db.Images
+            .AsNoTracking()
+            .Where(i => i.ImgId == imageId)
+            .Select(i => i.PublicId)
+            .SingleOrDefaultAsync(ct);
+    }
+
+    #endregion
 }

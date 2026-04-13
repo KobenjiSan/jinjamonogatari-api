@@ -15,8 +15,11 @@ public class ImageConfiguration : IEntityTypeConfiguration<Image>
         e.HasKey(x => x.ImgId);
         e.Property(x => x.ImgId).HasColumnName("img_id").ValueGeneratedOnAdd();
 
+        // Cloudinary id
+        e.Property(x => x.PublicId).HasColumnName("public_id");
+
         // Content
-        e.Property(x => x.ImgSource).HasColumnName("img_source");
+        e.Property(x => x.ImageUrl).HasColumnName("image_url");
         e.Property(x => x.Title).HasColumnName("title");
         e.Property(x => x.Desc).HasColumnName("desc");
 

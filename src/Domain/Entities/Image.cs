@@ -7,8 +7,10 @@ public class Image : IHasTimestamps
     // PK
     public int ImgId { get; set; }
 
+    public string? PublicId { get; set; } 
+
     // Content
-    public string? ImgSource { get; set; }
+    public string? ImageUrl { get; set; }
     public string? Title { get; set; }
     public string? Desc { get; set; }
 

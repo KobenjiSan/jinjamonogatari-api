@@ -52,7 +52,7 @@ public class GetShrineKamiByIdCMSHandler : IRequestHandler<GetShrineKamiByIdCMSQ
         return new ImageAuditSnapshot
         {
             ImgId = image.ImgId,
-            ImgSource = image.ImageUrl,
+            ImageUrl = image.ImageUrl,
             Title = image.Title,
             Desc = image.Desc,
             Citation = image.Citation is null ? null : MapCitationSnapshot(image.Citation)

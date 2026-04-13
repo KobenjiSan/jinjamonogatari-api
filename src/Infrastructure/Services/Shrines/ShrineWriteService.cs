@@ -126,7 +126,7 @@ public class ShrineWriteService : IShrineWriteService
         {
             var image = new Image
             {
-                ImgSource = request.HeroImage.ImgSource,
+                ImageUrl = request.HeroImage.ImageUrl,
                 Title = request.HeroImage.Title,
                 Desc = request.HeroImage.Desc
             };
@@ -151,7 +151,7 @@ public class ShrineWriteService : IShrineWriteService
             if (shrine.Image is null)
                 throw new NotFoundException("Hero image not found.");
 
-            shrine.Image.ImgSource = request.HeroImage.ImgSource;
+            shrine.Image.ImageUrl = request.HeroImage.ImageUrl;
             shrine.Image.Title = request.HeroImage.Title;
             shrine.Image.Desc = request.HeroImage.Desc;
 
@@ -238,7 +238,7 @@ public class ShrineWriteService : IShrineWriteService
         {
             var image = new Image
             {
-                ImgSource = request.Image.ImgSource,
+                ImageUrl = request.Image.ImageUrl,
                 Title = request.Image.Title,
                 Desc = request.Image.Desc
             };
@@ -406,7 +406,7 @@ public class ShrineWriteService : IShrineWriteService
         {
             var image = new Image
             {
-                ImgSource = request.Image.ImgSource,
+                ImageUrl = request.Image.ImageUrl,
                 Title = request.Image.Title,
                 Desc = request.Image.Desc
             };
@@ -431,7 +431,7 @@ public class ShrineWriteService : IShrineWriteService
             if (kami.Image is null)
                 throw new NotFoundException("Kami image not found.");
 
-            kami.Image.ImgSource = request.Image.ImgSource;
+            kami.Image.ImageUrl = request.Image.ImageUrl;
             kami.Image.Title = request.Image.Title;
             kami.Image.Desc = request.Image.Desc;
 
@@ -572,7 +572,7 @@ public class ShrineWriteService : IShrineWriteService
         {
             var image = new Image
             {
-                ImgSource = request.Image.ImgSource,
+                ImageUrl = request.Image.ImageUrl,
                 Title = request.Image.Title,
                 Desc = request.Image.Desc
             };
@@ -721,7 +721,7 @@ public class ShrineWriteService : IShrineWriteService
         {
             var image = new Image
             {
-                ImgSource = request.Image.ImgSource,
+                ImageUrl = request.Image.ImageUrl,
                 Title = request.Image.Title,
                 Desc = request.Image.Desc
             };
@@ -746,7 +746,7 @@ public class ShrineWriteService : IShrineWriteService
             if (history.Image is null)
                 throw new NotFoundException("History image not found.");
 
-            history.Image.ImgSource = request.Image.ImgSource;
+            history.Image.ImageUrl = request.Image.ImageUrl;
             history.Image.Title = request.Image.Title;
             history.Image.Desc = request.Image.Desc;
 
@@ -886,7 +886,7 @@ public class ShrineWriteService : IShrineWriteService
         {
             var image = new Image
             {
-                ImgSource = request.Image.ImgSource,
+                ImageUrl = request.Image.ImageUrl,
                 Title = request.Image.Title,
                 Desc = request.Image.Desc
             };
@@ -1034,7 +1034,7 @@ public class ShrineWriteService : IShrineWriteService
         {
             var image = new Image
             {
-                ImgSource = request.Image.ImgSource,
+                ImageUrl = request.Image.ImageUrl,
                 Title = request.Image.Title,
                 Desc = request.Image.Desc
             };
@@ -1059,7 +1059,7 @@ public class ShrineWriteService : IShrineWriteService
             if (folklore.Image is null)
                 throw new NotFoundException("Folklore image not found.");
 
-            folklore.Image.ImgSource = request.Image.ImgSource;
+            folklore.Image.ImageUrl = request.Image.ImageUrl;
             folklore.Image.Title = request.Image.Title;
             folklore.Image.Desc = request.Image.Desc;
 
@@ -1175,7 +1175,8 @@ public class ShrineWriteService : IShrineWriteService
 
     public async Task CreateGalleryImageAsync(
         int shrineId,
-        CreateImageRequest request,
+        CreateGalleryImageFormRequest request,
+        string publicId,
         CancellationToken ct
     )
     {
@@ -1188,7 +1189,8 @@ public class ShrineWriteService : IShrineWriteService
 
         var image = new Image
         {
-            ImgSource = request.ImgSource,
+            PublicId = publicId,
+            ImageUrl = request.ImageUrl,
             Title = request.Title,
             Desc = request.Desc
         };
@@ -1252,7 +1254,7 @@ public class ShrineWriteService : IShrineWriteService
 
     public async Task UpdateGalleryImageAsync(
         int imageId,
-        ImageRequest request,
+        UpdateGalleryImageFormRequest request,
         CancellationToken ct
     )
     {
@@ -1263,7 +1265,7 @@ public class ShrineWriteService : IShrineWriteService
         if (image is null)
             throw new NotFoundException("Gallery image not found.");
 
-        image.ImgSource = request.ImageUrl;
+        image.ImageUrl = request.ImageUrl;
         image.Title = request.Title;
         image.Desc = request.Desc;
 

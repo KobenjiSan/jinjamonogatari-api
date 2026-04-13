@@ -44,7 +44,7 @@ public class EtiquetteReadService : IEtiquetteReadService
                         s.Image == null
                             ? null
                             : new ImageCitedDto(
-                                s.Image.ImgSource,
+                                s.Image.ImageUrl,
                                 s.Image.Citation == null
                                     ? null
                                     : new CitationDto(
@@ -98,7 +98,7 @@ public class EtiquetteReadService : IEtiquetteReadService
                         s.Image == null
                             ? null
                             : new ImageCitedDto(
-                                s.Image.ImgSource,
+                                s.Image.ImageUrl,
                                 s.Image.Citation == null
                                     ? null
                                     : new CitationDto(
@@ -152,7 +152,7 @@ public class EtiquetteReadService : IEtiquetteReadService
                         s.Image == null
                             ? null
                             : new ImageCitedDto(
-                                s.Image.ImgSource,
+                                s.Image.ImageUrl,
                                 s.Image.Citation == null
                                     ? null
                                     : new CitationDto(

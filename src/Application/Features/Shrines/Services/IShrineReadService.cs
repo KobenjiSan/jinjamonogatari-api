@@ -67,4 +67,5 @@ public interface IShrineReadService
     
     Task<IReadOnlyList<ShrineReviewDto>> GetShrineReviewHistoryAsync(int shrineId, CancellationToken ct);
     Task<bool> IsShrineRecentlyRejectedAsync(int shrineId, CancellationToken ct);
+    Task<string?> GetImagePublicIdCMSAsync(int imageId, CancellationToken ct);
 }

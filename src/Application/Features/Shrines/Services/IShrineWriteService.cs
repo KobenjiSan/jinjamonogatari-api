@@ -39,11 +39,12 @@ public interface IShrineWriteService
     // GALLERY
     Task CreateGalleryImageAsync(
         int shrineId,
-        CreateImageRequest request,
+        CreateGalleryImageFormRequest request,
+        string publicId,
         CancellationToken ct
     );
     Task DeleteGalleryImageAsync(int imageId, CancellationToken ct);
-    Task UpdateGalleryImageAsync(int imageId, ImageRequest request, CancellationToken ct);
+    Task UpdateGalleryImageAsync(int imageId, UpdateGalleryImageFormRequest request, CancellationToken ct);
 
     Task ImportShrinesAsync(ImportShrinesRequest request, CancellationToken ct);
 

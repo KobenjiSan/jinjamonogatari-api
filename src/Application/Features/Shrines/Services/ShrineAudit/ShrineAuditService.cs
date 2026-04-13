@@ -589,9 +589,9 @@ public class ShrineAuditService : IShrineAuditService
     {
         var isValid = true;
 
-        if (string.IsNullOrWhiteSpace(image.ImgSource))
+        if (string.IsNullOrWhiteSpace(image.ImageUrl))
         {
-            AddError(issues, section, itemId, $"{fieldPrefix}.ImgSource", "Image is missing source.");
+            AddError(issues, section, itemId, $"{fieldPrefix}.ImageUrl", "Image is missing source.");
             isValid = false;
         }
 

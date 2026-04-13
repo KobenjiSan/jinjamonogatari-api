@@ -208,7 +208,7 @@ public class ShrineWriteController : ControllerBase
     // POST /api/shrines/cms/{shrineId}/gallery/ (image in body)
     // Create a new image linked automatically to shrine gallery
     [HttpPost("cms/{shrineId}/gallery")]
-    public async Task<IActionResult> CreateGalleryImage([FromRoute] int shrineId, [FromBody] CreateImageRequest request)
+    public async Task<IActionResult> CreateGalleryImage([FromRoute] int shrineId, [FromForm] CreateGalleryImageFormRequest request)
     {
         var role = User.GetUserRole();
         var command = new CreateGalleryImageCommand(role, shrineId, request);
@@ -219,7 +219,7 @@ public class ShrineWriteController : ControllerBase
     // PUT /api/shrines/cms/gallery/{imageId} (image in body)
     // Update image
     [HttpPut("cms/gallery/{imageId}")]
-    public async Task<IActionResult> UpdateGalleryImage([FromRoute] int imageId, [FromBody] ImageRequest request)
+    public async Task<IActionResult> UpdateGalleryImage([FromRoute] int imageId, [FromForm] UpdateGalleryImageFormRequest request)
     {
         if (request.ImgId != imageId)
             throw new ValidationException("Route ID and body ID do not match.");
@@ -377,16 +377,33 @@ public record ImageRequest(
 );
 public record ImageChangeRequest(
     string Action,
-    string? ImgSource,
+    string? ImageUrl,
     string? Title,
     string? Desc,
     CitationRequest? Citation
 );
 public record CreateImageRequest(
-    string? ImgSource,
+    string? ImageUrl,
     string? Title,
     string? Desc,
     CreateCitationRequest? Citation
+);
+
+public record CreateGalleryImageFormRequest(
+    string? ImageUrl,
+    string? Title,
+    string? Desc,
+    CreateCitationRequest? Citation,
+    IFormFile? File
+);
+
+public record UpdateGalleryImageFormRequest(
+    int ImgId,
+    string? ImageUrl,
+    string? Title,
+    string? Desc,
+    CitationRequest? Citation,
+    IFormFile? File
 );
 
 #endregion

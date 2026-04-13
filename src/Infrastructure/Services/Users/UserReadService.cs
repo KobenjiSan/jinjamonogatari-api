@@ -89,7 +89,7 @@ public class UserReadService : IUserReadService
                 uc.Shrine.Lon.HasValue ? (double?)uc.Shrine.Lon.Value : null,
                 uc.Shrine.NameEn,
                 uc.Shrine.NameJp,
-                uc.Shrine.Image != null ? uc.Shrine.Image.ImgSource : null,
+                uc.Shrine.Image != null ? uc.Shrine.Image.ImageUrl : null,
                 uc.Shrine.ShrineDesc,
                 (hasUserPoint && uc.Shrine.Location != null)
                     ? EF.Functions.Distance(uc.Shrine.Location!, userPoint!, true)

@@ -88,7 +88,7 @@ out center {input.MaxResults};
             ));
         }
 
-        // 7. FILTER (keep it simple)
+        // 7. FILTER 
         var filtered = candidates
             .Where(x =>
                 !string.IsNullOrWhiteSpace(x.Name) && 
