@@ -26,7 +26,6 @@ public class GetShrineListCMSHandler : IRequestHandler<GetShrineListCMSQuery, Ge
         {
             var errorCount = 0;
 
-
             var snapshot = await _readService.GetShrineAuditSnapshotAsync(shrine.ShrineId, ct);
             if (snapshot is not null)
             {

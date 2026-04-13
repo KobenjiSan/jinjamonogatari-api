@@ -24,12 +24,12 @@ public class TokenService : ITokenService
         {
             new(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new(JwtRegisteredClaimNames.Email, email),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Token Instance (ID)
             new(ClaimTypes.Role, role),
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256); // Scrambles(SHA) token using secret(HMAC) - Secure Hash Algorithm / Hash-based Message Authentication Code
 
         var token = new JwtSecurityToken(
             issuer: _jwt.Issuer,
@@ -60,7 +60,7 @@ public class TokenService : ITokenService
     public string HashRefreshToken(string rawToken)
     {
         var peppered = $"{rawToken}:{_jwt.Key}";
-        var bytes = Encoding.UTF8.GetBytes(peppered);
+        var bytes = Encoding.UTF8.GetBytes(peppered); // Computers hash bytes not strings
         var hash = SHA256.HashData(bytes);
         return Convert.ToBase64String(hash);
     }

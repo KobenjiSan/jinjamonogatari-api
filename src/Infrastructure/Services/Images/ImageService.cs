@@ -32,7 +32,7 @@ public class ImageService : IImageService
         if(file is null || file.Length == 0)
             throw new ArgumentException("Image file is required");
 
-        await using var stream = file.OpenReadStream();
+        await using var stream = file.OpenReadStream(); // build stream to read the contents of the file, allows system to dispose of resource asynchronously at end of scope
 
         var uploadParams = new ImageUploadParams
         {
@@ -57,7 +57,7 @@ public class ImageService : IImageService
         if(string.IsNullOrWhiteSpace(publicId))
             throw new ArgumentException("Public ID is required");
 
-        var deleteParams = new DeletionParams(publicId){Invalidate = true};
+        var deleteParams = new DeletionParams(publicId){Invalidate = true}; // Image location for Cloudinary to target and clears CDN (image cache)
             
         var result = await _cloudinary.DestroyAsync(deleteParams);
 

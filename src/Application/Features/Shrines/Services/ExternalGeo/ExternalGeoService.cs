@@ -18,31 +18,20 @@ public class ExternalGeoService : IExternalGeoService
     {
         var url = $"https://us1.locationiq.com/v1/search?key={_locationIqKey}&q={Uri.EscapeDataString(location)}&format=json&limit=1";
 
-        var response = await _http.GetAsync(url, ct);
-        response.EnsureSuccessStatusCode();
+        var results = await _http.GetFromJsonAsync<List<LocationIqResult>>(url, ct);
 
-        var content = await response.Content.ReadAsStringAsync(ct);
+        if (results == null || results.Count == 0) throw new Exception("Location not found.");
 
-        using var doc = JsonDocument.Parse(content);
+        var first = results[0];
 
-        var root = doc.RootElement;
-
-        if (root.GetArrayLength() == 0)
-            throw new Exception("Location not found.");
-
-        var first = root[0];
-
-        var lat = double.Parse(first.GetProperty("lat").GetString()!);
-        var lon = double.Parse(first.GetProperty("lon").GetString()!);
-
-        return (lat, lon);
+        return (double.Parse(first.lat), double.Parse(first.lon));
     }
 
     public async Task<List<OverpassElement>> QueryOverpassAsync(string query, CancellationToken ct)
     {
         var url = "https://overpass-api.de/api/interpreter";
 
-        var content = new FormUrlEncodedContent(new[]
+        using var content = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("data", query)
         });
@@ -50,56 +39,18 @@ public class ExternalGeoService : IExternalGeoService
         var response = await _http.PostAsync(url, content, ct);
         response.EnsureSuccessStatusCode();
 
-        var json = await response.Content.ReadAsStringAsync(ct);
+        var overpassResponse = await response.Content.ReadFromJsonAsync<OverpassResponse>(cancellationToken: ct);
 
-        using var doc = JsonDocument.Parse(json);
+        if (overpassResponse?.Elements == null || overpassResponse.Elements.Count == 0)
+            return new List<OverpassElement>();
 
-        var elements = doc.RootElement.GetProperty("elements");
-
-        var result = new List<OverpassElement>();
-
-        foreach (var el in elements.EnumerateArray())
+        return overpassResponse.Elements.Select(el => new OverpassElement
         {
-            var type = el.GetProperty("type").GetString()!;
-            var id = el.GetProperty("id").GetInt64();
-
-            double? lat = null;
-            double? lon = null;
-
-            if (el.TryGetProperty("lat", out var latProp) &&
-                el.TryGetProperty("lon", out var lonProp))
-            {
-                lat = latProp.GetDouble();
-                lon = lonProp.GetDouble();
-            }
-            else if (el.TryGetProperty("center", out var center))
-            {
-                lat = center.GetProperty("lat").GetDouble();
-                lon = center.GetProperty("lon").GetDouble();
-            }
-
-            Dictionary<string, string>? tags = null;
-
-            if (el.TryGetProperty("tags", out var tagsProp))
-            {
-                tags = new Dictionary<string, string>();
-
-                foreach (var tag in tagsProp.EnumerateObject())
-                {
-                    tags[tag.Name] = tag.Value.GetString() ?? "";
-                }
-            }
-
-            result.Add(new OverpassElement
-            {
-                Type = type,
-                Id = id,
-                Lat = lat,
-                Lon = lon,
-                Tags = tags
-            });
-        }
-
-        return result;
+            Type = el.Type,
+            Id = el.Id,
+            Lat = el.Lat ?? el.Center?.Lat,
+            Lon = el.Lon ?? el.Center?.Lon,
+            Tags = el.Tags
+        }).ToList();
     }
 }

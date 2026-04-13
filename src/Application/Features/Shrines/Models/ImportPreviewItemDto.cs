@@ -6,7 +6,6 @@ public record ImportPreviewItemDto(
     double Lat,
     double Lon,
     string SourceType,
-    long OsmId,
-    string? ReasonIncluded
+    long OsmId
 );
 

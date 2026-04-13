@@ -33,7 +33,7 @@ public class GetImportPreviewCMSHandler
         if (input.MaxResults <= 0 || input.MaxResults > 100)
             throw new ValidationException("MaxResults must be between 1 and 100.");
 
-        // 2. RESOLVE LAT / LON (LocationIQ)
+        // 2. GET LAT / LON (LocationIQ)
         var (lat, lon) = await _geoService.GeocodeAsync(input.Location, ct);
 
         // 3. MAP SEARCH SIZE → RADIUS
@@ -83,8 +83,7 @@ out center {input.MaxResults};
                 latVal.Value,
                 lonVal.Value,
                 el.Type,
-                el.Id,
-                null
+                el.Id
             ));
         }
 

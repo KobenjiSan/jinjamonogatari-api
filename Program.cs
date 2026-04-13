@@ -98,8 +98,7 @@ builder.Services.AddScoped<IShrineAuditService, ShrineAuditService>();
 // ExternalGeo
 builder.Services.AddHttpClient<IExternalGeoService, ExternalGeoService>();
 // Images
-builder.Services.Configure<CloudinarySettings>(
-    builder.Configuration.GetSection("CloudinarySettings"));
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
 builder.Services.AddScoped<IImageService, ImageService>();
 

@@ -38,9 +38,9 @@ public class ImportShrinesHandler : IRequestHandler<ImportShrinesCommand, Unit>
 
         // request-level duplicate check
         var duplicateRequestIds = previews
-            .GroupBy(p => p.ImportId.Trim(), StringComparer.OrdinalIgnoreCase)
+            .GroupBy(p => p.ImportId.Trim(), StringComparer.OrdinalIgnoreCase) // Ordinal compares unicode
             .Where(g => g.Count() > 1)
-            .Select(g => g.Key)
+            .Select(g => g.Key) // Key = ImportId
             .ToList();
 
         if (duplicateRequestIds.Count > 0)
