@@ -19,6 +19,8 @@ using Application.Features.Shrines.Services.ShrineAudit;
 using Application.Features.Shrines.Services.ExternalGeo;
 using Application.Features.Images.Services;
 using Infrastructure.Services.Images;
+using Application.Features.Tags.Services;
+using Infrastructure.Services.Tags;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -99,8 +101,9 @@ builder.Services.AddScoped<IShrineAuditService, ShrineAuditService>();
 builder.Services.AddHttpClient<IExternalGeoService, ExternalGeoService>();
 // Images
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
-
 builder.Services.AddScoped<IImageService, ImageService>();
+// Tags
+builder.Services.AddScoped<ITagsService, TagsService>();
 
 
 var app = builder.Build();

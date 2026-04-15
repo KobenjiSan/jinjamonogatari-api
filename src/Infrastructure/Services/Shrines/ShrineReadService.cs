@@ -617,21 +617,6 @@ public class ShrineReadService : IShrineReadService
 
     #endregion
 
-    #region CMS All Tags List
-
-    public async Task<IReadOnlyList<TagDto>> GetAllTagsListCMSAsync(CancellationToken ct)
-    {
-        return await _db.Tags
-            .AsNoTracking()
-            .Select(t => new TagDto(
-               t.TagId,
-               t.TitleEn,
-               t.TitleJp
-        )).ToListAsync(ct);
-    }
-
-    #endregion
-
     #region CMS Shrine History
 
     public async Task<IReadOnlyList<HistoryReadCMSDto>> GetShrineHistoryByIdCMSAsync(int id, CancellationToken ct)

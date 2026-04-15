@@ -2,7 +2,6 @@ using Application.Common.Models.Citations;
 using Application.Common.Models.Images;
 using Application.Features.Shrines.Models;
 using Application.Features.Shrines.Queries.GetAllKamiListCMS;
-using Application.Features.Shrines.Queries.GetAllTagsListCMS;
 using Application.Features.Shrines.Queries.GetImageById;
 using Application.Features.Shrines.Queries.GetImportPreviewCMS;
 using Application.Features.Shrines.Queries.GetShrineAudit;
@@ -218,16 +217,6 @@ public class ShrineReadController : ControllerBase
     {
         var result = await _mediator.Send(new GetShrineGalleryByIdCMSQuery(id));
         return Ok(result.Images);
-    }
-
-    // Returns all tags
-    // GET /api/shrines/cms/tags
-    [HttpGet("cms/tags")]
-    [Authorize]
-    public async Task<ActionResult<IReadOnlyList<TagDto>>> GetAllTagsCMSAsync()
-    {
-        var result = await _mediator.Send(new GetAllTagsListCMSQuery());
-        return Ok(result.Tags);
     }
 
     // Returns audit of shrine
