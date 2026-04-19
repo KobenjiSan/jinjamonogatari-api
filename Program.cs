@@ -21,6 +21,8 @@ using Application.Features.Images.Services;
 using Infrastructure.Services.Images;
 using Application.Features.Tags.Services;
 using Infrastructure.Services.Tags;
+using Application.Features.Kami.Services;
+using Infrastructure.Services.KamiService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,13 +35,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// var renderConn = builder.Configuration.GetConnectionString("Render");
+// Console.WriteLine(renderConn);
+
 // MediatR (scan Application assembly for handlers)
 builder.Services.AddMediatR(typeof(Application.Common.Interfaces.IAppDbContext).Assembly);
 
 // DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("Default"),
+        builder.Configuration.GetConnectionString("Render"),
         npgsqlOptions => npgsqlOptions.UseNetTopologySuite()
     ));
 
@@ -104,6 +109,8 @@ builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection(
 builder.Services.AddScoped<IImageService, ImageService>();
 // Tags
 builder.Services.AddScoped<ITagsService, TagsService>();
+// Kami
+builder.Services.AddScoped<IKamiService, KamiService>();
 
 
 var app = builder.Build();
