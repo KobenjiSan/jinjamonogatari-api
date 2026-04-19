@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Application.Common.Exceptions;
+using Application.Common.Models.Citations;
+using Application.Common.Models.Images;
 using Application.Features.Shrines.Services;
 using Domain.Entities;
 using Domain.Enums;
@@ -114,74 +116,178 @@ public class ShrineWriteService : IShrineWriteService
             }
         }
 
-        // Delete Image
-        if (request.HeroImage.Action == "delete")
-        {
-            shrine.Image = null;
-            shrine.ImgId = null;
-        }
-
-        // Create Image
-        if (request.HeroImage.Action == "create")
-        {
-            var image = new Image
-            {
-                ImageUrl = request.HeroImage.ImageUrl,
-                Title = request.HeroImage.Title,
-                Desc = request.HeroImage.Desc
-            };
-
-            if (request.HeroImage.Citation is not null)
-            {
-                image.Citation = new Citation
-                {
-                    Title = request.HeroImage.Citation.Title,
-                    Author = request.HeroImage.Citation.Author,
-                    Url = request.HeroImage.Citation.Url,
-                    Year = request.HeroImage.Citation.Year
-                };
-            }
-
-            shrine.Image = image;
-        }
-
-        // Update Image
-        if (request.HeroImage.Action == "update")
-        {
-            if (shrine.Image is null)
-                throw new NotFoundException("Hero image not found.");
-
-            shrine.Image.ImageUrl = request.HeroImage.ImageUrl;
-            shrine.Image.Title = request.HeroImage.Title;
-            shrine.Image.Desc = request.HeroImage.Desc;
-
-            if (request.HeroImage.Citation is null)
-            {
-                shrine.Image.Citation = null;
-                shrine.Image.CiteId = null;
-            }
-            else if (shrine.Image.Citation is null)
-            {
-                shrine.Image.Citation = new Citation
-                {
-                    Title = request.HeroImage.Citation.Title,
-                    Author = request.HeroImage.Citation.Author,
-                    Url = request.HeroImage.Citation.Url,
-                    Year = request.HeroImage.Citation.Year
-                };
-            }
-            else
-            {
-                shrine.Image.Citation.Title = request.HeroImage.Citation.Title;
-                shrine.Image.Citation.Author = request.HeroImage.Citation.Author;
-                shrine.Image.Citation.Url = request.HeroImage.Citation.Url;
-                shrine.Image.Citation.Year = request.HeroImage.Citation.Year;
-            }
-        }
-
         // force shrine timestamp to update                                                                                                                  
         shrine.UpdatedAt = DateTime.UtcNow;
         _db.Entry(shrine).Property(s => s.UpdatedAt).IsModified = true;
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region CREATE HERO IMAGE
+
+    public async Task<ImageFullDto> CreateHeroImageAsync(
+           int shrineId,
+           CreateImageFormRequest request,
+           string publicId,
+           CancellationToken ct
+       )
+    {
+        var shrine = await _db.Shrines
+            .Include(s => s.Image)
+            .FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+
+        if (shrine is null)
+            throw new NotFoundException("Shrine not found.");
+
+        if (shrine.Image is not null)
+            throw new InvalidOperationException("Shrine already has a hero image.");
+
+        var image = new Image
+        {
+            PublicId = publicId,
+            ImageUrl = request.ImageUrl,
+            Title = request.Title,
+            Desc = request.Desc
+        };
+
+        if (request.Citation is not null)
+        {
+            image.Citation = new Citation
+            {
+                Title = request.Citation.Title,
+                Author = request.Citation.Author,
+                Url = request.Citation.Url,
+                Year = request.Citation.Year
+            };
+        }
+
+        _db.Images.Add(image);
+        shrine.Image = image;
+        
+        await _db.SaveChangesAsync(ct);
+
+        return new ImageFullDto(
+            image.ImgId,
+            image.ImageUrl,
+            image.Title,
+            image.Desc,
+            image.Citation is null
+                ? null
+                : new CitationDto(
+                    image.Citation.CiteId,
+                    image.Citation.Title,
+                    image.Citation.Author,
+                    image.Citation.Url,
+                    image.Citation.Year
+                )
+        );
+    }
+
+    #endregion
+
+    #region UPDATE HERO IMAGE
+
+    public async Task<ImageFullDto> UpdateHeroImageAsync(
+            int shrineId,
+            UpdateImageFormRequest request,
+            CancellationToken ct
+        )
+    {
+        var shrine = await _db.Shrines
+            .Include(s => s.Image)
+            .ThenInclude(i => i!.Citation)
+            .FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+
+        if (shrine is null)
+            throw new NotFoundException("Shrine not found.");
+
+        if (shrine.Image is null || shrine.Image.ImgId != request.ImgId)
+            throw new NotFoundException("Hero image not found for this shrine.");
+
+        var image = shrine.Image;
+
+        image.ImageUrl = request.ImageUrl;
+        image.Title = request.Title;
+        image.Desc = request.Desc;
+
+        if (request.Citation is null)
+        {
+            if (image.Citation is not null)
+            {
+                _db.Citations.Remove(image.Citation);
+                image.Citation = null;
+                image.CiteId = null;
+            }
+        }
+        else if (image.Citation is null)
+        {
+            image.Citation = new Citation
+            {
+                Title = request.Citation.Title,
+                Author = request.Citation.Author,
+                Url = request.Citation.Url,
+                Year = request.Citation.Year
+            };
+        }
+        else
+        {
+            image.Citation.Title = request.Citation.Title;
+            image.Citation.Author = request.Citation.Author;
+            image.Citation.Url = request.Citation.Url;
+            image.Citation.Year = request.Citation.Year;
+        }
+
+        await _db.SaveChangesAsync(ct);
+
+        return new ImageFullDto(
+            image.ImgId,
+            image.ImageUrl,
+            image.Title,
+            image.Desc,
+            image.Citation is null
+                ? null
+                : new CitationDto(
+                    image.Citation.CiteId,
+                    image.Citation.Title,
+                    image.Citation.Author,
+                    image.Citation.Url,
+                    image.Citation.Year
+                )
+        );
+    }
+
+    #endregion
+
+    #region DELETE HERO IMAGE
+
+    public async Task DeleteHeroImageAsync(
+            int shrineId,
+            int imageId,
+            CancellationToken ct
+        )
+    {
+        var shrine = await _db.Shrines
+            .Include(s => s.Image)
+            .ThenInclude(i => i!.Citation)
+            .FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
+
+        if (shrine is null)
+            throw new NotFoundException("Shrine not found.");
+
+        if (shrine.Image is null || shrine.Image.ImgId != imageId)
+            throw new NotFoundException("Hero image not found for this shrine.");
+
+        var image = shrine.Image;
+
+        if (image.Citation is not null)
+        {
+            _db.Citations.Remove(image.Citation);
+        }
+
+        shrine.Image = null;
+        _db.Images.Remove(image);
 
         await _db.SaveChangesAsync(ct);
     }
@@ -212,6 +318,7 @@ public class ShrineWriteService : IShrineWriteService
     public async Task CreateKamiInShrineAsync(
         int shrineId,
         CreateKamiInShrineRequest request,
+        string? publicId,
         CancellationToken ct
     )
     {
@@ -238,6 +345,7 @@ public class ShrineWriteService : IShrineWriteService
         {
             var image = new Image
             {
+                PublicId = publicId,
                 ImageUrl = request.Image.ImageUrl,
                 Title = request.Image.Title,
                 Desc = request.Image.Desc
@@ -273,7 +381,7 @@ public class ShrineWriteService : IShrineWriteService
         }
 
         // Link existing citations
-        if (request.Citations.LinkExisting.Count > 0)
+        if (request.Citations.LinkExisting is not null && request.Citations.LinkExisting.Count > 0)
         {
             foreach (var citationRequest in request.Citations.LinkExisting)
             {
@@ -373,179 +481,9 @@ public class ShrineWriteService : IShrineWriteService
 
     #endregion
 
-    #region UPDATE KAMI
-
-    public async Task UpdateKamiAsync(int kamiId, UpdateKamiRequest request, CancellationToken ct)
-    {
-        // Load kami / related data
-        var kami = await _db.Kamis
-            .Include(k => k.Image!)
-                .ThenInclude(i => i.Citation)
-            .Include(k => k.KamiCitations)
-                .ThenInclude(kc => kc.Citation)
-            .FirstOrDefaultAsync(k => k.KamiId == kamiId, ct);
-
-        // Validate kami exists
-        if (kami is null)
-            throw new NotFoundException("Kami not found.");
-
-        // Update basic fields
-        kami.NameEn = request.Basic.NameEn;
-        kami.NameJp = request.Basic.NameJp;
-        kami.Desc = request.Basic.Desc;
-
-        // Delete image
-        if (request.Image.Action == "delete")
-        {
-            kami.Image = null;
-            kami.ImgId = null;
-        }
-
-        // Create image
-        if (request.Image.Action == "create")
-        {
-            var image = new Image
-            {
-                ImageUrl = request.Image.ImageUrl,
-                Title = request.Image.Title,
-                Desc = request.Image.Desc
-            };
-
-            if (request.Image.Citation is not null)
-            {
-                image.Citation = new Citation
-                {
-                    Title = request.Image.Citation.Title,
-                    Author = request.Image.Citation.Author,
-                    Url = request.Image.Citation.Url,
-                    Year = request.Image.Citation.Year
-                };
-            }
-
-            kami.Image = image;
-        }
-
-        // Update image
-        if (request.Image.Action == "update")
-        {
-            if (kami.Image is null)
-                throw new NotFoundException("Kami image not found.");
-
-            kami.Image.ImageUrl = request.Image.ImageUrl;
-            kami.Image.Title = request.Image.Title;
-            kami.Image.Desc = request.Image.Desc;
-
-            if (request.Image.Citation is null)
-            {
-                kami.Image.Citation = null;
-                kami.Image.CiteId = null;
-            }
-            else if (kami.Image.Citation is null)
-            {
-                kami.Image.Citation = new Citation
-                {
-                    Title = request.Image.Citation.Title,
-                    Author = request.Image.Citation.Author,
-                    Url = request.Image.Citation.Url,
-                    Year = request.Image.Citation.Year
-                };
-            }
-            else
-            {
-                kami.Image.Citation.Title = request.Image.Citation.Title;
-                kami.Image.Citation.Author = request.Image.Citation.Author;
-                kami.Image.Citation.Url = request.Image.Citation.Url;
-                kami.Image.Citation.Year = request.Image.Citation.Year;
-            }
-        }
-
-        // Delete citations (unlink only)
-        if (request.Citations.Delete.Count > 0)
-        {
-            var kamiCitationsToRemove = kami.KamiCitations
-                .Where(kc => request.Citations.Delete.Contains(kc.CiteId))
-                .ToList();
-
-            foreach (var kamiCitation in kamiCitationsToRemove)
-            {
-                kami.KamiCitations.Remove(kamiCitation);
-                _db.Set<KamiCitation>().Remove(kamiCitation);
-            }
-        }
-
-        // Create citations
-        if (request.Citations.Create.Count > 0)
-        {
-            foreach (var citationRequest in request.Citations.Create)
-            {
-                var citation = new Citation
-                {
-                    Title = citationRequest.Title,
-                    Author = citationRequest.Author,
-                    Url = citationRequest.Url,
-                    Year = citationRequest.Year
-                };
-
-                kami.KamiCitations.Add(new KamiCitation
-                {
-                    KamiId = kami.KamiId,
-                    Kami = kami,
-                    Citation = citation
-                });
-            }
-        }
-
-        // Link existing citations
-        if (request.Citations.LinkExisting.Count > 0)
-        {
-            foreach (var citationRequest in request.Citations.LinkExisting)
-            {
-                var citation = await GetExistingCitationOrThrowAsync(citationRequest.CiteId, ct);
-
-                citation.Title = citationRequest.Title;
-                citation.Author = citationRequest.Author;
-                citation.Url = citationRequest.Url;
-                citation.Year = citationRequest.Year;
-
-                var alreadyLinked = kami.KamiCitations.Any(kc => kc.CiteId == citation.CiteId);
-                if (alreadyLinked) continue;
-
-                kami.KamiCitations.Add(new KamiCitation
-                {
-                    KamiId = kami.KamiId,
-                    Kami = kami,
-                    Citation = citation,
-                    CiteId = citation.CiteId
-                });
-            }
-        }
-
-        // Update citations
-        if (request.Citations.Update.Count > 0)
-        {
-            foreach (var citationRequest in request.Citations.Update)
-            {
-                var existingKamiCitation = kami.KamiCitations
-                    .FirstOrDefault(kc => kc.CiteId == citationRequest.CiteId);
-
-                if (existingKamiCitation is null)
-                    continue;
-
-                existingKamiCitation.Citation.Title = citationRequest.Title;
-                existingKamiCitation.Citation.Author = citationRequest.Author;
-                existingKamiCitation.Citation.Url = citationRequest.Url;
-                existingKamiCitation.Citation.Year = citationRequest.Year;
-            }
-        }
-
-        await _db.SaveChangesAsync(ct);
-    }
-
-    #endregion
-
     #region CREATE HISTORY
 
-    public async Task CreateHistoryAsync(int shrineId, CreateHistoryRequest request, CancellationToken ct)
+    public async Task CreateHistoryAsync(int shrineId, CreateHistoryRequest request, string? publicId, CancellationToken ct)
     {
         // Load shrine
         var shrine = await _db.Shrines
@@ -572,6 +510,7 @@ public class ShrineWriteService : IShrineWriteService
         {
             var image = new Image
             {
+                PublicId = publicId,
                 ImageUrl = request.Image.ImageUrl,
                 Title = request.Image.Title,
                 Desc = request.Image.Desc
@@ -607,7 +546,7 @@ public class ShrineWriteService : IShrineWriteService
         }
 
         // Link existing citations
-        if (request.Citations.LinkExisting.Count > 0)
+        if (request.Citations.LinkExisting is not null && request.Citations.LinkExisting.Count > 0)
         {
             foreach (var citationRequest in request.Citations.LinkExisting)
             {
@@ -685,7 +624,7 @@ public class ShrineWriteService : IShrineWriteService
 
     #region UPDATE HISTORY
 
-    public async Task UpdateHistoryAsync(int historyId, UpdateHistoryRequest request, CancellationToken ct)
+    public async Task UpdateHistoryAsync(int historyId, UpdateHistoryRequest request, string? publicId, CancellationToken ct)
     {
         // Load history / related data
         var history = await _db.Histories
@@ -721,6 +660,7 @@ public class ShrineWriteService : IShrineWriteService
         {
             var image = new Image
             {
+                PublicId = publicId,
                 ImageUrl = request.Image.ImageUrl,
                 Title = request.Image.Title,
                 Desc = request.Image.Desc
@@ -746,12 +686,19 @@ public class ShrineWriteService : IShrineWriteService
             if (history.Image is null)
                 throw new NotFoundException("History image not found.");
 
+            if (!string.IsNullOrWhiteSpace(publicId))
+            {
+                history.Image.PublicId = publicId;
+            }
             history.Image.ImageUrl = request.Image.ImageUrl;
             history.Image.Title = request.Image.Title;
             history.Image.Desc = request.Image.Desc;
 
             if (request.Image.Citation is null)
             {
+                if (history.Image.Citation is not null)
+                    _db.Citations.Remove(history.Image.Citation);
+
                 history.Image.Citation = null;
                 history.Image.CiteId = null;
             }
@@ -860,7 +807,7 @@ public class ShrineWriteService : IShrineWriteService
 
     #region CREATE FOLKLORE
 
-    public async Task CreateFolkloreAsync(int shrineId, CreateFolkloreRequest request, CancellationToken ct)
+    public async Task CreateFolkloreAsync(int shrineId, CreateFolkloreRequest request, string? publicId, CancellationToken ct)
     {
         // Load shrine
         var shrine = await _db.Shrines
@@ -886,6 +833,7 @@ public class ShrineWriteService : IShrineWriteService
         {
             var image = new Image
             {
+                PublicId = publicId,
                 ImageUrl = request.Image.ImageUrl,
                 Title = request.Image.Title,
                 Desc = request.Image.Desc
@@ -921,7 +869,7 @@ public class ShrineWriteService : IShrineWriteService
         }
 
         // Link existing citations
-        if (request.Citations.LinkExisting.Count > 0)
+        if (request.Citations.LinkExisting is not null && request.Citations.LinkExisting.Count > 0)
         {
             foreach (var citationRequest in request.Citations.LinkExisting)
             {
@@ -999,7 +947,7 @@ public class ShrineWriteService : IShrineWriteService
 
     #region UPDATE FOLKLORE
 
-    public async Task UpdateFolkloreAsync(int folkloreId, UpdateFolkloreRequest request, CancellationToken ct)
+    public async Task UpdateFolkloreAsync(int folkloreId, UpdateFolkloreRequest request, string? publicId, CancellationToken ct)
     {
         // Load folklore / related data
         var folklore = await _db.Folklores
@@ -1034,6 +982,7 @@ public class ShrineWriteService : IShrineWriteService
         {
             var image = new Image
             {
+                PublicId = publicId,
                 ImageUrl = request.Image.ImageUrl,
                 Title = request.Image.Title,
                 Desc = request.Image.Desc
@@ -1059,12 +1008,19 @@ public class ShrineWriteService : IShrineWriteService
             if (folklore.Image is null)
                 throw new NotFoundException("Folklore image not found.");
 
+            if (!string.IsNullOrWhiteSpace(publicId))
+            {
+                folklore.Image.PublicId = publicId;
+            }
             folklore.Image.ImageUrl = request.Image.ImageUrl;
             folklore.Image.Title = request.Image.Title;
             folklore.Image.Desc = request.Image.Desc;
 
             if (request.Image.Citation is null)
             {
+                if (folklore.Image.Citation is not null)
+                    _db.Citations.Remove(folklore.Image.Citation);
+
                 folklore.Image.Citation = null;
                 folklore.Image.CiteId = null;
             }
@@ -1175,7 +1131,7 @@ public class ShrineWriteService : IShrineWriteService
 
     public async Task CreateGalleryImageAsync(
         int shrineId,
-        CreateGalleryImageFormRequest request,
+        CreateImageFormRequest request,
         string publicId,
         CancellationToken ct
     )
@@ -1254,7 +1210,7 @@ public class ShrineWriteService : IShrineWriteService
 
     public async Task UpdateGalleryImageAsync(
         int imageId,
-        UpdateGalleryImageFormRequest request,
+        UpdateImageFormRequest request,
         CancellationToken ct
     )
     {
@@ -1427,7 +1383,7 @@ public class ShrineWriteService : IShrineWriteService
     {
         // Get shrine and validate it exists
         var shrine = await _db.Shrines.FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
-        if (shrine is null) 
+        if (shrine is null)
             throw new NotFoundException($"Shrine {shrineId} was not found.");
 
         // Check if shrine is already pending review
@@ -1458,13 +1414,13 @@ public class ShrineWriteService : IShrineWriteService
     #region REJECT REVIEW SHRINE
 
     public async Task RejectShrineForReview(int shrineId, int userId, string message, CancellationToken ct)
-    {  
+    {
         if (string.IsNullOrWhiteSpace(message))
             throw new BadRequestException("Rejection message is required.");
 
         // Get shrine and validate it exists
         var shrine = await _db.Shrines.FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
-        if (shrine is null) 
+        if (shrine is null)
             throw new NotFoundException($"Shrine {shrineId} was not found.");
         if (shrine.Status != "review")
             throw new BadRequestException("Only shrines in review can be published.");
@@ -1472,7 +1428,7 @@ public class ShrineWriteService : IShrineWriteService
         // Get review and validate it exists
         var review = await _db.ShrineReviews
             .FirstOrDefaultAsync(r => r.Decision == ReviewDecision.Pending && r.ShrineId == shrineId, ct);
-        if (review is null) 
+        if (review is null)
             throw new NotFoundException($"Shrine {shrineId} does not have a pending review.");
 
         // Update review
@@ -1484,7 +1440,7 @@ public class ShrineWriteService : IShrineWriteService
         // Update shrine status
         if (shrine.InputtedId is null) shrine.Status = "draft";
         else shrine.Status = "import";
-        
+
         await _db.SaveChangesAsync(ct);
     }
 
@@ -1493,10 +1449,10 @@ public class ShrineWriteService : IShrineWriteService
     #region PUBLISH REVIEW SHRINE
 
     public async Task PublishShrineForReview(int shrineId, int userId, CancellationToken ct)
-    {  
+    {
         // Get shrine and validate it exists
         var shrine = await _db.Shrines.FirstOrDefaultAsync(s => s.ShrineId == shrineId, ct);
-        if (shrine is null) 
+        if (shrine is null)
             throw new NotFoundException($"Shrine {shrineId} was not found.");
         if (shrine.Status != "review")
             throw new BadRequestException("Only shrines in review can be published.");
@@ -1504,7 +1460,7 @@ public class ShrineWriteService : IShrineWriteService
         // Get review and validate it exists
         var review = await _db.ShrineReviews
             .FirstOrDefaultAsync(r => r.Decision == ReviewDecision.Pending && r.ShrineId == shrineId, ct);
-        if (review is null) 
+        if (review is null)
             throw new NotFoundException($"Shrine {shrineId} does not have a pending review.");
 
         // Update review
@@ -1515,7 +1471,7 @@ public class ShrineWriteService : IShrineWriteService
         // Update shrine status
         shrine.Status = "published";
         shrine.PublishedAt = DateTime.UtcNow;
-        
+
         await _db.SaveChangesAsync(ct);
     }
 

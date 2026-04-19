@@ -6,5 +6,6 @@ namespace Application.Features.Shrines.Commands.CreateHistory;
 public record CreateHistoryCommand(
     string UserRole,
     int ShrineId,
-    CreateHistoryRequest Request
+    CreateHistoryRequest Request,
+    IFormFile? File
 ) : IRequest<Unit>;

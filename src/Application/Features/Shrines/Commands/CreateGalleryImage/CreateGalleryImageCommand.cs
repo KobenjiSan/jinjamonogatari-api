@@ -6,5 +6,5 @@ namespace Application.Features.Shrines.Commands.CreateGalleryImage;
 public record CreateGalleryImageCommand(
     string UserRole,
     int ShrineId,
-    CreateGalleryImageFormRequest Request
+    CreateImageFormRequest Request
 ) : IRequest<Unit>;

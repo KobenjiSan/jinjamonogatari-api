@@ -1,5 +1,6 @@
 using System.Net.Http;
 using System.Text.Json;
+using Application.Common.Exceptions;
 using Application.Features.Shrines.Models;
 using Application.Features.Shrines.Services.ExternalGeo;
 
@@ -18,13 +19,34 @@ public class ExternalGeoService : IExternalGeoService
     {
         var url = $"https://us1.locationiq.com/v1/search?key={_locationIqKey}&q={Uri.EscapeDataString(location)}&format=json&limit=1";
 
-        var results = await _http.GetFromJsonAsync<List<LocationIqResult>>(url, ct);
+        try
+        {
+            using var response = await _http.GetAsync(url, ct);
 
-        if (results == null || results.Count == 0) throw new Exception("Location not found.");
+            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                throw new BadRequestException("Location lookup is temporarily busy. Please try again in a moment.");
 
-        var first = results[0];
+            if (!response.IsSuccessStatusCode)
+                throw new BadRequestException("Unable to look up that location right now.");
 
-        return (double.Parse(first.lat), double.Parse(first.lon));
+            var results = await response.Content.ReadFromJsonAsync<List<LocationIqResult>>(cancellationToken: ct);
+
+            if (results == null || results.Count == 0)
+                throw new BadRequestException("Location not found. Try a more specific address or place name.");
+
+            var first = results[0];
+
+            return (double.Parse(first.lat), double.Parse(first.lon));
+        }
+        catch (TaskCanceledException) when (!ct.IsCancellationRequested)
+        {
+            throw new BadRequestException("Location lookup timed out. Please try again.");
+        }
+        catch (HttpRequestException)
+        {
+            throw new BadRequestException("Unable to contact the location service right now.");
+        }
+
     }
 
     public async Task<List<OverpassElement>> QueryOverpassAsync(string query, CancellationToken ct)
@@ -36,21 +58,37 @@ public class ExternalGeoService : IExternalGeoService
             new KeyValuePair<string, string>("data", query)
         });
 
-        var response = await _http.PostAsync(url, content, ct);
-        response.EnsureSuccessStatusCode();
-
-        var overpassResponse = await response.Content.ReadFromJsonAsync<OverpassResponse>(cancellationToken: ct);
-
-        if (overpassResponse?.Elements == null || overpassResponse.Elements.Count == 0)
-            return new List<OverpassElement>();
-
-        return overpassResponse.Elements.Select(el => new OverpassElement
+        try
         {
-            Type = el.Type,
-            Id = el.Id,
-            Lat = el.Lat ?? el.Center?.Lat,
-            Lon = el.Lon ?? el.Center?.Lon,
-            Tags = el.Tags
-        }).ToList();
+            using var response = await _http.PostAsync(url, content, ct);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                throw new BadRequestException("Map data service is receiving too many requests right now. Please try again shortly.");
+
+            if (!response.IsSuccessStatusCode)
+                throw new BadRequestException("Unable to search map data right now.");
+
+            var overpassResponse = await response.Content.ReadFromJsonAsync<OverpassResponse>(cancellationToken: ct);
+
+            if (overpassResponse?.Elements == null || overpassResponse.Elements.Count == 0)
+                return new List<OverpassElement>();
+
+            return overpassResponse.Elements.Select(el => new OverpassElement
+            {
+                Type = el.Type,
+                Id = el.Id,
+                Lat = el.Lat ?? el.Center?.Lat,
+                Lon = el.Lon ?? el.Center?.Lon,
+                Tags = el.Tags
+            }).ToList();
+        }
+        catch (TaskCanceledException) when (!ct.IsCancellationRequested)
+        {
+            throw new BadRequestException("Map search timed out. Please try again.");
+        }
+        catch (HttpRequestException)
+        {
+            throw new BadRequestException("Unable to contact the map data service right now.");
+        }
     }
 }

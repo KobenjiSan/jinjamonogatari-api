@@ -1447,7 +1447,7 @@ public class ShrineReadService : IShrineReadService
 
     #endregion
 
-    #region Get PublicId
+    #region Get PublicId Image
 
     public async Task<string?> GetImagePublicIdCMSAsync(int imageId, CancellationToken ct)
     {
@@ -1455,6 +1455,32 @@ public class ShrineReadService : IShrineReadService
             .AsNoTracking()
             .Where(i => i.ImgId == imageId)
             .Select(i => i.PublicId)
+            .SingleOrDefaultAsync(ct);
+    }
+
+    #endregion
+
+    #region Get PublicId History
+
+    public async Task<string?> GetHistoryImagePublicIdCMSAsync(int historyId, CancellationToken ct)
+    {
+        return await _db.Histories
+            .AsNoTracking()
+            .Where(k => k.HistoryId == historyId)
+            .Select(k => k.Image!.PublicId)
+            .SingleOrDefaultAsync(ct);
+    }
+
+    #endregion
+
+    #region Get PublicId Folklore
+
+    public async Task<string?> GetFolkloreImagePublicIdCMSAsync(int folkloreId, CancellationToken ct)
+    {
+        return await _db.Folklores
+            .AsNoTracking()
+            .Where(k => k.FolkloreId == folkloreId)
+            .Select(k => k.Image!.PublicId)
             .SingleOrDefaultAsync(ct);
     }
 

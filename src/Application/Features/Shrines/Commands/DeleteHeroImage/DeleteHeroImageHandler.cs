@@ -3,16 +3,16 @@ using Application.Features.Images.Services;
 using Application.Features.Shrines.Services;
 using MediatR;
 
-namespace Application.Features.Shrines.Commands.DeleteHistory;
+namespace Application.Features.Shrines.Commands.DeleteHeroImage;
 
-public class DeleteHistoryHandler : IRequestHandler<DeleteHistoryCommand, Unit>
+public class DeleteHeroImageHandler : IRequestHandler<DeleteHeroImageCommand, Unit>
 {
     private readonly IShrineWriteService _shrineWriteService;
     private readonly IShrineReadService _shrineReadService;
     private readonly IImageService _imageService;
 
-    public DeleteHistoryHandler(
-        IShrineWriteService shrineWriteService, 
+    public DeleteHeroImageHandler(
+        IShrineWriteService shrineWriteService,
         IShrineReadService shrineReadService,
         IImageService imageService
     )
@@ -22,19 +22,21 @@ public class DeleteHistoryHandler : IRequestHandler<DeleteHistoryCommand, Unit>
         _imageService = imageService;
     }
 
-    public async Task<Unit> Handle(DeleteHistoryCommand request, CancellationToken ct)
+    public async Task<Unit> Handle(DeleteHeroImageCommand request, CancellationToken ct)
     {
-        // Validate Policy 
-        var shrineId = await _shrineReadService.GetShrineIdByHistoryIdCMSAsync(request.HistoryId, ct);
-        var shrineStatus = await _shrineReadService.GetShrineStatusByIdCMSAsync(shrineId, ct);
+        // Validate Policy
+        var shrineStatus = await _shrineReadService.GetShrineStatusByIdCMSAsync(request.ShrineId, ct);
         ShrineWritePolicy.EnsureCanModify(shrineStatus, request.UserRole);
 
         // Remove Image from Cloudinary
-        string? publicId = await _shrineReadService.GetHistoryImagePublicIdCMSAsync(request.HistoryId, ct);
+        string? publicId = await _shrineReadService.GetImagePublicIdCMSAsync(request.ImageId, ct);
         if (!string.IsNullOrWhiteSpace(publicId)) await _imageService.DeleteAsync(publicId, ct);
 
-        // Delete Shrine History
-        await _shrineWriteService.DeleteHistoryAsync(request.HistoryId, ct);
+        await _shrineWriteService.DeleteHeroImageAsync(
+            request.ShrineId,
+            request.ImageId,
+            ct
+        );
 
         return Unit.Value;
     }

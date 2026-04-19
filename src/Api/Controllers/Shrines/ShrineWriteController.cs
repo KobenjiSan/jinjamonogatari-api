@@ -1,12 +1,16 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using API.Extensions;
+using Application.Common.Models.Images;
 using Application.Features.Shrines.Commands.CreateFolklore;
 using Application.Features.Shrines.Commands.CreateGalleryImage;
+using Application.Features.Shrines.Commands.CreateHeroImage;
 using Application.Features.Shrines.Commands.CreateHistory;
 using Application.Features.Shrines.Commands.CreateKamiInShrine;
 using Application.Features.Shrines.Commands.CreateShrine;
 using Application.Features.Shrines.Commands.DeleteFolklore;
 using Application.Features.Shrines.Commands.DeleteGalleryImage;
+using Application.Features.Shrines.Commands.DeleteHeroImage;
 using Application.Features.Shrines.Commands.DeleteHistory;
 using Application.Features.Shrines.Commands.DeleteShrine;
 using Application.Features.Shrines.Commands.ImportShrines;
@@ -17,8 +21,8 @@ using Application.Features.Shrines.Commands.SubmitReviewShrine;
 using Application.Features.Shrines.Commands.UnlinkKamiToShrine;
 using Application.Features.Shrines.Commands.UpdateFolklore;
 using Application.Features.Shrines.Commands.UpdateGalleryImage;
+using Application.Features.Shrines.Commands.UpdateHeroImage;
 using Application.Features.Shrines.Commands.UpdateHistory;
-using Application.Features.Shrines.Commands.UpdateKami;
 using Application.Features.Shrines.Commands.UpdateShrineMeta;
 using Application.Features.Shrines.Commands.UpdateShrineNotes;
 using MediatR;
@@ -40,15 +44,54 @@ public class ShrineWriteController : ControllerBase
 
     #region META
 
-    // PUT /api/shrines/cms/{id}/meta
-    [HttpPut("cms/{id}/meta")]
+    // PUT /api/shrines/cms/{shrineId}/meta
+    [HttpPut("cms/{shrineId}/meta")]
     public async Task<IActionResult> UpdateShrineMeta(
-        [FromRoute] int id,
+        [FromRoute] int shrineId,
         [FromBody] UpdateShrineMetaRequest request
     )
     {
         var role = User.GetUserRole();
-        var command = new UpdateShrineMetaCommand(role, id, request);
+        var command = new UpdateShrineMetaCommand(role, shrineId, request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // POST /api/shrines/cms/{shrineId}/hero-image
+    [HttpPost("cms/{shrineId}/hero-image")]
+    public async Task<ActionResult<ImageFullDto>> CreateHeroImage(
+        [FromRoute] int shrineId,
+        [FromForm] CreateImageFormRequest request
+    )
+    {
+        var role = User.GetUserRole();
+        var command = new CreateHeroImageCommand(role, shrineId, request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // PUT /api/shrines/cms/{shrineId}/hero-image
+    [HttpPut("cms/{shrineId}/hero-image")]
+    public async Task<ActionResult<ImageFullDto>> UpdateHeroImage(
+        [FromRoute] int shrineId,
+        [FromForm] UpdateImageFormRequest request
+    )
+    {
+        var role = User.GetUserRole();
+        var command = new UpdateHeroImageCommand(role, shrineId, request);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // DELETE /api/shrines/cms/{shrineId}/hero-image/{imageId}
+    [HttpDelete("cms/{shrineId}/hero-image/{imageId}")]
+    public async Task<IActionResult> DeleteHeroImage(
+        [FromRoute] int shrineId,
+        [FromRoute] int imageId
+    )
+    {
+        var role = User.GetUserRole();
+        var command = new DeleteHeroImageCommand(role, shrineId, imageId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -79,11 +122,22 @@ public class ShrineWriteController : ControllerBase
     [HttpPost("cms/{shrineId}/kami")]
     public async Task<IActionResult> CreateKamiInShrine(
         [FromRoute] int shrineId,
-        [FromBody] CreateKamiInShrineRequest request
+        [FromForm] string data,
+        [FromForm] IFormFile? file
     )
     {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var request = JsonSerializer.Deserialize<CreateKamiInShrineRequest>(data, options);
+
+        if (request == null)
+            return BadRequest("Invalid payload");
+
         var role = User.GetUserRole();
-        var command = new CreateKamiInShrineCommand(role, shrineId, request);
+        var command = new CreateKamiInShrineCommand(role, shrineId, request, file);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -116,17 +170,6 @@ public class ShrineWriteController : ControllerBase
         return Ok(result);
     }
 
-    // To be moved later into Kami Controller
-    // PUT /api/shrines/cms/kami/{kamiId} (kami in body)
-    // Update kami from shrine editor
-    [HttpPut("cms/kami/{kamiId}")]
-    public async Task<IActionResult> UpdateKami([FromRoute] int kamiId, [FromBody] UpdateKamiRequest request)
-    {
-        var command = new UpdateKamiCommand(kamiId, request);
-        var result = await _mediator.Send(command);
-        return Ok(result);
-    }
-
     #endregion
     
     #region HISTORY
@@ -134,10 +177,24 @@ public class ShrineWriteController : ControllerBase
     // POST /api/shrines/cms/{shrineId}/history/ (history in body)
     // Create a new history item linked automatically to shrine
     [HttpPost("cms/{shrineId}/history")]
-    public async Task<IActionResult> CreateHistory([FromRoute] int shrineId, [FromBody] CreateHistoryRequest request)
+    public async Task<IActionResult> CreateHistory(
+        [FromRoute] int shrineId, 
+        [FromForm] string data,
+        [FromForm] IFormFile? file
+    )
     {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var request = JsonSerializer.Deserialize<CreateHistoryRequest>(data, options);
+
+        if (request == null)
+            return BadRequest("Invalid payload");
+        
         var role = User.GetUserRole();
-        var command = new CreateHistoryCommand(role, shrineId, request);
+        var command = new CreateHistoryCommand(role, shrineId, request, file);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -145,10 +202,24 @@ public class ShrineWriteController : ControllerBase
     // PUT /api/shrines/cms/history/{historyId} (history in body)
     // Update history
     [HttpPut("cms/history/{historyId}")]
-    public async Task<IActionResult> UpdateHistory([FromRoute] int historyId, [FromBody] UpdateHistoryRequest request)
+    public async Task<IActionResult> UpdateHistory(
+        [FromRoute] int historyId, 
+        [FromForm] string data,
+        [FromForm] IFormFile? file
+    )
     {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var request = JsonSerializer.Deserialize<UpdateHistoryRequest>(data, options);
+
+        if (request == null)
+            return BadRequest("Invalid payload");
+        
         var role = User.GetUserRole();
-        var command = new UpdateHistoryCommand(role, historyId, request);
+        var command = new UpdateHistoryCommand(role, historyId, request, file);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -171,10 +242,24 @@ public class ShrineWriteController : ControllerBase
     // POST /api/shrines/cms/{shrineId}/folklore/ (folklore in body)
     // Create a new folklore item linked automatically to shrine
     [HttpPost("cms/{shrineId}/folklore")]
-    public async Task<IActionResult> CreateFolklore([FromRoute] int shrineId, [FromBody] CreateFolkloreRequest request)
+    public async Task<IActionResult> CreateFolklore(
+        [FromRoute] int shrineId, 
+        [FromForm] string data,
+        [FromForm] IFormFile? file
+    )
     {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var request = JsonSerializer.Deserialize<CreateFolkloreRequest>(data, options);
+
+        if (request == null)
+            return BadRequest("Invalid payload");
+        
         var role = User.GetUserRole();
-        var command = new CreateFolkloreCommand(role, shrineId, request);
+        var command = new CreateFolkloreCommand(role, shrineId, request, file);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -182,10 +267,24 @@ public class ShrineWriteController : ControllerBase
     // PUT /api/shrines/cms/folklore/{folkloreId} (folklore in body)
     // Update folklore
     [HttpPut("cms/folklore/{folkloreId}")]
-    public async Task<IActionResult> UpdateFolklore([FromRoute] int folkloreId, [FromBody] UpdateFolkloreRequest request)
+    public async Task<IActionResult> UpdateFolklore(
+        [FromRoute] int folkloreId, 
+        [FromForm] string data,
+        [FromForm] IFormFile? file
+    )
     {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var request = JsonSerializer.Deserialize<UpdateFolkloreRequest>(data, options);
+
+        if (request == null)
+            return BadRequest("Invalid payload");
+        
         var role = User.GetUserRole();
-        var command = new UpdateFolkloreCommand(role, folkloreId, request);
+        var command = new UpdateFolkloreCommand(role, folkloreId, request, file);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -208,7 +307,7 @@ public class ShrineWriteController : ControllerBase
     // POST /api/shrines/cms/{shrineId}/gallery/ (image in body)
     // Create a new image linked automatically to shrine gallery
     [HttpPost("cms/{shrineId}/gallery")]
-    public async Task<IActionResult> CreateGalleryImage([FromRoute] int shrineId, [FromForm] CreateGalleryImageFormRequest request)
+    public async Task<IActionResult> CreateGalleryImage([FromRoute] int shrineId, [FromForm] CreateImageFormRequest request)
     {
         var role = User.GetUserRole();
         var command = new CreateGalleryImageCommand(role, shrineId, request);
@@ -219,7 +318,7 @@ public class ShrineWriteController : ControllerBase
     // PUT /api/shrines/cms/gallery/{imageId} (image in body)
     // Update image
     [HttpPut("cms/gallery/{imageId}")]
-    public async Task<IActionResult> UpdateGalleryImage([FromRoute] int imageId, [FromForm] UpdateGalleryImageFormRequest request)
+    public async Task<IActionResult> UpdateGalleryImage([FromRoute] int imageId, [FromForm] UpdateImageFormRequest request)
     {
         if (request.ImgId != imageId)
             throw new ValidationException("Route ID and body ID do not match.");
@@ -332,8 +431,7 @@ public class ShrineWriteController : ControllerBase
 
 public record UpdateShrineMetaRequest(
     BasicMetaUpdateRequest Basic,
-    TagLinkChangesRequest Tags,
-    ImageChangeRequest HeroImage
+    TagLinkChangesRequest Tags
 );
 
 public record BasicMetaUpdateRequest(
@@ -368,7 +466,7 @@ public record TagLinkChangesRequest(
 
 #region Images Request
 
-public record ImageRequest(
+public record UpdateImageRequest(
     int ImgId,
     string? ImageUrl,
     string? Title,
@@ -389,7 +487,7 @@ public record CreateImageRequest(
     CreateCitationRequest? Citation
 );
 
-public record CreateGalleryImageFormRequest(
+public record CreateImageFormRequest(
     string? ImageUrl,
     string? Title,
     string? Desc,
@@ -397,7 +495,7 @@ public record CreateGalleryImageFormRequest(
     IFormFile? File
 );
 
-public record UpdateGalleryImageFormRequest(
+public record UpdateImageFormRequest(
     int ImgId,
     string? ImageUrl,
     string? Title,
@@ -435,7 +533,7 @@ public record LinkExistingCitationRequest(
 
 public record CitationCreateChangesRequest(
     IReadOnlyList<CreateCitationRequest> Create,
-    IReadOnlyList<LinkExistingCitationRequest> LinkExisting
+    IReadOnlyList<LinkExistingCitationRequest>? LinkExisting
 );
 
 public record CitationListChangesRequest(

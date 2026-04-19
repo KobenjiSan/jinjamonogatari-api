@@ -6,5 +6,6 @@ namespace Application.Features.Shrines.Commands.CreateFolklore;
 public record CreateFolkloreCommand(
     string UserRole,
     int ShrineId,
-    CreateFolkloreRequest Request
+    CreateFolkloreRequest Request,
+    IFormFile? File
 ) : IRequest<Unit>;

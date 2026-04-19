@@ -6,5 +6,6 @@ namespace Application.Features.Shrines.Commands.CreateKamiInShrine;
 public record CreateKamiInShrineCommand(
     string UserRole,
     int ShrineId,
-    CreateKamiInShrineRequest Request
+    CreateKamiInShrineRequest Request,
+    IFormFile? File
 ) : IRequest<Unit>;
