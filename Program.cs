@@ -97,6 +97,7 @@ builder.Services.AddScoped<IUserReadService, UserReadService>();
 builder.Services.AddScoped<IUserWriteService, UserWriteService>();
 // Etiquette
 builder.Services.AddScoped<IEtiquetteReadService, EtiquetteReadService>();
+builder.Services.AddScoped<IEtiquetteWriteService, EtiquetteWriteService>();
 // Shrines
 builder.Services.AddScoped<IShrineReadService, ShrineReadService>();
 builder.Services.AddScoped<IShrineWriteService, ShrineWriteService>();

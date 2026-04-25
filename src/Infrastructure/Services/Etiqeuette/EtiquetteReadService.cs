@@ -106,7 +106,7 @@ public class EtiquetteReadService : IEtiquetteReadService
                                         s.Image.Citation.Title,
                                         s.Image.Citation.Author,
                                         s.Image.Citation.Url,
-                                        s.Image.Citation.CiteId == 0 ? null : s.Image.Citation.Year // harmless guard if you ever seed weird data
+                                        s.Image.Citation.CiteId == 0 ? null : s.Image.Citation.Year
                                     )
                             )
                     ))
@@ -178,4 +178,112 @@ public class EtiquetteReadService : IEtiquetteReadService
             ))
             .SingleOrDefaultAsync(ct);
     }
+
+    #region Get Glance Topics
+
+    public async Task<IReadOnlyList<AtAGlanceCMSDto>> GetGlanceTopicsCMSAsync(CancellationToken ct)
+    {
+        return await _db.EtiquetteTopics
+            .AsNoTracking()
+            .Where(t => t.ShowInGlance == true)
+            .OrderBy(t => t.GlanceOrder ?? int.MaxValue)
+            .ThenBy(t => t.TopicId)
+            .Select(t => new AtAGlanceCMSDto(
+                t.TopicId,
+                t.TitleLong,
+                t.TitleShort,
+                t.IconKey,
+                t.IconSet,
+                t.GlanceOrder
+            ))
+            .ToListAsync(ct);
+    }
+
+    #endregion
+
+    #region Get Topics
+
+    public async Task<IReadOnlyList<EtiquetteTopicCMSDto>> GetTopicsCMSAsync(CancellationToken ct)
+    {
+        return await _db.EtiquetteTopics
+            .AsNoTracking()
+            .OrderBy(t => t.TopicId)
+            .Select(t => new EtiquetteTopicCMSDto(
+                t.TopicId,
+                t.Slug,
+                t.TitleLong,
+                t.Summary,
+                t.ShowInGlance,
+                t.ShowAsHighlight,
+                t.GuideOrder,
+                t.Status,
+                t.CreatedAt,
+                t.UpdatedAt,
+                t.TopicCitations
+                    .OrderBy(tc => tc.CiteId)
+                    .Select(tc => new CitationCMSDto(
+                        tc.Citation.CiteId,
+                        tc.Citation.Title,
+                        tc.Citation.Author,
+                        tc.Citation.Url,
+                        tc.Citation.Year,
+                        tc.Citation.CreatedAt,
+                        tc.Citation.UpdatedAt
+                    )).ToList()
+            )).ToListAsync(ct);
+    }
+
+    #endregion
+
+    #region Get Steps By Id
+
+    public async Task<IReadOnlyList<EtiquetteStepCMSDto>> GetStepsByIdCMSAsync(int topicId, CancellationToken ct)
+    {
+        return await _db.EtiquetteSteps
+            .AsNoTracking()
+            .Where(s => s.TopicId == topicId)
+            .OrderBy(s => s.StepOrder ?? int.MaxValue)
+            .ThenBy(s => s.StepId)
+            .Select(s => new EtiquetteStepCMSDto(
+                s.StepId,
+                s.Text,
+                s.StepOrder,
+                s.Image == null
+                    ? null
+                    : new ImageCMSDto(
+                        s.Image.ImgId,
+                        s.Image.ImageUrl,
+                        s.Image.Title,
+                        s.Image.Desc,
+                        s.Image.Citation == null
+                            ? null
+                            : new CitationCMSDto(
+                                s.Image.Citation.CiteId,
+                                s.Image.Citation.Title,
+                                s.Image.Citation.Author,
+                                s.Image.Citation.Url,
+                                s.Image.Citation.Year,
+                                s.Image.Citation.CreatedAt,
+                                s.Image.Citation.UpdatedAt
+                            ),
+                        s.Image.CreatedAt,
+                        s.Image.UpdatedAt
+                    )
+            )).ToListAsync(ct);
+    }
+
+    #endregion
+
+    #region Get PublicId Step
+
+    public async Task<string?> GetStepImagePublicIdCMSAsync(int stepId, CancellationToken ct)
+    {
+        return await _db.EtiquetteSteps
+            .AsNoTracking()
+            .Where(s => s.StepId == stepId)
+            .Select(s => s.Image!.PublicId)
+            .SingleOrDefaultAsync(ct);
+    }
+
+    #endregion
 }

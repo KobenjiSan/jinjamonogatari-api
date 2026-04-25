@@ -1,10 +1,14 @@
 using Application.Features.Etiquette.Models;
+using Application.Features.Etiquette.Queries.GetEtiquetteStepsByIdCMS;
 using Application.Features.Etiquette.Queries.GetEtiquetteTopicDetail;
 using Application.Features.Etiquette.Queries.GetEtiquetteTopics;
+using Application.Features.Etiquette.Queries.GetEtiquetteTopicsCMS;
+using Application.Features.Etiquette.Queries.GetGlanceCMS;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Api.Controllers;
+namespace Api.Controllers.Etiquette;
 
 [ApiController]
 [Route("api/etiquette")]
@@ -39,5 +43,34 @@ public class EtiquetteReadController : ControllerBase
     {
         var result = await _mediator.Send(new GetEtiquetteTopicDetailBySlugQuery(slug));
         return Ok(result.Topic);
+    }
+
+    // CMS
+
+    // GET /api/etiquette/cms/glance
+    [HttpGet("cms/glance")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<AtAGlanceCMSDto>>> GetGlanceCMSAsync()
+    {
+        var result = await _mediator.Send(new GetGlanceCMSQuery());
+        return Ok(result.Topics);
+    }
+
+    // GET /api/etiquette/cms/topics
+    [HttpGet("cms/topics")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<EtiquetteTopicCMSDto>>> GetTopicsCMSAsync()
+    {
+        var result = await _mediator.Send(new GetEtiquetteTopicsCMSQuery());
+        return Ok(result.Topics);
+    }
+
+    // GET /api/etiquette/cms/steps/{topicId}
+    [HttpGet("cms/steps/{topicId}")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<EtiquetteStepCMSDto>>> GetStepsByTopicIdCMSAsync([FromRoute] int topicId)
+    {
+        var result = await _mediator.Send(new GetEtiquetteStepsByIdCMSQuery(topicId));
+        return Ok(result.Steps);
     }
 }
