@@ -56,7 +56,7 @@ public class EtiquetteWriteController : ControllerBase
 
     #region Delete Etiquette
 
-    // DELETE /api/etiquette/
+    // DELETE /api/etiquette/{topicId}
     [HttpDelete("{topicId}")]
     public async Task<IActionResult> DeleteEtiquetteAsync([FromRoute] int topicId)
     {
@@ -192,14 +192,12 @@ public record BasicEtiquetteRequest(
 
 public record CreateStepRequest(
     BasicStepRequest Basic,
-    CreateImageRequest? Image,
-    CitationCreateChangesRequest Citations
+    CreateImageRequest? Image
 );
 
 public record UpdateStepRequest(
     BasicStepRequest Basic,
-    ImageChangeRequest Image,
-    CitationListChangesRequest Citations
+    ImageChangeRequest Image
 );
 
 public record BasicStepRequest(
