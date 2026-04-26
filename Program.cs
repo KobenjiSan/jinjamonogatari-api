@@ -23,6 +23,8 @@ using Application.Features.Tags.Services;
 using Infrastructure.Services.Tags;
 using Application.Features.Kami.Services;
 using Infrastructure.Services.KamiService;
+using Infrastructure.Services.Audit;
+using Application.Features.Audits.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -89,6 +91,8 @@ builder.Services
 builder.Services.AddAuthorization();
 
 // Infrastructure services
+// Audit
+builder.Services.AddScoped<IAuditService, AuditService>();
 // Auth
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasherService>();

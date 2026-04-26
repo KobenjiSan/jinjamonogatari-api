@@ -1,6 +1,6 @@
 using Application.Common.Models.Images;
 using Application.Common.Policies;
-using Application.Features.Images.Services;
+using Application.Features.Audits.Services;
 using Application.Features.Shrines.Services;
 using MediatR;
 
@@ -10,31 +10,46 @@ public class UpdateHeroImageHandler : IRequestHandler<UpdateHeroImageCommand, Im
 {
     private readonly IShrineWriteService _shrineWriteService;
     private readonly IShrineReadService _shrineReadService;
-    private readonly IImageService _imageService;
+    private readonly IAuditService _audit;
 
     public UpdateHeroImageHandler(
         IShrineWriteService shrineWriteService,
         IShrineReadService shrineReadService,
-        IImageService imageService
+        IAuditService audit
     )
     {
         _shrineWriteService = shrineWriteService;
         _shrineReadService = shrineReadService;
-        _imageService = imageService;
+        _audit = audit;
     }
 
     public async Task<ImageFullDto> Handle(UpdateHeroImageCommand request, CancellationToken ct)
     {
-        // Validate Policy
-        var shrineStatus = await _shrineReadService.GetShrineStatusByIdCMSAsync(request.ShrineId, ct);
-        ShrineWritePolicy.EnsureCanModify(shrineStatus, request.UserRole);
+        ImageFullDto result;
+        try
+        {
+            // Validate Policy
+            var shrineStatus = await _shrineReadService.GetShrineStatusByIdCMSAsync(request.ShrineId, ct);
+            ShrineWritePolicy.EnsureCanModify(shrineStatus, request.UserRole);
 
-        // Update Hero Image
-        var result = await _shrineWriteService.UpdateHeroImageAsync(
-            request.ShrineId,
-            request.Request,
-            ct
-        );
+            // Update Hero Image
+            result = await _shrineWriteService.UpdateHeroImageAsync(
+                request.ShrineId,
+                request.Request,
+                ct
+            );
+
+            await _audit.LogAsync(request.UserId, request.Username, "UpdatedHeroImage", $"Shrine #{request.ShrineId} (Hero Image #{request.Request.ImgId})", true, null, ct);
+        }
+        catch (Exception e)
+        {
+            try
+            {
+                await _audit.LogAsync(request.UserId, request.Username, "UpdatedHeroImage", $"Shrine #{request.ShrineId} (Hero Image #{request.Request.ImgId})", false, e.Message, ct);
+            }
+            catch { }
+            throw;
+        }
 
         return result;
     }

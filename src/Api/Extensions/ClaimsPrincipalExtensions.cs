@@ -16,6 +16,18 @@ public static class ClaimsPrincipalExtensions
         return userId;
     }
 
+    public static string GetEmail(this ClaimsPrincipal user)
+    {
+        var email =
+            user.FindFirstValue(ClaimTypes.Email) ??
+            user.FindFirstValue("email");
+
+        if (string.IsNullOrWhiteSpace(email))
+            throw new UnauthorizedAccessException("User email missing.");
+
+        return email;
+    }
+
     public static string GetUserRole(this ClaimsPrincipal user)
     {
         var role = 

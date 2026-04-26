@@ -3,4 +3,8 @@ using MediatR;
 namespace Application.Features.Shrines.Commands.DeleteShrine;
 
 // COMMAND
-public record DeleteShrineCommand(int ShrineId) : IRequest<Unit>;
+public record DeleteShrineCommand(
+    int UserId, 
+    string Username, 
+    int ShrineId
+) : IRequest<Unit>;

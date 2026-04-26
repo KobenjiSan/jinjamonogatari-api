@@ -51,8 +51,10 @@ public class ShrineWriteController : ControllerBase
         [FromBody] UpdateShrineMetaRequest request
     )
     {
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new UpdateShrineMetaCommand(role, shrineId, request);
+        var command = new UpdateShrineMetaCommand(userId, username, role, shrineId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -64,8 +66,10 @@ public class ShrineWriteController : ControllerBase
         [FromForm] CreateImageFormRequest request
     )
     {
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new CreateHeroImageCommand(role, shrineId, request);
+        var command = new CreateHeroImageCommand(userId, username, role, shrineId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -77,8 +81,10 @@ public class ShrineWriteController : ControllerBase
         [FromForm] UpdateImageFormRequest request
     )
     {
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new UpdateHeroImageCommand(role, shrineId, request);
+        var command = new UpdateHeroImageCommand(userId, username, role, shrineId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -90,8 +96,10 @@ public class ShrineWriteController : ControllerBase
         [FromRoute] int imageId
     )
     {
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new DeleteHeroImageCommand(role, shrineId, imageId);
+        var command = new DeleteHeroImageCommand(userId, username, role, shrineId, imageId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -107,8 +115,10 @@ public class ShrineWriteController : ControllerBase
         [FromBody] UpdateShrineNotesRequest request
     )
     {
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new UpdateShrineNotesCommand(role, id, request.Notes);
+        var command = new UpdateShrineNotesCommand(userId, username, role, id, request.Notes);
         await _mediator.Send(command);
         return NoContent();
     }
@@ -136,8 +146,10 @@ public class ShrineWriteController : ControllerBase
         if (request == null)
             return BadRequest("Invalid payload");
 
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new CreateKamiInShrineCommand(role, shrineId, request, file);
+        var command = new CreateKamiInShrineCommand(userId, username, role, shrineId, request, file);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -150,8 +162,10 @@ public class ShrineWriteController : ControllerBase
         [FromRoute] int kamiId
     )
     {
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new LinkKamiToShrineCommand(role, shrineId, kamiId);
+        var command = new LinkKamiToShrineCommand(userId, username, role, shrineId, kamiId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -164,8 +178,10 @@ public class ShrineWriteController : ControllerBase
         [FromRoute] int kamiId
     )
     {
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new UnlinkKamiToShrineCommand(role, shrineId, kamiId);
+        var command = new UnlinkKamiToShrineCommand(userId, username, role, shrineId, kamiId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -193,8 +209,10 @@ public class ShrineWriteController : ControllerBase
         if (request == null)
             return BadRequest("Invalid payload");
         
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new CreateHistoryCommand(role, shrineId, request, file);
+        var command = new CreateHistoryCommand(userId, username, role, shrineId, request, file);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -218,8 +236,10 @@ public class ShrineWriteController : ControllerBase
         if (request == null)
             return BadRequest("Invalid payload");
         
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new UpdateHistoryCommand(role, historyId, request, file);
+        var command = new UpdateHistoryCommand(userId, username, role, historyId, request, file);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -229,8 +249,10 @@ public class ShrineWriteController : ControllerBase
     [HttpDelete("cms/history/{historyId}")]
     public async Task<IActionResult> DeleteHistory([FromRoute] int historyId)
     {
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new DeleteHistoryCommand(role, historyId);
+        var command = new DeleteHistoryCommand(userId, username, role, historyId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -258,8 +280,11 @@ public class ShrineWriteController : ControllerBase
         if (request == null)
             return BadRequest("Invalid payload");
         
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new CreateFolkloreCommand(role, shrineId, request, file);
+
+        var command = new CreateFolkloreCommand(userId, username, role, shrineId, request, file);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -283,8 +308,10 @@ public class ShrineWriteController : ControllerBase
         if (request == null)
             return BadRequest("Invalid payload");
         
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new UpdateFolkloreCommand(role, folkloreId, request, file);
+        var command = new UpdateFolkloreCommand(userId, username, role, folkloreId, request, file);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -294,8 +321,10 @@ public class ShrineWriteController : ControllerBase
     [HttpDelete("cms/folklore/{folkloreId}")]
     public async Task<IActionResult> DeleteFolklore([FromRoute] int folkloreId)
     {
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new DeleteFolkloreCommand(role, folkloreId);
+        var command = new DeleteFolkloreCommand(userId, username, role, folkloreId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -309,8 +338,10 @@ public class ShrineWriteController : ControllerBase
     [HttpPost("cms/{shrineId}/gallery")]
     public async Task<IActionResult> CreateGalleryImage([FromRoute] int shrineId, [FromForm] CreateImageFormRequest request)
     {
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new CreateGalleryImageCommand(role, shrineId, request);
+        var command = new CreateGalleryImageCommand(userId, username, role, shrineId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -323,8 +354,10 @@ public class ShrineWriteController : ControllerBase
         if (request.ImgId != imageId)
             throw new ValidationException("Route ID and body ID do not match.");
 
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new UpdateGalleryImageCommand(role, imageId, request);
+        var command = new UpdateGalleryImageCommand(userId, username, role, imageId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -333,8 +366,10 @@ public class ShrineWriteController : ControllerBase
     [HttpDelete("cms/gallery/{imageId}")]
     public async Task<IActionResult> DeleteGalleryImage([FromRoute] int imageId)
     {
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         var role = User.GetUserRole();
-        var command = new DeleteGalleryImageCommand(role, imageId);
+        var command = new DeleteGalleryImageCommand(userId, username, role, imageId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -347,7 +382,9 @@ public class ShrineWriteController : ControllerBase
     [HttpPost("cms/import")]
     public async Task<IActionResult> ImportShrinesAsync([FromBody] ImportShrinesRequest request)
     {
-        var command = new ImportShrinesCommand(request);
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
+        var command = new ImportShrinesCommand(userId, username, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -360,7 +397,9 @@ public class ShrineWriteController : ControllerBase
     [HttpPost("cms/create")]
     public async Task<IActionResult> CreateShrineAsync([FromBody] CreateShrineRequest request)
     {
-        var command = new CreateShrineCommand(request);
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
+        var command = new CreateShrineCommand(userId, username, request);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -374,7 +413,9 @@ public class ShrineWriteController : ControllerBase
     [Authorize(Roles = "Admin")]    // Admins only
     public async Task<IActionResult> DeleteShrineAsync([FromRoute] int shrineId)
     {
-        var command = new DeleteShrineCommand(shrineId);
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
+        var command = new DeleteShrineCommand(userId, username, shrineId);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -388,7 +429,8 @@ public class ShrineWriteController : ControllerBase
     public async Task<IActionResult> SubmitReviewShrineAsync([FromRoute] int shrineId)
     {
         var userId = User.GetUserId();
-        var command = new SubmitReviewShrineCommand(shrineId, userId);
+        var username = User.GetEmail();
+        var command = new SubmitReviewShrineCommand(username, shrineId, userId);
         await _mediator.Send(command);
         return NoContent();
     }
@@ -403,7 +445,8 @@ public class ShrineWriteController : ControllerBase
     public async Task<IActionResult> RejectReviewShrineAsync([FromRoute] int shrineId, [FromBody] RejectShrineRequest request)
     {
         var userId = User.GetUserId();
-        var command = new RejectReviewShrineCommand(shrineId, userId, request.Message);
+        var username = User.GetEmail();
+        var command = new RejectReviewShrineCommand(username, shrineId, userId, request.Message);
         await _mediator.Send(command);
         return NoContent();
     }
@@ -418,7 +461,8 @@ public class ShrineWriteController : ControllerBase
     public async Task<IActionResult> PublishReviewShrineAsync([FromRoute] int shrineId)
     {
         var userId = User.GetUserId();
-        var command = new PublishReviewShrineCommand(shrineId, userId);
+        var username = User.GetEmail();
+        var command = new PublishReviewShrineCommand(username, shrineId, userId);
         await _mediator.Send(command);
         return NoContent();
     }

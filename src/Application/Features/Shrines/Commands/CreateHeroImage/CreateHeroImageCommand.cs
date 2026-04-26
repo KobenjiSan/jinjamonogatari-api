@@ -5,6 +5,8 @@ namespace Application.Features.Shrines.Commands.CreateHeroImage;
 
 // COMMAND
 public record CreateHeroImageCommand(
+    int UserId,
+    string Username,
     string UserRole,
     int ShrineId,
     CreateImageFormRequest Request

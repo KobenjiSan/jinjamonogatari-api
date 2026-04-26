@@ -5,6 +5,8 @@ namespace Application.Features.Shrines.Commands.UpdateHeroImage;
 
 // COMMAND
 public record UpdateHeroImageCommand(
+    int UserId, 
+    string Username,
     string UserRole,
     int ShrineId,
     UpdateImageFormRequest Request

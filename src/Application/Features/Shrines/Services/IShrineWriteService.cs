@@ -31,7 +31,7 @@ public interface IShrineWriteService
     Task UpdateShrineNotesAsync(int shrineId, string notes, CancellationToken ct);
 
     // KAMI
-    Task CreateKamiInShrineAsync(
+    Task<int> CreateKamiInShrineAsync(
         int shrineId,
         CreateKamiInShrineRequest request,
         string? publicId,
@@ -41,7 +41,7 @@ public interface IShrineWriteService
     Task UnlinkKamiToShrineAsync(int shrineId, int kamiId, CancellationToken ct);
 
     // HISTORY
-    Task CreateHistoryAsync(
+    Task<int> CreateHistoryAsync(
         int shrineId,
         CreateHistoryRequest request,
         string? publicId,
@@ -51,7 +51,7 @@ public interface IShrineWriteService
     Task UpdateHistoryAsync(int historyId, UpdateHistoryRequest request, string? publicId, CancellationToken ct);
 
     // FOLKLORE
-    Task CreateFolkloreAsync(
+    Task<int> CreateFolkloreAsync(
         int shrineId,
         CreateFolkloreRequest request,
         string? publicId,
@@ -61,7 +61,7 @@ public interface IShrineWriteService
     Task UpdateFolkloreAsync(int folkloreId, UpdateFolkloreRequest request, string? publicId, CancellationToken ct);
 
     // GALLERY
-    Task CreateGalleryImageAsync(
+    Task<int> CreateGalleryImageAsync(
         int shrineId,
         CreateImageFormRequest request,
         string publicId,
@@ -72,7 +72,7 @@ public interface IShrineWriteService
 
     Task ImportShrinesAsync(ImportShrinesRequest request, CancellationToken ct);
 
-    Task CreateShrineAsync(CreateShrineRequest request, CancellationToken ct);
+    Task<int> CreateShrineAsync(CreateShrineRequest request, CancellationToken ct);
     Task DeleteShrineAsync(int shrineId, CancellationToken ct);
 
     Task UpdateShrineStatus(int shrineId, string status, CancellationToken ct);

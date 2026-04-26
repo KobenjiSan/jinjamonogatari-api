@@ -51,6 +51,9 @@ public class AppDbContext : DbContext, IAppDbContext
     // Citations
     public DbSet<Citation> Citations => Set<Citation>();
 
+    // Auditing
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
     /*
     Builds EF Core model at startup.
     Applies all IEntityTypeConfiguration mappings (table names,

@@ -3,4 +3,8 @@ using MediatR;
 namespace Application.Features.Shrines.Commands.PublishReviewShrine;
 
 // COMMAND
-public record PublishReviewShrineCommand(int ShrineId, int UserId) : IRequest<Unit>;
+public record PublishReviewShrineCommand(
+    string Username,
+    int ShrineId, 
+    int UserId
+) : IRequest<Unit>;

@@ -3,4 +3,9 @@ using MediatR;
 namespace Application.Features.Shrines.Commands.DeleteHistory;
 
 // COMMAND
-public record DeleteHistoryCommand(string UserRole, int HistoryId) : IRequest<Unit>;
+public record DeleteHistoryCommand(
+    int UserId, 
+    string Username, 
+    string UserRole, 
+    int HistoryId
+) : IRequest<Unit>;

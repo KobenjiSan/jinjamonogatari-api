@@ -315,7 +315,7 @@ public class ShrineWriteService : IShrineWriteService
 
     #region CREATE KAMI
 
-    public async Task CreateKamiInShrineAsync(
+    public async Task<int> CreateKamiInShrineAsync(
         int shrineId,
         CreateKamiInShrineRequest request,
         string? publicId,
@@ -405,15 +405,19 @@ public class ShrineWriteService : IShrineWriteService
             }
         }
 
-        // Link kami to shrine
-        shrine.ShrineKamis.Add(new ShrineKami
+        var shrineKami = new ShrineKami
         {
             ShrineId = shrine.ShrineId,
             Shrine = shrine,
             Kami = kami
-        });
+        };
+
+        // Link kami to shrine
+        shrine.ShrineKamis.Add(shrineKami);
 
         await _db.SaveChangesAsync(ct);
+
+        return shrineKami.KamiId;
     }
 
     #endregion
@@ -483,7 +487,7 @@ public class ShrineWriteService : IShrineWriteService
 
     #region CREATE HISTORY
 
-    public async Task CreateHistoryAsync(int shrineId, CreateHistoryRequest request, string? publicId, CancellationToken ct)
+    public async Task<int> CreateHistoryAsync(int shrineId, CreateHistoryRequest request, string? publicId, CancellationToken ct)
     {
         // Load shrine
         var shrine = await _db.Shrines
@@ -573,6 +577,8 @@ public class ShrineWriteService : IShrineWriteService
         shrine.ShrineHistories.Add(history);
 
         await _db.SaveChangesAsync(ct);
+
+        return history.HistoryId;
     }
 
     #endregion
@@ -807,7 +813,7 @@ public class ShrineWriteService : IShrineWriteService
 
     #region CREATE FOLKLORE
 
-    public async Task CreateFolkloreAsync(int shrineId, CreateFolkloreRequest request, string? publicId, CancellationToken ct)
+    public async Task<int> CreateFolkloreAsync(int shrineId, CreateFolkloreRequest request, string? publicId, CancellationToken ct)
     {
         // Load shrine
         var shrine = await _db.Shrines
@@ -896,6 +902,8 @@ public class ShrineWriteService : IShrineWriteService
         shrine.ShrineFolklores.Add(folklore);
 
         await _db.SaveChangesAsync(ct);
+
+        return folklore.FolkloreId;
     }
 
     #endregion
@@ -1129,7 +1137,7 @@ public class ShrineWriteService : IShrineWriteService
 
     #region CREATE GALLERY IMAGE
 
-    public async Task CreateGalleryImageAsync(
+    public async Task<int> CreateGalleryImageAsync(
         int shrineId,
         CreateImageFormRequest request,
         string publicId,
@@ -1162,14 +1170,18 @@ public class ShrineWriteService : IShrineWriteService
             };
         }
 
-        shrine.ShrineGalleries.Add(new ShrineGallery
+        var galleryImage = new ShrineGallery
         {
             ShrineId = shrine.ShrineId,
             Shrine = shrine,
             Image = image
-        });
+        };
+
+        shrine.ShrineGalleries.Add(galleryImage);
 
         await _db.SaveChangesAsync(ct);
+
+        return galleryImage.ImgId;
     }
 
     #endregion
@@ -1282,7 +1294,7 @@ public class ShrineWriteService : IShrineWriteService
 
     #region CREATE SHRINE
 
-    public async Task CreateShrineAsync(CreateShrineRequest request, CancellationToken ct)
+    public async Task<int> CreateShrineAsync(CreateShrineRequest request, CancellationToken ct)
     {
         if (request.Lat is null || request.Lon is null)
             throw new ValidationException("Shrine coordinates are required.");
@@ -1298,6 +1310,7 @@ public class ShrineWriteService : IShrineWriteService
 
         _db.Add(shrine);
         await _db.SaveChangesAsync(ct);
+        return shrine.ShrineId;
     }
 
     #endregion
