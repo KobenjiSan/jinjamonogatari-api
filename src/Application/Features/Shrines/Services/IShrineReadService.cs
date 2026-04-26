@@ -1,6 +1,7 @@
 using Application.Common.Models.Citations;
 using Application.Common.Models.Images;
 using Application.Features.Shrines.Models;
+using Application.Features.Shrines.Queries.GetShrineCounts;
 using Application.Features.Shrines.Queries.GetShrineListCMS;
 
 namespace Application.Features.Shrines.Services;
@@ -68,4 +69,6 @@ public interface IShrineReadService
     Task<string?> GetImagePublicIdCMSAsync(int imageId, CancellationToken ct);
     Task<string?> GetHistoryImagePublicIdCMSAsync(int historyId, CancellationToken ct);
     Task<string?> GetFolkloreImagePublicIdCMSAsync(int folkloreId, CancellationToken ct);
+
+    Task<GetShrineCountsResult> GetShrineCountsAsync(CancellationToken ct);
 }

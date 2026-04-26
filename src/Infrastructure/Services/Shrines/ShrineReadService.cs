@@ -1,6 +1,7 @@
 using Application.Common.Models.Citations;
 using Application.Common.Models.Images;
 using Application.Features.Shrines.Models;
+using Application.Features.Shrines.Queries.GetShrineCounts;
 using Application.Features.Shrines.Queries.GetShrineListCMS;
 using Application.Features.Shrines.Services;
 using Domain.Enums;
@@ -1485,4 +1486,37 @@ public class ShrineReadService : IShrineReadService
     }
 
     #endregion
+
+    #region Get Counts
+
+    public async Task<GetShrineCountsResult> GetShrineCountsAsync(CancellationToken ct)
+    {
+        int total = await _db.Shrines.AsNoTracking().CountAsync(ct);
+
+        int imports = await _db.Shrines.AsNoTracking().CountAsync(s => s.Status == "import", ct);
+        int drafts = await _db.Shrines.AsNoTracking().CountAsync(s => s.Status == "draft", ct);
+        int review = await _db.Shrines.AsNoTracking().CountAsync(s => s.Status == "review", ct);
+        int published = await _db.Shrines.AsNoTracking().CountAsync(s => s.Status == "published", ct);
+        int rejected = await _db.Shrines
+            .AsNoTracking()
+            .CountAsync(s =>
+                s.Reviews
+                    .OrderByDescending(r => r.SubmittedAt)
+                    .Select(r => r.Decision)
+                    .FirstOrDefault() == ReviewDecision.Rejected,
+                ct);
+
+        return new GetShrineCountsResult
+        (
+            total,
+            imports,
+            drafts,
+            review,
+            published,
+            rejected
+        );
+    }
+
+    #endregion
+
 }

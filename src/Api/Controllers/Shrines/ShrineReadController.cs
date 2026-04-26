@@ -7,6 +7,7 @@ using Application.Features.Shrines.Queries.GetImportPreviewCMS;
 using Application.Features.Shrines.Queries.GetShrineAudit;
 using Application.Features.Shrines.Queries.GetShrineCitationsByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineCitationsDropdownByIdCMS;
+using Application.Features.Shrines.Queries.GetShrineCounts;
 using Application.Features.Shrines.Queries.GetShrineFolkloreByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineFolkloreBySlug;
 using Application.Features.Shrines.Queries.GetShrineGalleryByIdCMS;
@@ -294,6 +295,15 @@ public class ShrineReadController : ControllerBase
     {
         var result = await _mediator.Send(new GetShrineReviewHistoryQuery(shrineId));
         return Ok(result.ReviewHistory);
+    }
+
+    // Get /api/shrines/cms/counts
+    [Authorize]
+    [HttpGet("cms/counts")]
+    public async Task<ActionResult<GetShrineCountsResult>> GetShrineCountsAsync()
+    {
+        var result = await _mediator.Send(new GetShrineCountsQuery());
+        return Ok(result);
     }
 }
 
