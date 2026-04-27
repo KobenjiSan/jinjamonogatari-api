@@ -191,7 +191,6 @@ public class ShrineReadService : IShrineReadService
             .AsNoTracking()
             .Where(s => s.Slug == slug && s.PublishedAt != null)
             .SelectMany(s => s.ShrineKamis.Select(sk => sk.Kami))
-            .Where(k => k.PublishedAt != null)
             .Select(k => new KamiReadDto(
                 k.KamiId,
                 k.NameEn,
@@ -234,7 +233,6 @@ public class ShrineReadService : IShrineReadService
             .Where(s => s.Slug == slug && s.PublishedAt != null)
             .SelectMany(s => s.ShrineHistories)
             .Where(h =>
-                h.PublishedAt != null &&
                 h.EventDate != null &&
                 h.SortOrder != null &&
                 h.Title != null)
@@ -281,7 +279,6 @@ public class ShrineReadService : IShrineReadService
             .Where(s => s.Slug == slug && s.PublishedAt != null)
             .SelectMany(s => s.ShrineFolklores)
             .Where(f =>
-                f.PublishedAt != null &&
                 f.Title != null &&
                 f.Information != null)
             .OrderBy(f => f.SortOrder)
