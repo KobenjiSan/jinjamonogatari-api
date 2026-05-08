@@ -8,8 +8,10 @@ JinjaMonogatari API is a .NET Web API that serves shrine discovery and cultural 
 
 This repository contains the backend API used by the JinjaMonogatari clients. The API is structured for predictable change and long-term maintainability: feature-scoped CQRS handlers, explicit DTOs, and Infrastructure services that keep database concerns out of controllers and request handlers.
 
-Mobile client repository:
-- Mobile: https://github.com/KobenjiSan/jinjamonogatari-mobile
+Related repositories:
+
+Mobile: https://github.com/KobenjiSan/jinjamonogatari-mobile
+CMS: https://github.com/KobenjiSan/jinjamonogatari-cms
 
 ## 🧠 Problem & Motivation
 
