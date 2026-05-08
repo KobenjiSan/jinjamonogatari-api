@@ -10,8 +10,8 @@ This repository contains the backend API used by the JinjaMonogatari clients. Th
 
 Related repositories:
 
-Mobile: https://github.com/KobenjiSan/jinjamonogatari-mobile
-CMS: https://github.com/KobenjiSan/jinjamonogatari-cms
+- Mobile: https://github.com/KobenjiSan/jinjamonogatari-mobile
+- CMS: https://github.com/KobenjiSan/jinjamonogatari-cms
 
 ## 🧠 Problem & Motivation
 
