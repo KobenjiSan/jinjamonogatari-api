@@ -43,7 +43,7 @@ public class LoginUserCMSHandler : IRequestHandler<LoginUserCMSCommand, LoginUse
         if (user.Role is null)
             throw new UnauthorizedAccessException("User role not found.");
 
-        if (user.Role?.Name is not ("Admin" or "Editor"))
+        if (user.Role?.Name is not ("Admin" or "Editor" or "Demo"))
             throw new UnauthorizedAccessException("Unauthorized User.");
 
         await _writeService.UpdateLastLoginAsync(user.UserId, ct);

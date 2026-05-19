@@ -106,6 +106,7 @@ public class UserWriteController : ControllerBase
     public async Task<ActionResult<UpdateMyProfileResult>> UpdateMyProfileAsync(
         [FromBody] UpdateMyProfileRequest request)
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
 
         bool hasFirstName = request.FirstName.HasValue;
@@ -135,6 +136,7 @@ public class UserWriteController : ControllerBase
     [Authorize]
     public async Task<IActionResult> AddShrineToCollectionAsync([FromRoute] int shrineId)
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         await _mediator.Send(new AddShrineToCollectionCommand(userId, shrineId));
         return NoContent();
@@ -145,6 +147,7 @@ public class UserWriteController : ControllerBase
     [Authorize]
     public async Task<IActionResult> RemoveShrineFromCollectionAsync([FromRoute] int shrineId)
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         await _mediator.Send(new RemoveShrineFromCollectionCommand(userId, shrineId));
         return NoContent();

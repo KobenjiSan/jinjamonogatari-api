@@ -1,4 +1,5 @@
 using System.Text.Json;
+using API.Extensions;
 using Application.Features.Etiquette.Commands.CreateEtiquette;
 using Application.Features.Etiquette.Commands.CreateStep;
 using Application.Features.Etiquette.Commands.DeleteEtiquette;
@@ -31,6 +32,7 @@ public class EtiquetteWriteController : ControllerBase
     [HttpPost()]
     public async Task<IActionResult> CreateEtiquetteAsync([FromBody] CreateEtiquetteRequest request)
     {
+        User.EnsureNotDemo();
         var command = new CreateEtiquetteCommand(request);
         var result = await _mediator.Send(command);
         return Ok(result);
@@ -47,6 +49,7 @@ public class EtiquetteWriteController : ControllerBase
         [FromBody] UpdateEtiquetteRequest request
     )
     {
+        User.EnsureNotDemo();
         var command = new UpdateEtiquetteCommand(topicId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
@@ -60,6 +63,7 @@ public class EtiquetteWriteController : ControllerBase
     [HttpDelete("{topicId}")]
     public async Task<IActionResult> DeleteEtiquetteAsync([FromRoute] int topicId)
     {
+        User.EnsureNotDemo();
         var command = new DeleteEtiquetteCommand(topicId);
         await _mediator.Send(command);
         return NoContent();
@@ -77,6 +81,8 @@ public class EtiquetteWriteController : ControllerBase
         [FromForm] IFormFile? file
     )
     {
+        User.EnsureNotDemo();
+
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -104,6 +110,8 @@ public class EtiquetteWriteController : ControllerBase
         [FromForm] IFormFile? file
     )
     {
+        User.EnsureNotDemo();
+
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -127,6 +135,7 @@ public class EtiquetteWriteController : ControllerBase
     [HttpDelete("steps/{stepId}")]
     public async Task<IActionResult> DeleteStepAsync([FromRoute] int stepId)
     {
+        User.EnsureNotDemo();
         var command = new DeleteStepCommand(stepId);
         await _mediator.Send(command);
         return NoContent();
@@ -143,6 +152,7 @@ public class EtiquetteWriteController : ControllerBase
         [FromBody] UpdateGlanceRequest request
     )
     {
+        User.EnsureNotDemo();
         var command = new UpdateGlanceCommand(topicId, request);
         var result = await _mediator.Send(command);
         return Ok(result);
@@ -156,6 +166,7 @@ public class EtiquetteWriteController : ControllerBase
     [HttpDelete("{topicId}/glance")]
     public async Task<IActionResult> DeleteGlanceAsync([FromRoute] int topicId)
     {
+        User.EnsureNotDemo();
         var command = new DeleteGlanceCommand(topicId);
         await _mediator.Send(command);
         return NoContent();

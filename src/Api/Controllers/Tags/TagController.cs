@@ -1,3 +1,4 @@
+using API.Extensions;
 using Application.Features.Shrines.Models;
 using Application.Features.Tags.Commands.CreateTag;
 using Application.Features.Tags.Commands.DeleteTag;
@@ -60,6 +61,7 @@ public class TagController : ControllerBase
     [Authorize]
     public async Task<IActionResult> CreateTagAsync([FromBody] TagRequest request)
     {
+        User.EnsureNotDemo();
         await _mediator.Send(new CreateTagCommand(request));
         return NoContent();
     }
@@ -73,6 +75,7 @@ public class TagController : ControllerBase
     [Authorize]
     public async Task<IActionResult> UpdateTagAsync([FromRoute] int tagId, [FromBody] TagRequest request)
     {
+        User.EnsureNotDemo();
         await _mediator.Send(new UpdateTagCommand(tagId, request));
         return NoContent();
     }
@@ -86,6 +89,7 @@ public class TagController : ControllerBase
     [Authorize]
     public async Task<IActionResult> DeleteTagAsync([FromRoute] int tagId)
     {
+        User.EnsureNotDemo();
         await _mediator.Send(new DeleteTagCommand(tagId));
         return NoContent();
     }

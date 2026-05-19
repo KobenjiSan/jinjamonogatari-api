@@ -51,6 +51,7 @@ public class ShrineWriteController : ControllerBase
         [FromBody] UpdateShrineMetaRequest request
     )
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var role = User.GetUserRole();
@@ -66,6 +67,7 @@ public class ShrineWriteController : ControllerBase
         [FromForm] CreateImageFormRequest request
     )
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var role = User.GetUserRole();
@@ -81,6 +83,7 @@ public class ShrineWriteController : ControllerBase
         [FromForm] UpdateImageFormRequest request
     )
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var role = User.GetUserRole();
@@ -96,6 +99,7 @@ public class ShrineWriteController : ControllerBase
         [FromRoute] int imageId
     )
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var role = User.GetUserRole();
@@ -115,6 +119,7 @@ public class ShrineWriteController : ControllerBase
         [FromBody] UpdateShrineNotesRequest request
     )
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var role = User.GetUserRole();
@@ -136,6 +141,8 @@ public class ShrineWriteController : ControllerBase
         [FromForm] IFormFile? file
     )
     {
+        User.EnsureNotDemo();
+
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -162,6 +169,7 @@ public class ShrineWriteController : ControllerBase
         [FromRoute] int kamiId
     )
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var role = User.GetUserRole();
@@ -178,6 +186,7 @@ public class ShrineWriteController : ControllerBase
         [FromRoute] int kamiId
     )
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var role = User.GetUserRole();
@@ -199,6 +208,8 @@ public class ShrineWriteController : ControllerBase
         [FromForm] IFormFile? file
     )
     {
+        User.EnsureNotDemo();
+
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -226,6 +237,8 @@ public class ShrineWriteController : ControllerBase
         [FromForm] IFormFile? file
     )
     {
+        User.EnsureNotDemo();
+
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -249,6 +262,7 @@ public class ShrineWriteController : ControllerBase
     [HttpDelete("cms/history/{historyId}")]
     public async Task<IActionResult> DeleteHistory([FromRoute] int historyId)
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var role = User.GetUserRole();
@@ -270,6 +284,8 @@ public class ShrineWriteController : ControllerBase
         [FromForm] IFormFile? file
     )
     {
+        User.EnsureNotDemo();
+
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -298,6 +314,8 @@ public class ShrineWriteController : ControllerBase
         [FromForm] IFormFile? file
     )
     {
+        User.EnsureNotDemo();
+
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -321,6 +339,7 @@ public class ShrineWriteController : ControllerBase
     [HttpDelete("cms/folklore/{folkloreId}")]
     public async Task<IActionResult> DeleteFolklore([FromRoute] int folkloreId)
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var role = User.GetUserRole();
@@ -338,6 +357,7 @@ public class ShrineWriteController : ControllerBase
     [HttpPost("cms/{shrineId}/gallery")]
     public async Task<IActionResult> CreateGalleryImage([FromRoute] int shrineId, [FromForm] CreateImageFormRequest request)
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var role = User.GetUserRole();
@@ -351,6 +371,8 @@ public class ShrineWriteController : ControllerBase
     [HttpPut("cms/gallery/{imageId}")]
     public async Task<IActionResult> UpdateGalleryImage([FromRoute] int imageId, [FromForm] UpdateImageFormRequest request)
     {
+        User.EnsureNotDemo();
+
         if (request.ImgId != imageId)
             throw new ValidationException("Route ID and body ID do not match.");
 
@@ -366,6 +388,7 @@ public class ShrineWriteController : ControllerBase
     [HttpDelete("cms/gallery/{imageId}")]
     public async Task<IActionResult> DeleteGalleryImage([FromRoute] int imageId)
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var role = User.GetUserRole();
@@ -382,6 +405,7 @@ public class ShrineWriteController : ControllerBase
     [HttpPost("cms/import")]
     public async Task<IActionResult> ImportShrinesAsync([FromBody] ImportShrinesRequest request)
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var command = new ImportShrinesCommand(userId, username, request);
@@ -397,6 +421,7 @@ public class ShrineWriteController : ControllerBase
     [HttpPost("cms/create")]
     public async Task<IActionResult> CreateShrineAsync([FromBody] CreateShrineRequest request)
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var command = new CreateShrineCommand(userId, username, request);
@@ -413,6 +438,7 @@ public class ShrineWriteController : ControllerBase
     [Authorize(Roles = "Admin")]    // Admins only
     public async Task<IActionResult> DeleteShrineAsync([FromRoute] int shrineId)
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var command = new DeleteShrineCommand(userId, username, shrineId);
@@ -428,6 +454,7 @@ public class ShrineWriteController : ControllerBase
     [HttpPost("cms/{shrineId}/review/submit")]
     public async Task<IActionResult> SubmitReviewShrineAsync([FromRoute] int shrineId)
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var command = new SubmitReviewShrineCommand(username, shrineId, userId);
@@ -444,6 +471,7 @@ public class ShrineWriteController : ControllerBase
     [Authorize(Roles = "Admin")]    // Admins only
     public async Task<IActionResult> RejectReviewShrineAsync([FromRoute] int shrineId, [FromBody] RejectShrineRequest request)
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var command = new RejectReviewShrineCommand(username, shrineId, userId, request.Message);
@@ -460,6 +488,7 @@ public class ShrineWriteController : ControllerBase
     [Authorize(Roles = "Admin")]    // Admins only
     public async Task<IActionResult> PublishReviewShrineAsync([FromRoute] int shrineId)
     {
+        User.EnsureNotDemo();
         var userId = User.GetUserId();
         var username = User.GetEmail();
         var command = new PublishReviewShrineCommand(username, shrineId, userId);

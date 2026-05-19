@@ -1,4 +1,5 @@
 using System.Text.Json;
+using API.Extensions;
 using Application.Features.Kami.Commands.CreateKami;
 using Application.Features.Kami.Commands.DeleteKami;
 using Application.Features.Kami.Commands.UpdateKami;
@@ -43,6 +44,8 @@ public class KamiController : ControllerBase
     [HttpPost()]
     public async Task<IActionResult> CreateKamiAsync([FromForm] string data, [FromForm] IFormFile? file)
     {
+        User.EnsureNotDemo();
+        
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -70,6 +73,8 @@ public class KamiController : ControllerBase
         [FromForm] IFormFile? file
     )
     {
+        User.EnsureNotDemo();
+
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -93,6 +98,7 @@ public class KamiController : ControllerBase
     [HttpDelete("{kamiId}")]
     public async Task<IActionResult> DeleteKamiAsync([FromRoute] int kamiId)
     {
+        User.EnsureNotDemo();
         await _mediator.Send(new DeleteKamiCommand(kamiId));
         return NoContent();
     }

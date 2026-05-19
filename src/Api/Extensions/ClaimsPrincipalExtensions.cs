@@ -39,4 +39,12 @@ public static class ClaimsPrincipalExtensions
 
         return role;
     }
+
+    public static void EnsureNotDemo(this ClaimsPrincipal user)
+    {
+        var role = user.GetUserRole();
+
+        if (role.Equals("Demo", StringComparison.OrdinalIgnoreCase))
+            throw new UnauthorizedAccessException("Demo role permissions are limited.");
+    }
 }
