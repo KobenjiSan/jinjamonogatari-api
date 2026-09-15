@@ -71,4 +71,9 @@ public interface IShrineReadService
     Task<string?> GetFolkloreImagePublicIdCMSAsync(int folkloreId, CancellationToken ct);
 
     Task<GetShrineCountsResult> GetShrineCountsAsync(CancellationToken ct);
+
+    Task<IReadOnlyList<ShrineMapPointCMSDto>> GetShrineMapPointsCMSAsync(CancellationToken ct);
+
+    Task<ShrineListCMSDto?> GetShrineMapPopupCMSAsync(int shrineId, CancellationToken ct);
+    
 }

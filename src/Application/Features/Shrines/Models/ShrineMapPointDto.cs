@@ -7,3 +7,12 @@ public record ShrineMapPointDto(
     decimal Lat,
     decimal Lon
 );
+
+// Used for mapping shrines points on map CMS version
+public record ShrineMapPointCMSDto(
+    int ShrineId,
+    decimal Lat,
+    decimal Lon,
+    string Status
+);
+

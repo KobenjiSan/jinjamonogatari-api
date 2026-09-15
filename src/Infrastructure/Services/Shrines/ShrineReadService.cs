@@ -1516,4 +1516,47 @@ public class ShrineReadService : IShrineReadService
 
     #endregion
 
+    #region Shrine Map Points CMS
+
+    public async Task<IReadOnlyList<ShrineMapPointCMSDto>> GetShrineMapPointsCMSAsync(CancellationToken ct)
+    {
+        return await _db.Shrines
+            .AsNoTracking()
+            .Where(s =>
+                s.Lat != null &&
+                s.Lon != null)
+            .Select(s => new ShrineMapPointCMSDto(
+                s.ShrineId,
+                s.Lat!.Value,
+                s.Lon!.Value,
+                s.Status!
+            )).ToListAsync(ct);
+    }
+
+    #endregion
+
+    #region Shrine Map Popup CMS
+
+    public async Task<ShrineListCMSDto?> GetShrineMapPopupCMSAsync(int shrineId, CancellationToken ct)
+    {
+
+        return await _db.Shrines
+            .AsNoTracking()
+            .Where(s => s.ShrineId == shrineId)
+            .Select(s => new ShrineListCMSDto(
+                s.ShrineId,
+                s.NameEn,
+                s.NameJp,
+                s.Status,
+                s.City,
+                s.Lat,
+                s.Lon,
+                s.UpdatedAt,
+                null,
+                false
+            )).SingleOrDefaultAsync(ct);
+    }
+
+    #endregion
+
 }

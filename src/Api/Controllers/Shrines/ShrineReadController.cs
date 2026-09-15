@@ -19,6 +19,8 @@ using Application.Features.Shrines.Queries.GetShrineKamiBySlug;
 using Application.Features.Shrines.Queries.GetShrineListCMS;
 using Application.Features.Shrines.Queries.GetShrineListView;
 using Application.Features.Shrines.Queries.GetShrineMapPoints;
+using Application.Features.Shrines.Queries.GetShrineMapPointsCMS;
+using Application.Features.Shrines.Queries.GetShrineMapPopupCMS;
 using Application.Features.Shrines.Queries.GetShrineMetaByIdCMS;
 using Application.Features.Shrines.Queries.GetShrineMetaBySlug;
 using Application.Features.Shrines.Queries.GetShrineNotesByIdCMS;
@@ -303,6 +305,22 @@ public class ShrineReadController : ControllerBase
     public async Task<ActionResult<GetShrineCountsResult>> GetShrineCountsAsync()
     {
         var result = await _mediator.Send(new GetShrineCountsQuery());
+        return Ok(result);
+    }
+
+    // GET /api/shrines/cms/map
+    [HttpGet("cms/map")]
+    public async Task<ActionResult<IReadOnlyList<ShrineMapPointCMSDto>>> GetShrineMapPointsCMSAsync()
+    {
+        var result = await _mediator.Send(new GetShrineMapPointsCMSQuery());
+        return Ok(result.MapPoints);
+    }
+
+    // GET /api/shrines/cms/map/{shrineId}
+    [HttpGet("cms/map/{shrineId}")]
+    public async Task<ActionResult<ShrineListCMSDto>> GetShrineMapPointsCMSAsync([FromRoute] int shrineId)
+    {
+        var result = await _mediator.Send(new GetShrineMapPopupCMSQuery(shrineId));
         return Ok(result);
     }
 }
