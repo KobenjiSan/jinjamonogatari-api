@@ -25,6 +25,8 @@ using Application.Features.Kami.Services;
 using Infrastructure.Services.KamiService;
 using Infrastructure.Services.Audit;
 using Application.Features.Audits.Services;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,6 +69,22 @@ var jwtSettings = jwtSection.Get<JwtSettings>()!;
 
 builder.Services.AddScoped<ITokenOptions, TokenOptions>();
 builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+
+// Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    // return HTTP 429 Too Many Requests rather than default 503
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // change from fixed rate to partitioned policy (per user, atm all users are limited so userA affects userB)
+    options.AddFixedWindowLimiter(policyName: "FixedImport", opt =>
+    {
+       opt.PermitLimit = 1;
+       opt.Window = TimeSpan.FromSeconds(15);
+       opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+       opt.QueueLimit = 0; 
+    });
+});
 
 // AuthN/AuthZ
 builder.Services
@@ -133,6 +151,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

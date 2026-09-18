@@ -12,6 +12,7 @@ public class ExternalGeoService : IExternalGeoService
     public ExternalGeoService(HttpClient http, IConfiguration config)
     {
         _http = http;
+        _http.DefaultRequestHeaders.UserAgent.ParseAdd("JinjaMonogatari/1.0"); // needed to ID my app to overpass
         _locationIqKey = config["LocationIQ:Key"] ?? throw new Exception("LocationIQ key not configured.");
     }
 
@@ -61,6 +62,7 @@ public class ExternalGeoService : IExternalGeoService
         try
         {
             using var response = await _http.PostAsync(url, content, ct);
+            var errorBody = await response.Content.ReadAsStringAsync(ct);
 
             if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                 throw new BadRequestException("Map data service is receiving too many requests right now. Please try again shortly.");

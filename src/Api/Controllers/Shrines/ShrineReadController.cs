@@ -31,6 +31,7 @@ using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 [ApiController]
 [Route("api/shrines")]
@@ -277,11 +278,14 @@ public class ShrineReadController : ControllerBase
     // POST /api/shrines/cms/import-preview
     [Authorize]
     [HttpPost("cms/import-preview")]
+    [EnableRateLimiting("FixedImport")]
     public async Task<ActionResult<IReadOnlyList<ImportPreviewItemDto>>> GetImportPreviewCMSAsync([FromBody] ImportPreviewRequest request)
     {
         // validate request items
         if (request is null) return BadRequest("Request body is required."); 
-        if (string.IsNullOrWhiteSpace(request.Location)) return BadRequest("Location is required.");
+        if (request.Center is null) return BadRequest("A center marker is required.");
+        if (request.Center.Lat < -90 || request.Center.Lat > 90) return BadRequest("Invalid Center Point.");
+        if (request.Center.Lon < -180 || request.Center.Lon > 180) return BadRequest("Invalid Center Point.");
         if (!Enum.IsDefined(typeof(SearchSize), request.SearchSize)) return BadRequest("Invalid search size.");
         if (request.MaxResults <= 0 || request.MaxResults > 100) return BadRequest("MaxResults must be between 1 and 100.");
 
@@ -326,7 +330,12 @@ public class ShrineReadController : ControllerBase
 }
 
 public record ImportPreviewRequest(
-    string Location,
+    CenterPoint Center,
     SearchSize SearchSize,
     int MaxResults
+);
+
+public record CenterPoint(
+    double Lat,
+    double Lon
 );

@@ -27,14 +27,17 @@ public class GetImportPreviewCMSHandler
         var input = request.Request;
 
         // 1. BASIC VALIDATION
-        if (string.IsNullOrWhiteSpace(input.Location))
-            throw new ValidationException("Location is required.");
+        if (input.Center.Lat < -90 || input.Center.Lat > 90)
+            throw new ValidationException("Invalid Center Point.");
+
+        if (input.Center.Lon < -180 || input.Center.Lon > 180)
+            throw new ValidationException("Invalid Center Point.");
 
         if (input.MaxResults <= 0 || input.MaxResults > 100)
             throw new ValidationException("MaxResults must be between 1 and 100.");
 
         // 2. GET LAT / LON (LocationIQ)
-        var (lat, lon) = await _geoService.GeocodeAsync(input.Location, ct);
+        var (lat, lon) = (input.Center.Lat, input.Center.Lon);
 
         // 3. MAP SEARCH SIZE → RADIUS
         var radius = input.SearchSize switch
@@ -49,11 +52,19 @@ public class GetImportPreviewCMSHandler
         var query = $@"
 [out:json][timeout:25];
 (
-  node(around:{radius},{lat},{lon})[""amenity""=""place_of_worship""][""religion""=""shinto""];
-  way(around:{radius},{lat},{lon})[""amenity""=""place_of_worship""][""religion""=""shinto""];
-  relation(around:{radius},{lat},{lon})[""amenity""=""place_of_worship""][""religion""=""shinto""];
+  node[""religion""=""shinto""](around:{radius},{lat},{lon});
+  way[""religion""=""shinto""](around:{radius},{lat},{lon});
+  relation[""religion""=""shinto""](around:{radius},{lat},{lon});
+
+  node[""amenity""=""place_of_worship""][""religion""=""shinto""](around:{radius},{lat},{lon});
+  way[""amenity""=""place_of_worship""][""religion""=""shinto""](around:{radius},{lat},{lon});
+  relation[""amenity""=""place_of_worship""][""religion""=""shinto""](around:{radius},{lat},{lon});
+
+  node[""building""=""shrine""](around:{radius},{lat},{lon});
+  way[""building""=""shrine""](around:{radius},{lat},{lon});
+  relation[""building""=""shrine""](around:{radius},{lat},{lon});
 );
-out center {input.MaxResults};
+out center tags;
 ";
 
         // 5. CALL OVERPASS
@@ -106,10 +117,44 @@ out center {input.MaxResults};
 
         var final = filtered
             .Where(x => !existingIds.Contains(x.ImportId))
+            .OrderBy(x => GetDistanceInMeters(
+                input.Center.Lat,
+                input.Center.Lon,
+                x.Lat,
+                x.Lon
+            ))
+            .ThenBy(x => x.ImportId)
             .Take(input.MaxResults)
             .ToList();
 
         // 9. RETURN
         return new GetImportPreviewCMSResult(final);
+    }
+
+    // Haversine formula used to sort by distance on final results
+    private static double GetDistanceInMeters(
+        double centerLat,
+        double centerLon,
+        double shrineLat,
+        double shrineLon)
+    {
+        const double earthRadius = 6_371_000;
+
+        var lat1 = centerLat * Math.PI / 180;
+        var lat2 = shrineLat * Math.PI / 180;
+        var latDifference = (shrineLat - centerLat) * Math.PI / 180;
+        var lonDifference = (shrineLon - centerLon) * Math.PI / 180;
+
+        var a =
+            Math.Sin(latDifference / 2) * Math.Sin(latDifference / 2) +
+            Math.Cos(lat1) * Math.Cos(lat2) *
+            Math.Sin(lonDifference / 2) * Math.Sin(lonDifference / 2);
+
+        var angularDistance = 2 * Math.Atan2(
+            Math.Sqrt(a),
+            Math.Sqrt(1 - a)
+        );
+
+        return earthRadius * angularDistance;
     }
 }
