@@ -1,4 +1,5 @@
 using Domain.Common;
+using Domain.Enums;
 
 namespace Domain.Entities;
 
@@ -18,7 +19,7 @@ public class Kami : IHasTimestamps
     public string? Desc { get; set; }
 
     // Publishing
-    public string? Status { get; set; }
+    public EntityStatus Status { get; set; }
 
     // Timestamps
     public DateTime? PublishedAt { get; set; }

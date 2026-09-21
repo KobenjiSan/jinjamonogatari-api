@@ -24,7 +24,7 @@ public class KamiConfiguration : IEntityTypeConfiguration<Kami>
         e.Property(x => x.ImgId).HasColumnName("img_id");
 
         // Publishing state
-        e.Property(x => x.Status).HasColumnName("status");
+        e.Property(x => x.Status).HasColumnName("status").HasConversion<string>(); // .HasConversion<string>() converts C# enum to string in db
 
         // Timestamps 
         e.Property(x => x.PublishedAt).HasColumnName("published_at").HasColumnType("timestamp with time zone");

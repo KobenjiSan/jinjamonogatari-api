@@ -55,7 +55,7 @@ public class KamiService : IKamiService
             NameEn = request.NameEn,
             NameJp = request.NameJp,
             Desc = request.Desc,
-            Status = "draft"
+            Status = EntityStatus.Draft
         };
 
         // Create hero image if provided
