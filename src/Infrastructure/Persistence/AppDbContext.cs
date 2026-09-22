@@ -54,6 +54,10 @@ public class AppDbContext : DbContext, IAppDbContext
     // Auditing
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
+    // Entity Audits
+    public DbSet<EntityAudit> EntityAudits => Set<EntityAudit>();
+    public DbSet<EntityAuditIssue> EntityAuditIssues => Set<EntityAuditIssue>();
+
     /*
     Builds EF Core model at startup.
     Applies all IEntityTypeConfiguration mappings (table names,

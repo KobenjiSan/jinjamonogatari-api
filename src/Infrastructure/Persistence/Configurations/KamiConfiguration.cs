@@ -23,6 +23,9 @@ public class KamiConfiguration : IEntityTypeConfiguration<Kami>
         // Image
         e.Property(x => x.ImgId).HasColumnName("img_id");
 
+        // Audit
+        e.Property(x => x.EntityAuditId).HasColumnName("entity_audit_id");
+
         // Publishing state
         e.Property(x => x.Status).HasColumnName("status").HasConversion<string>(); // .HasConversion<string>() converts C# enum to string in db
 
@@ -33,9 +36,14 @@ public class KamiConfiguration : IEntityTypeConfiguration<Kami>
 
         // Relationship config:
 
-        e.HasOne(x => x.Image)                      // kami has one image
-            .WithMany()                             // image can link to many kami
-            .HasForeignKey(x => x.ImgId)            // link to our FK
-            .OnDelete(DeleteBehavior.SetNull);      // if images is deleted, set ImgId / Image to null
+        e.HasOne(x => x.Image)                          // kami has one image
+            .WithMany()                                 // image can link to many kami
+            .HasForeignKey(x => x.ImgId)                // link to our FK
+            .OnDelete(DeleteBehavior.SetNull);          // if images is deleted, set ImgId / Image to null
+
+        e.HasOne(x => x.EntityAudit)                    // kami has one EntityAudit
+            .WithOne()                                  // EntityAudit belongs to one Kami
+            .HasForeignKey<Kami>(x => x.EntityAuditId)  // foreign key is stored on the Kami table in EntityAuditId
+            .OnDelete(DeleteBehavior.Restrict);         // prevents EntityAudit from being deleted while Kami still references it.
     }
 }

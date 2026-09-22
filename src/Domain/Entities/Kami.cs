@@ -16,6 +16,10 @@ public class Kami : IHasTimestamps
     public int? ImgId { get; set; }
     public Image? Image { get; set; }
 
+    // Audit Link
+    public int? EntityAuditId { get; set; }
+    public EntityAudit? EntityAudit { get; set; }
+
     public string? Desc { get; set; }
 
     // Publishing
