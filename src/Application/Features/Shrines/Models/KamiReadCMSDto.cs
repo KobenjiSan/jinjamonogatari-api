@@ -1,4 +1,5 @@
 using Application.Common.Models.Citations;
+using Application.Common.Models.EntityAudit;
 using Application.Common.Models.Images;
 using Domain.Enums;
 
@@ -15,5 +16,6 @@ public record KamiReadCMSDto(
     DateTime UpdatedAt,
     ImageCMSDto? Image,
     IReadOnlyList<CitationCMSDto> Citations,
-    EntityAuditDto? Audit = null
+    EntityAuditDto? Audit = null,
+    EntityAuditCMSDto? EntityAudit = null
 );

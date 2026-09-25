@@ -1,5 +1,6 @@
 using Application.Common.Exceptions;
 using Application.Common.Models.Citations;
+using Application.Common.Models.EntityAudit;
 using Application.Common.Models.Images;
 using Application.Features.Kami.Queries.GetAllKamiCMS;
 using Application.Features.Kami.Services;
@@ -47,7 +48,7 @@ public class KamiService : IKamiService
 
     #region Create Kami
 
-    public async Task CreateKamiAsync(CreateKamiInShrineRequest request, string? publicId, CancellationToken ct)
+    public async Task<int> CreateKamiAsync(CreateKamiInShrineRequest request, string? publicId, CancellationToken ct)
     {
         // Create kami
         var kami = new Kami
@@ -126,6 +127,8 @@ public class KamiService : IKamiService
         _db.Kamis.Add(kami);
 
         await _db.SaveChangesAsync(ct);
+
+        return kami.KamiId;
     }
 
     #endregion
@@ -139,6 +142,8 @@ public class KamiService : IKamiService
                 .ThenInclude(i => i!.Citation)
             .Include(k => k.KamiCitations)
                 .ThenInclude(kc => kc.Citation)
+            .Include(k => k.EntityAudit)
+                .ThenInclude(a => a!.Issues)
             .FirstOrDefaultAsync(k => k.KamiId == kamiId, ct);
 
         if (kami is null)
@@ -193,6 +198,13 @@ public class KamiService : IKamiService
 
             if (!isUsedElsewhere)
                 _db.Citations.Remove(citation);
+        }
+
+        // Remove EntityAudit
+        if (kami.EntityAudit is not null)
+        {
+            _db.Set<Domain.Entities.EntityAudit>()
+                .Remove(kami.EntityAudit);
         }
 
         _db.Kamis.Remove(kami);
@@ -283,7 +295,30 @@ public class KamiService : IKamiService
                         kc.Citation.CreatedAt,
                         kc.Citation.UpdatedAt
                     )).ToList(),
-                null    // Nulling Audit
+                null,    // Nulling Audit
+                k.EntityAudit == null 
+                    ? null
+                    : new EntityAuditCMSDto(
+                        k.EntityAudit.EntityAuditId,
+                        k.EntityAudit.ErrorCount,
+                        k.EntityAudit.WarningCount,
+                        k.EntityAudit.CanSubmit,
+                        k.EntityAudit.CreatedAt,
+                        k.EntityAudit.UpdatedAt,
+                        k.EntityAudit.Issues
+                            .OrderBy(issue => issue.EntityAuditIssueId)
+                            .Select(issue => new EntityAuditIssueDto(
+                                issue.EntityAuditIssueId,
+                                issue.EntityAuditId,
+                                issue.Severity,
+                                issue.Field,
+                                issue.Message,
+                                issue.RelatedItemType,
+                                issue.RelatedItemId,
+                                issue.CreatedAt
+                            ))
+                            .ToList()
+                    )
         )).ToListAsync(ct);
 
         return (items, totalCount);

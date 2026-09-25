@@ -28,6 +28,8 @@ using Application.Features.Audits.Services;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Text.Json.Serialization;
+using Application.Common.Services;
+using Infrastructure.Services.EntityAudit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -140,6 +142,8 @@ builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<ITagsService, TagsService>();
 // Kami
 builder.Services.AddScoped<IKamiService, KamiService>();
+// Entity Audit
+builder.Services.AddScoped<IEntityAuditService, EntityAuditService>();
 
 
 var app = builder.Build();

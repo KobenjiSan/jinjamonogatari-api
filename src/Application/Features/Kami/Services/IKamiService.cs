@@ -7,7 +7,7 @@ public interface IKamiService
 {
     Task<(IReadOnlyList<KamiReadCMSDto>, int)> GetAllKamiCMSAsync(GetAllKamiCMSQuery request, CancellationToken ct);
 
-    Task CreateKamiAsync(CreateKamiInShrineRequest request, string? publicId, CancellationToken ct);
+    Task<int> CreateKamiAsync(CreateKamiInShrineRequest request, string? publicId, CancellationToken ct);
     Task DeleteKamiAsync(int kamiId, CancellationToken ct);
     Task UpdateKamiAsync(int kamiId, UpdateKamiRequest request, string? publicId, CancellationToken ct);
 
