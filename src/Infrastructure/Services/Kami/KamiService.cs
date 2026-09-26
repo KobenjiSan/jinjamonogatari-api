@@ -1,6 +1,8 @@
 using Application.Common.Exceptions;
 using Application.Common.Models.Citations;
+using Application.Common.Models.EntityAudit;
 using Application.Common.Models.Images;
+using Application.Features.Kami.Models;
 using Application.Features.Kami.Queries.GetAllKamiCMS;
 using Application.Features.Kami.Services;
 using Application.Features.Shrines.Models;
@@ -47,7 +49,7 @@ public class KamiService : IKamiService
 
     #region Create Kami
 
-    public async Task CreateKamiAsync(CreateKamiInShrineRequest request, string? publicId, CancellationToken ct)
+    public async Task<int> CreateKamiAsync(CreateKamiInShrineRequest request, string? publicId, CancellationToken ct)
     {
         // Create kami
         var kami = new Kami
@@ -55,7 +57,7 @@ public class KamiService : IKamiService
             NameEn = request.NameEn,
             NameJp = request.NameJp,
             Desc = request.Desc,
-            Status = "draft"
+            Status = EntityStatus.Draft
         };
 
         // Create hero image if provided
@@ -126,6 +128,8 @@ public class KamiService : IKamiService
         _db.Kamis.Add(kami);
 
         await _db.SaveChangesAsync(ct);
+
+        return kami.KamiId;
     }
 
     #endregion
@@ -139,6 +143,8 @@ public class KamiService : IKamiService
                 .ThenInclude(i => i!.Citation)
             .Include(k => k.KamiCitations)
                 .ThenInclude(kc => kc.Citation)
+            .Include(k => k.EntityAudit)
+                .ThenInclude(a => a!.Issues)
             .FirstOrDefaultAsync(k => k.KamiId == kamiId, ct);
 
         if (kami is null)
@@ -193,6 +199,13 @@ public class KamiService : IKamiService
 
             if (!isUsedElsewhere)
                 _db.Citations.Remove(citation);
+        }
+
+        // Remove EntityAudit
+        if (kami.EntityAudit is not null)
+        {
+            _db.Set<Domain.Entities.EntityAudit>()
+                .Remove(kami.EntityAudit);
         }
 
         _db.Kamis.Remove(kami);
@@ -283,7 +296,30 @@ public class KamiService : IKamiService
                         kc.Citation.CreatedAt,
                         kc.Citation.UpdatedAt
                     )).ToList(),
-                null    // Nulling Audit
+                null,    // Nulling Audit
+                k.EntityAudit == null 
+                    ? null
+                    : new EntityAuditCMSDto(
+                        k.EntityAudit.EntityAuditId,
+                        k.EntityAudit.ErrorCount,
+                        k.EntityAudit.WarningCount,
+                        k.EntityAudit.CanSubmit,
+                        k.EntityAudit.CreatedAt,
+                        k.EntityAudit.UpdatedAt,
+                        k.EntityAudit.Issues
+                            .OrderBy(issue => issue.EntityAuditIssueId)
+                            .Select(issue => new EntityAuditIssueDto(
+                                issue.EntityAuditIssueId,
+                                issue.EntityAuditId,
+                                issue.Severity,
+                                issue.Field,
+                                issue.Message,
+                                issue.RelatedItemType,
+                                issue.RelatedItemId,
+                                issue.CreatedAt
+                            ))
+                            .ToList()
+                    )
         )).ToListAsync(ct);
 
         return (items, totalCount);
@@ -475,6 +511,206 @@ public class KamiService : IKamiService
         }
 
         await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region Get Kami By Id
+
+    public async Task<KamiReadCMSDto?> GetKamiByIdAsync(int kamiId, CancellationToken ct)
+    {
+        return await _db.Kamis
+            .AsNoTracking()
+            .Where(k => k.KamiId == kamiId)
+            .Select(k => new KamiReadCMSDto(
+                k.KamiId,
+                k.NameEn,
+                k.NameJp,
+                k.Desc,
+                k.Status,
+                k.PublishedAt,
+                k.CreatedAt,
+                k.UpdatedAt,
+                    k.Image == null
+                    ? null
+                    : new ImageCMSDto(
+                        k.Image.ImgId,
+                        k.Image.ImageUrl,
+                        k.Image.Title,
+                        k.Image.Desc,
+                        k.Image.Citation == null
+                            ? null
+                            : new CitationCMSDto(
+                                k.Image.Citation.CiteId,
+                                k.Image.Citation.Title,
+                                k.Image.Citation.Author,
+                                k.Image.Citation.Url,
+                                k.Image.Citation.Year,
+                                k.Image.Citation.CreatedAt,
+                                k.Image.Citation.UpdatedAt
+                            ),
+                        k.Image.CreatedAt,
+                        k.Image.UpdatedAt
+                    ),
+                k.KamiCitations
+                    .Where(kc => kc.Citation != null)
+                    .Select(kc => new CitationCMSDto(
+                        kc.Citation.CiteId,
+                        kc.Citation.Title,
+                        kc.Citation.Author,
+                        kc.Citation.Url,
+                        kc.Citation.Year,
+                        kc.Citation.CreatedAt,
+                        kc.Citation.UpdatedAt
+                    )).ToList(),
+                null,    // Nulling Audit
+                k.EntityAudit == null 
+                    ? null
+                    : new EntityAuditCMSDto(
+                        k.EntityAudit.EntityAuditId,
+                        k.EntityAudit.ErrorCount,
+                        k.EntityAudit.WarningCount,
+                        k.EntityAudit.CanSubmit,
+                        k.EntityAudit.CreatedAt,
+                        k.EntityAudit.UpdatedAt,
+                        k.EntityAudit.Issues
+                            .OrderBy(issue => issue.EntityAuditIssueId)
+                            .Select(issue => new EntityAuditIssueDto(
+                                issue.EntityAuditIssueId,
+                                issue.EntityAuditId,
+                                issue.Severity,
+                                issue.Field,
+                                issue.Message,
+                                issue.RelatedItemType,
+                                issue.RelatedItemId,
+                                issue.CreatedAt
+                            ))
+                            .ToList()
+                    )
+        )).FirstOrDefaultAsync(ct);
+    }
+
+    #endregion
+
+    #region SUBMIT KAMI FOR REVIEW
+
+    public async Task SubmitKamiForReviewAsync(int kamiId, int userId, CancellationToken ct)
+    {
+        // Get Kami and validate it exists
+        var kami = await _db.Kamis.FirstOrDefaultAsync(k => k.KamiId == kamiId, ct);
+        if (kami is null)
+            throw new NotFoundException($"Kami {kamiId} was not found.");
+
+        // Check if kami is already pending review
+        var hasPendingReview = await _db.KamiReviews
+            .AnyAsync(r => r.KamiId == kamiId && r.Decision == ReviewDecision.Pending, ct);
+
+        if (hasPendingReview)
+            throw new BadRequestException("Kami already has a pending review.");
+
+        // New KamiReview
+        var review = new KamiReview
+        {
+            KamiId = kamiId,
+            SubmittedAt = DateTime.UtcNow,
+            SubmittedBy = userId,
+            Decision = ReviewDecision.Pending
+        };
+
+        _db.KamiReviews.Add(review);
+
+        kami.Status = EntityStatus.Review;
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region REJECT REVIEW KAMI
+
+    public async Task RejectKamiForReviewAsync(int kamiId, int userId, string message, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            throw new BadRequestException("Rejection message is required.");
+
+        // Get kami and validate it exists
+        var kami = await _db.Kamis.FirstOrDefaultAsync(k => k.KamiId == kamiId, ct);
+        if (kami is null)
+            throw new NotFoundException($"Kami {kamiId} was not found.");
+        if (kami.Status != EntityStatus.Review)
+            throw new BadRequestException("Only Kami in review can be rejected.");
+
+        // Get review and validate it exists
+        var review = await _db.KamiReviews
+            .FirstOrDefaultAsync(r => r.Decision == ReviewDecision.Pending && r.KamiId == kamiId, ct);
+        if (review is null)
+            throw new NotFoundException($"Kami {kamiId} does not have a pending review.");
+
+        // Update review
+        review.ReviewedAt = DateTime.UtcNow;
+        review.ReviewedBy = userId;
+        review.ReviewerComment = message;
+        review.Decision = ReviewDecision.Rejected;
+
+        // Update kami status
+        kami.Status = EntityStatus.Draft;
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region PUBLISH REVIEW KAMI
+
+    public async Task PublishKamiForReviewAsync(int kamiId, int userId, CancellationToken ct)
+    {
+        // Get kami and validate it exists
+        var kami = await _db.Kamis.FirstOrDefaultAsync(k => k.KamiId == kamiId, ct);
+        if (kami is null)
+            throw new NotFoundException($"Kami {kamiId} was not found.");
+        if (kami.Status != EntityStatus.Review)
+            throw new BadRequestException("Only Kami in review can be published.");
+
+        // Get review and validate it exists
+        var review = await _db.KamiReviews
+            .FirstOrDefaultAsync(r => r.Decision == ReviewDecision.Pending && r.KamiId == kamiId, ct);
+        if (review is null)
+            throw new NotFoundException($"Kami {kamiId} does not have a pending review.");
+
+        // Update review
+        review.ReviewedAt = DateTime.UtcNow;
+        review.ReviewedBy = userId;
+        review.Decision = ReviewDecision.Published;
+
+        // Update kami status
+        kami.Status = EntityStatus.Published;
+        kami.PublishedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region Get Kami Review History
+
+    public async Task<IReadOnlyList<KamiReviewDto>> GetKamiReviewHistoryAsync(int kamiId, CancellationToken ct)
+    {
+        return await _db.KamiReviews
+            .AsNoTracking()
+            .Where(k => k.KamiId == kamiId)
+            .OrderByDescending(r => r.SubmittedAt)
+            .Select(r => new KamiReviewDto
+            (
+                r.ReviewId,
+                r.SubmittedAt,
+                r.SubmittedBy,
+                r.SubmittedByUser.Username,
+                r.ReviewedAt,
+                r.ReviewedBy,
+                r.ReviewedByUser != null ? r.ReviewedByUser.Username : null,
+                r.ReviewerComment,
+                r.Decision.ToString()
+            )).ToListAsync(ct);
     }
 
     #endregion

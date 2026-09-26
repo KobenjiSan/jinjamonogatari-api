@@ -1,4 +1,5 @@
 using Domain.Common;
+using Domain.Enums;
 
 namespace Domain.Entities;
 
@@ -15,10 +16,14 @@ public class Kami : IHasTimestamps
     public int? ImgId { get; set; }
     public Image? Image { get; set; }
 
+    // Audit Link
+    public int? EntityAuditId { get; set; }
+    public EntityAudit? EntityAudit { get; set; }
+
     public string? Desc { get; set; }
 
     // Publishing
-    public string? Status { get; set; }
+    public EntityStatus Status { get; set; }
 
     // Timestamps
     public DateTime? PublishedAt { get; set; }
@@ -28,4 +33,5 @@ public class Kami : IHasTimestamps
     // Relationships (collections)
     public ICollection<ShrineKami> ShrineKamis { get; set; } = new List<ShrineKami>();
     public ICollection<KamiCitation> KamiCitations { get; set; } = new List<KamiCitation>();
+    public ICollection<KamiReview> Reviews { get; set; } = new List<KamiReview>();
 }

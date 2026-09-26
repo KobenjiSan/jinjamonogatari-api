@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260922010634_AddEntityAudits")]
+    partial class AddEntityAudits
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -596,55 +599,6 @@ namespace Infrastructure.Persistence.Migrations
                     b.HasIndex("CiteId");
 
                     b.ToTable("kami_citations", (string)null);
-                });
-
-            modelBuilder.Entity("Domain.Entities.KamiReview", b =>
-                {
-                    b.Property<int>("ReviewId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("review_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ReviewId"));
-
-                    b.Property<string>("Decision")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("decision");
-
-                    b.Property<int>("KamiId")
-                        .HasColumnType("integer")
-                        .HasColumnName("kami_id");
-
-                    b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("reviewed_at");
-
-                    b.Property<int?>("ReviewedBy")
-                        .HasColumnType("integer")
-                        .HasColumnName("reviewed_by");
-
-                    b.Property<string>("ReviewerComment")
-                        .HasColumnType("text")
-                        .HasColumnName("reviewer_comment");
-
-                    b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("submitted_at");
-
-                    b.Property<int>("SubmittedBy")
-                        .HasColumnType("integer")
-                        .HasColumnName("submitted_by");
-
-                    b.HasKey("ReviewId");
-
-                    b.HasIndex("KamiId");
-
-                    b.HasIndex("ReviewedBy");
-
-                    b.HasIndex("SubmittedBy");
-
-                    b.ToTable("kami_review", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.RefreshToken", b =>
@@ -1244,32 +1198,6 @@ namespace Infrastructure.Persistence.Migrations
                     b.Navigation("Kami");
                 });
 
-            modelBuilder.Entity("Domain.Entities.KamiReview", b =>
-                {
-                    b.HasOne("Domain.Entities.Kami", "Kami")
-                        .WithMany("Reviews")
-                        .HasForeignKey("KamiId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.User", "ReviewedByUser")
-                        .WithMany("ReviewedKamiReviews")
-                        .HasForeignKey("ReviewedBy")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Domain.Entities.User", "SubmittedByUser")
-                        .WithMany("SubmittedKamiReviews")
-                        .HasForeignKey("SubmittedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Kami");
-
-                    b.Navigation("ReviewedByUser");
-
-                    b.Navigation("SubmittedByUser");
-                });
-
             modelBuilder.Entity("Domain.Entities.RefreshToken", b =>
                 {
                     b.HasOne("Domain.Entities.User", "User")
@@ -1332,7 +1260,7 @@ namespace Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Domain.Entities.ShrineReview", b =>
                 {
                     b.HasOne("Domain.Entities.User", "ReviewedByUser")
-                        .WithMany("ReviewedShrineReviews")
+                        .WithMany("ReviewedReviews")
                         .HasForeignKey("ReviewedBy")
                         .OnDelete(DeleteBehavior.Restrict);
 
@@ -1343,7 +1271,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.User", "SubmittedByUser")
-                        .WithMany("SubmittedShrineReviews")
+                        .WithMany("SubmittedReviews")
                         .HasForeignKey("SubmittedBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1443,8 +1371,6 @@ namespace Infrastructure.Persistence.Migrations
                 {
                     b.Navigation("KamiCitations");
 
-                    b.Navigation("Reviews");
-
                     b.Navigation("ShrineKamis");
                 });
 
@@ -1479,13 +1405,9 @@ namespace Infrastructure.Persistence.Migrations
                 {
                     b.Navigation("RefreshTokens");
 
-                    b.Navigation("ReviewedKamiReviews");
+                    b.Navigation("ReviewedReviews");
 
-                    b.Navigation("ReviewedShrineReviews");
-
-                    b.Navigation("SubmittedKamiReviews");
-
-                    b.Navigation("SubmittedShrineReviews");
+                    b.Navigation("SubmittedReviews");
 
                     b.Navigation("UserCollections");
                 });

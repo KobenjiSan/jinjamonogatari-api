@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Application.Common.Models.EntityAudit;
 using Application.Features.Shrines.Models;
 
 namespace Application.Features.Shrines.Services.ShrineAudit;

@@ -1,24 +1,28 @@
+using Application.Common.Services;
 using Application.Features.Images.Services;
 using Application.Features.Kami.Services;
 using MediatR;
 
 namespace Application.Features.Kami.Commands.UpdateKami;
 
-public class UpdateKamiHandler : IRequestHandler<UpdateKamiCommand, Unit>
+public class UpdateKamiHandler : IRequestHandler<UpdateKamiCommand, UpdateKamiResult>
 {
     private readonly IKamiService _service;
     private readonly IImageService _imageService;
+    private readonly IEntityAuditService _entityAuditService;
 
     public UpdateKamiHandler(
         IKamiService service,
-        IImageService imageService
+        IImageService imageService,
+        IEntityAuditService entityAuditService
     )
     {
         _service = service;
         _imageService = imageService;
+        _entityAuditService = entityAuditService;
     }
 
-    public async Task<Unit> Handle(UpdateKamiCommand request, CancellationToken ct)
+    public async Task<UpdateKamiResult> Handle(UpdateKamiCommand request, CancellationToken ct)
     {
         var data = request.Request;
         var file = request.File;
@@ -76,6 +80,11 @@ public class UpdateKamiHandler : IRequestHandler<UpdateKamiCommand, Unit>
             ct
         );
 
-        return Unit.Value;
+        // run EntityAudit
+        await _entityAuditService.AuditKamiAsync(request.KamiId, ct);
+
+        var result = await _service.GetKamiByIdAsync(request.KamiId, ct);
+
+        return new UpdateKamiResult(result);
     }
 }

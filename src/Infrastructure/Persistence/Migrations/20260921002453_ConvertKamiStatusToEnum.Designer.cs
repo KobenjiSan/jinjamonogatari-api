@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260921002453_ConvertKamiStatusToEnum")]
+    partial class ConvertKamiStatusToEnum
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -109,87 +112,6 @@ namespace Infrastructure.Persistence.Migrations
                     b.HasKey("CiteId");
 
                     b.ToTable("citations", (string)null);
-                });
-
-            modelBuilder.Entity("Domain.Entities.EntityAudit", b =>
-                {
-                    b.Property<int>("EntityAuditId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("entity_audit_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("EntityAuditId"));
-
-                    b.Property<bool>("CanSubmit")
-                        .HasColumnType("boolean")
-                        .HasColumnName("can_submit");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("ErrorCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("error_count");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<int>("WarningCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("warning_count");
-
-                    b.HasKey("EntityAuditId");
-
-                    b.ToTable("entity_audit", (string)null);
-                });
-
-            modelBuilder.Entity("Domain.Entities.EntityAuditIssue", b =>
-                {
-                    b.Property<int>("EntityAuditIssueId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("entity_audit_issue_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("EntityAuditIssueId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("EntityAuditId")
-                        .HasColumnType("integer")
-                        .HasColumnName("entity_audit_id");
-
-                    b.Property<string>("Field")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("field");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("message");
-
-                    b.Property<int?>("RelatedItemId")
-                        .HasColumnType("integer")
-                        .HasColumnName("related_item_id");
-
-                    b.Property<string>("RelatedItemType")
-                        .HasColumnType("text")
-                        .HasColumnName("related_item_type");
-
-                    b.Property<string>("Severity")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("severity");
-
-                    b.HasKey("EntityAuditIssueId");
-
-                    b.HasIndex("EntityAuditId");
-
-                    b.ToTable("entity_audit_issue", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.EtiquetteStep", b =>
@@ -538,10 +460,6 @@ namespace Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("desc");
 
-                    b.Property<int?>("EntityAuditId")
-                        .HasColumnType("integer")
-                        .HasColumnName("entity_audit_id");
-
                     b.Property<int?>("ImgId")
                         .HasColumnType("integer")
                         .HasColumnName("img_id");
@@ -569,9 +487,6 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.HasKey("KamiId");
 
-                    b.HasIndex("EntityAuditId")
-                        .IsUnique();
-
                     b.HasIndex("ImgId");
 
                     b.ToTable("kami", (string)null);
@@ -596,55 +511,6 @@ namespace Infrastructure.Persistence.Migrations
                     b.HasIndex("CiteId");
 
                     b.ToTable("kami_citations", (string)null);
-                });
-
-            modelBuilder.Entity("Domain.Entities.KamiReview", b =>
-                {
-                    b.Property<int>("ReviewId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("review_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ReviewId"));
-
-                    b.Property<string>("Decision")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("decision");
-
-                    b.Property<int>("KamiId")
-                        .HasColumnType("integer")
-                        .HasColumnName("kami_id");
-
-                    b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("reviewed_at");
-
-                    b.Property<int?>("ReviewedBy")
-                        .HasColumnType("integer")
-                        .HasColumnName("reviewed_by");
-
-                    b.Property<string>("ReviewerComment")
-                        .HasColumnType("text")
-                        .HasColumnName("reviewer_comment");
-
-                    b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("submitted_at");
-
-                    b.Property<int>("SubmittedBy")
-                        .HasColumnType("integer")
-                        .HasColumnName("submitted_by");
-
-                    b.HasKey("ReviewId");
-
-                    b.HasIndex("KamiId");
-
-                    b.HasIndex("ReviewedBy");
-
-                    b.HasIndex("SubmittedBy");
-
-                    b.ToTable("kami_review", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.RefreshToken", b =>
@@ -1076,17 +942,6 @@ namespace Infrastructure.Persistence.Migrations
                     b.ToTable("user_collection", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.EntityAuditIssue", b =>
-                {
-                    b.HasOne("Domain.Entities.EntityAudit", "EntityAudit")
-                        .WithMany("Issues")
-                        .HasForeignKey("EntityAuditId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("EntityAudit");
-                });
-
             modelBuilder.Entity("Domain.Entities.EtiquetteStep", b =>
                 {
                     b.HasOne("Domain.Entities.Image", "Image")
@@ -1210,17 +1065,10 @@ namespace Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Domain.Entities.Kami", b =>
                 {
-                    b.HasOne("Domain.Entities.EntityAudit", "EntityAudit")
-                        .WithOne()
-                        .HasForeignKey("Domain.Entities.Kami", "EntityAuditId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Domain.Entities.Image", "Image")
                         .WithMany()
                         .HasForeignKey("ImgId")
                         .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("EntityAudit");
 
                     b.Navigation("Image");
                 });
@@ -1242,32 +1090,6 @@ namespace Infrastructure.Persistence.Migrations
                     b.Navigation("Citation");
 
                     b.Navigation("Kami");
-                });
-
-            modelBuilder.Entity("Domain.Entities.KamiReview", b =>
-                {
-                    b.HasOne("Domain.Entities.Kami", "Kami")
-                        .WithMany("Reviews")
-                        .HasForeignKey("KamiId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.User", "ReviewedByUser")
-                        .WithMany("ReviewedKamiReviews")
-                        .HasForeignKey("ReviewedBy")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Domain.Entities.User", "SubmittedByUser")
-                        .WithMany("SubmittedKamiReviews")
-                        .HasForeignKey("SubmittedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Kami");
-
-                    b.Navigation("ReviewedByUser");
-
-                    b.Navigation("SubmittedByUser");
                 });
 
             modelBuilder.Entity("Domain.Entities.RefreshToken", b =>
@@ -1332,7 +1154,7 @@ namespace Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Domain.Entities.ShrineReview", b =>
                 {
                     b.HasOne("Domain.Entities.User", "ReviewedByUser")
-                        .WithMany("ReviewedShrineReviews")
+                        .WithMany("ReviewedReviews")
                         .HasForeignKey("ReviewedBy")
                         .OnDelete(DeleteBehavior.Restrict);
 
@@ -1343,7 +1165,7 @@ namespace Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.User", "SubmittedByUser")
-                        .WithMany("SubmittedShrineReviews")
+                        .WithMany("SubmittedReviews")
                         .HasForeignKey("SubmittedBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1417,11 +1239,6 @@ namespace Infrastructure.Persistence.Migrations
                     b.Navigation("KamiCitations");
                 });
 
-            modelBuilder.Entity("Domain.Entities.EntityAudit", b =>
-                {
-                    b.Navigation("Issues");
-                });
-
             modelBuilder.Entity("Domain.Entities.EtiquetteTopic", b =>
                 {
                     b.Navigation("Steps");
@@ -1442,8 +1259,6 @@ namespace Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Domain.Entities.Kami", b =>
                 {
                     b.Navigation("KamiCitations");
-
-                    b.Navigation("Reviews");
 
                     b.Navigation("ShrineKamis");
                 });
@@ -1479,13 +1294,9 @@ namespace Infrastructure.Persistence.Migrations
                 {
                     b.Navigation("RefreshTokens");
 
-                    b.Navigation("ReviewedKamiReviews");
+                    b.Navigation("ReviewedReviews");
 
-                    b.Navigation("ReviewedShrineReviews");
-
-                    b.Navigation("SubmittedKamiReviews");
-
-                    b.Navigation("SubmittedShrineReviews");
+                    b.Navigation("SubmittedReviews");
 
                     b.Navigation("UserCollections");
                 });
