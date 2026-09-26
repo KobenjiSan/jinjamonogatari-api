@@ -4,6 +4,7 @@ using Application.Features.Kami.Commands.CreateKami;
 using Application.Features.Kami.Commands.DeleteKami;
 using Application.Features.Kami.Commands.UpdateKami;
 using Application.Features.Kami.Queries.GetAllKamiCMS;
+using Application.Features.Shrines.Models;
 using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -67,7 +68,7 @@ public class KamiController : ControllerBase
 
     // PUT /api/kami/{kamiId}
     [HttpPut("{kamiId}")]
-    public async Task<IActionResult> UpdateKamiAsync(
+    public async Task<ActionResult<KamiReadCMSDto>> UpdateKamiAsync(
         [FromRoute] int kamiId,
         [FromForm] string data,
         [FromForm] IFormFile? file
@@ -87,7 +88,7 @@ public class KamiController : ControllerBase
 
         var command = new UpdateKamiCommand(kamiId, request, file);
         var result = await _mediator.Send(command);
-        return Ok(result);
+        return Ok(result.Kami);
     }
 
     #endregion

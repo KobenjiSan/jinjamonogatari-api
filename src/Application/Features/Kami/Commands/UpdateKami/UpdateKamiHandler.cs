@@ -5,7 +5,7 @@ using MediatR;
 
 namespace Application.Features.Kami.Commands.UpdateKami;
 
-public class UpdateKamiHandler : IRequestHandler<UpdateKamiCommand, Unit>
+public class UpdateKamiHandler : IRequestHandler<UpdateKamiCommand, UpdateKamiResult>
 {
     private readonly IKamiService _service;
     private readonly IImageService _imageService;
@@ -22,7 +22,7 @@ public class UpdateKamiHandler : IRequestHandler<UpdateKamiCommand, Unit>
         _entityAuditService = entityAuditService;
     }
 
-    public async Task<Unit> Handle(UpdateKamiCommand request, CancellationToken ct)
+    public async Task<UpdateKamiResult> Handle(UpdateKamiCommand request, CancellationToken ct)
     {
         var data = request.Request;
         var file = request.File;
@@ -83,6 +83,8 @@ public class UpdateKamiHandler : IRequestHandler<UpdateKamiCommand, Unit>
         // run EntityAudit
         await _entityAuditService.AuditKamiAsync(request.KamiId, ct);
 
-        return Unit.Value;
+        var result = await _service.GetKamiByIdAsync(request.KamiId, ct);
+
+        return new UpdateKamiResult(result);
     }
 }

@@ -513,4 +513,81 @@ public class KamiService : IKamiService
     }
 
     #endregion
+
+    #region Get Kami By Id
+
+    public async Task<KamiReadCMSDto?> GetKamiByIdAsync(int kamiId, CancellationToken ct)
+    {
+        return await _db.Kamis
+            .AsNoTracking()
+            .Where(k => k.KamiId == kamiId)
+            .Select(k => new KamiReadCMSDto(
+                k.KamiId,
+                k.NameEn,
+                k.NameJp,
+                k.Desc,
+                k.Status,
+                k.PublishedAt,
+                k.CreatedAt,
+                k.UpdatedAt,
+                    k.Image == null
+                    ? null
+                    : new ImageCMSDto(
+                        k.Image.ImgId,
+                        k.Image.ImageUrl,
+                        k.Image.Title,
+                        k.Image.Desc,
+                        k.Image.Citation == null
+                            ? null
+                            : new CitationCMSDto(
+                                k.Image.Citation.CiteId,
+                                k.Image.Citation.Title,
+                                k.Image.Citation.Author,
+                                k.Image.Citation.Url,
+                                k.Image.Citation.Year,
+                                k.Image.Citation.CreatedAt,
+                                k.Image.Citation.UpdatedAt
+                            ),
+                        k.Image.CreatedAt,
+                        k.Image.UpdatedAt
+                    ),
+                k.KamiCitations
+                    .Where(kc => kc.Citation != null)
+                    .Select(kc => new CitationCMSDto(
+                        kc.Citation.CiteId,
+                        kc.Citation.Title,
+                        kc.Citation.Author,
+                        kc.Citation.Url,
+                        kc.Citation.Year,
+                        kc.Citation.CreatedAt,
+                        kc.Citation.UpdatedAt
+                    )).ToList(),
+                null,    // Nulling Audit
+                k.EntityAudit == null 
+                    ? null
+                    : new EntityAuditCMSDto(
+                        k.EntityAudit.EntityAuditId,
+                        k.EntityAudit.ErrorCount,
+                        k.EntityAudit.WarningCount,
+                        k.EntityAudit.CanSubmit,
+                        k.EntityAudit.CreatedAt,
+                        k.EntityAudit.UpdatedAt,
+                        k.EntityAudit.Issues
+                            .OrderBy(issue => issue.EntityAuditIssueId)
+                            .Select(issue => new EntityAuditIssueDto(
+                                issue.EntityAuditIssueId,
+                                issue.EntityAuditId,
+                                issue.Severity,
+                                issue.Field,
+                                issue.Message,
+                                issue.RelatedItemType,
+                                issue.RelatedItemId,
+                                issue.CreatedAt
+                            ))
+                            .ToList()
+                    )
+        )).FirstOrDefaultAsync(ct);
+    }
+
+    #endregion
 }

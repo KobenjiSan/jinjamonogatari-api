@@ -12,4 +12,6 @@ public interface IKamiService
     Task UpdateKamiAsync(int kamiId, UpdateKamiRequest request, string? publicId, CancellationToken ct);
 
     Task<string?> GetKamiImagePublicIdCMSAsync(int kamiId, CancellationToken ct);
+
+    Task<KamiReadCMSDto?> GetKamiByIdAsync(int kamiId, CancellationToken ct);
 }
