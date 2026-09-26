@@ -1,3 +1,4 @@
+using Application.Features.Kami.Models;
 using Application.Features.Kami.Queries.GetAllKamiCMS;
 using Application.Features.Shrines.Models;
 
@@ -14,4 +15,9 @@ public interface IKamiService
     Task<string?> GetKamiImagePublicIdCMSAsync(int kamiId, CancellationToken ct);
 
     Task<KamiReadCMSDto?> GetKamiByIdAsync(int kamiId, CancellationToken ct);
+
+    Task SubmitKamiForReviewAsync(int kamiId, int userId, CancellationToken ct);
+    Task RejectKamiForReviewAsync(int kamiId, int userId, string message, CancellationToken ct);
+    Task PublishKamiForReviewAsync(int kamiId, int userId, CancellationToken ct);
+    Task<IReadOnlyList<KamiReviewDto>> GetKamiReviewHistoryAsync(int kamiId, CancellationToken ct);
 }

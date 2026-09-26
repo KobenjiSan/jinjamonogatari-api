@@ -2,6 +2,7 @@ using Application.Common.Exceptions;
 using Application.Common.Models.Citations;
 using Application.Common.Models.EntityAudit;
 using Application.Common.Models.Images;
+using Application.Features.Kami.Models;
 using Application.Features.Kami.Queries.GetAllKamiCMS;
 using Application.Features.Kami.Services;
 using Application.Features.Shrines.Models;
@@ -587,6 +588,129 @@ public class KamiService : IKamiService
                             .ToList()
                     )
         )).FirstOrDefaultAsync(ct);
+    }
+
+    #endregion
+
+    #region SUBMIT KAMI FOR REVIEW
+
+    public async Task SubmitKamiForReviewAsync(int kamiId, int userId, CancellationToken ct)
+    {
+        // Get Kami and validate it exists
+        var kami = await _db.Kamis.FirstOrDefaultAsync(k => k.KamiId == kamiId, ct);
+        if (kami is null)
+            throw new NotFoundException($"Kami {kamiId} was not found.");
+
+        // Check if kami is already pending review
+        var hasPendingReview = await _db.KamiReviews
+            .AnyAsync(r => r.KamiId == kamiId && r.Decision == ReviewDecision.Pending, ct);
+
+        if (hasPendingReview)
+            throw new BadRequestException("Kami already has a pending review.");
+
+        // New KamiReview
+        var review = new KamiReview
+        {
+            KamiId = kamiId,
+            SubmittedAt = DateTime.UtcNow,
+            SubmittedBy = userId,
+            Decision = ReviewDecision.Pending
+        };
+
+        _db.KamiReviews.Add(review);
+
+        kami.Status = EntityStatus.Review;
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region REJECT REVIEW KAMI
+
+    public async Task RejectKamiForReviewAsync(int kamiId, int userId, string message, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            throw new BadRequestException("Rejection message is required.");
+
+        // Get kami and validate it exists
+        var kami = await _db.Kamis.FirstOrDefaultAsync(k => k.KamiId == kamiId, ct);
+        if (kami is null)
+            throw new NotFoundException($"Kami {kamiId} was not found.");
+        if (kami.Status != EntityStatus.Review)
+            throw new BadRequestException("Only Kami in review can be rejected.");
+
+        // Get review and validate it exists
+        var review = await _db.KamiReviews
+            .FirstOrDefaultAsync(r => r.Decision == ReviewDecision.Pending && r.KamiId == kamiId, ct);
+        if (review is null)
+            throw new NotFoundException($"Kami {kamiId} does not have a pending review.");
+
+        // Update review
+        review.ReviewedAt = DateTime.UtcNow;
+        review.ReviewedBy = userId;
+        review.ReviewerComment = message;
+        review.Decision = ReviewDecision.Rejected;
+
+        // Update kami status
+        kami.Status = EntityStatus.Draft;
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region PUBLISH REVIEW KAMI
+
+    public async Task PublishKamiForReviewAsync(int kamiId, int userId, CancellationToken ct)
+    {
+        // Get kami and validate it exists
+        var kami = await _db.Kamis.FirstOrDefaultAsync(k => k.KamiId == kamiId, ct);
+        if (kami is null)
+            throw new NotFoundException($"Kami {kamiId} was not found.");
+        if (kami.Status != EntityStatus.Review)
+            throw new BadRequestException("Only Kami in review can be published.");
+
+        // Get review and validate it exists
+        var review = await _db.KamiReviews
+            .FirstOrDefaultAsync(r => r.Decision == ReviewDecision.Pending && r.KamiId == kamiId, ct);
+        if (review is null)
+            throw new NotFoundException($"Kami {kamiId} does not have a pending review.");
+
+        // Update review
+        review.ReviewedAt = DateTime.UtcNow;
+        review.ReviewedBy = userId;
+        review.Decision = ReviewDecision.Published;
+
+        // Update kami status
+        kami.Status = EntityStatus.Published;
+        kami.PublishedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region Get Kami Review History
+
+    public async Task<IReadOnlyList<KamiReviewDto>> GetKamiReviewHistoryAsync(int kamiId, CancellationToken ct)
+    {
+        return await _db.KamiReviews
+            .AsNoTracking()
+            .Where(k => k.KamiId == kamiId)
+            .OrderByDescending(r => r.SubmittedAt)
+            .Select(r => new KamiReviewDto
+            (
+                r.ReviewId,
+                r.SubmittedAt,
+                r.SubmittedBy,
+                r.SubmittedByUser.Username,
+                r.ReviewedAt,
+                r.ReviewedBy,
+                r.ReviewedByUser != null ? r.ReviewedByUser.Username : null,
+                r.ReviewerComment,
+                r.Decision.ToString()
+            )).ToListAsync(ct);
     }
 
     #endregion

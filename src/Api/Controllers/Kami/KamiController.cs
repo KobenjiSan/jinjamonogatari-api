@@ -2,8 +2,13 @@ using System.Text.Json;
 using API.Extensions;
 using Application.Features.Kami.Commands.CreateKami;
 using Application.Features.Kami.Commands.DeleteKami;
+using Application.Features.Kami.Commands.PublishReviewKami;
+using Application.Features.Kami.Commands.RejectReviewKami;
+using Application.Features.Kami.Commands.SubmitReviewKami;
 using Application.Features.Kami.Commands.UpdateKami;
+using Application.Features.Kami.Models;
 using Application.Features.Kami.Queries.GetAllKamiCMS;
+using Application.Features.Kami.Queries.GetKamiReviewHistory;
 using Application.Features.Shrines.Models;
 using Domain.Enums;
 using MediatR;
@@ -105,4 +110,73 @@ public class KamiController : ControllerBase
     }
 
     #endregion
+
+    #region SUBMIT REVIEW
+
+    // POST /api/kami/{kamiId}/review/submit
+    [HttpPost("{kamiId}/review/submit")]
+    public async Task<IActionResult> SubmitReviewKamiAsync([FromRoute] int kamiId)
+    {
+        User.EnsureNotDemo();
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
+        var command = new SubmitReviewKamiCommand(username, kamiId, userId);
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    #endregion
+
+    #region REJECT REVIEW KAMI
+
+    // POST /api/kami/{kamiId}/review/reject
+    [HttpPost("{kamiId}/review/reject")]
+    [Authorize(Roles = "Admin")]    // Admins only
+    public async Task<IActionResult> RejectReviewKamiAsync([FromRoute] int kamiId, [FromBody] RejectKamiRequest request)
+    {
+        User.EnsureNotDemo();
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
+        var command = new RejectReviewKamiCommand(username, kamiId, userId, request.Message);
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    #endregion
+
+    #region PUBLISH REVIEW KAMI
+
+    // POST /api/kami/{kamiId}/review/publish
+    [HttpPost("{kamiId}/review/publish")]
+    [Authorize(Roles = "Admin")]    // Admins only
+    public async Task<IActionResult> PublishReviewKamiAsync([FromRoute] int kamiId)
+    {
+        User.EnsureNotDemo();
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
+        var command = new PublishReviewKamiCommand(username, kamiId, userId);
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    #endregion
+
+     #region GET KAMI REVIEW HISTORY
+
+    // POST /api/kami/{kamiId}/review/history
+    [Authorize]
+    [HttpGet("{kamiId}/review/history")]
+    public async Task<ActionResult<IReadOnlyList<KamiReviewDto>>> GetKamiReviewHistoryAsync([FromRoute] int kamiId)
+    {
+        var result = await _mediator.Send(new GetKamiReviewHistoryQuery(kamiId));
+        return Ok(result.ReviewHistory);
+    }
+
+    #endregion
 }
+
+#region Reject Kami Request
+
+public record RejectKamiRequest(string Message);
+
+#endregion
