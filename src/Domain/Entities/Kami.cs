@@ -33,4 +33,5 @@ public class Kami : IHasTimestamps
     // Relationships (collections)
     public ICollection<ShrineKami> ShrineKamis { get; set; } = new List<ShrineKami>();
     public ICollection<KamiCitation> KamiCitations { get; set; } = new List<KamiCitation>();
+    public ICollection<KamiReview> Reviews { get; set; } = new List<KamiReview>();
 }
