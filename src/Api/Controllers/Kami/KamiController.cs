@@ -6,6 +6,8 @@ using Application.Features.Kami.Commands.PublishReviewKami;
 using Application.Features.Kami.Commands.RejectReviewKami;
 using Application.Features.Kami.Commands.SubmitReviewKami;
 using Application.Features.Kami.Commands.UpdateKami;
+using Application.Features.Kami.Commands.WithdrawDraftKami;
+using Application.Features.Kami.Commands.WithdrawPublishedKami;
 using Application.Features.Kami.Models;
 using Application.Features.Kami.Queries.GetAllKamiCMS;
 using Application.Features.Kami.Queries.GetKamiReviewHistory;
@@ -51,6 +53,8 @@ public class KamiController : ControllerBase
     public async Task<IActionResult> CreateKamiAsync([FromForm] string data, [FromForm] IFormFile? file)
     {
         User.EnsureNotDemo();
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
         
         var options = new JsonSerializerOptions
         {
@@ -62,7 +66,7 @@ public class KamiController : ControllerBase
         if (request == null)
             return BadRequest("Invalid payload");
 
-        var command = new CreateKamiCommand(request, file);
+        var command = new CreateKamiCommand(userId, username, request, file);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -80,6 +84,8 @@ public class KamiController : ControllerBase
     )
     {
         User.EnsureNotDemo();
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
 
         var options = new JsonSerializerOptions
         {
@@ -91,7 +97,7 @@ public class KamiController : ControllerBase
         if (request == null)
             return BadRequest("Invalid payload");
 
-        var command = new UpdateKamiCommand(kamiId, request, file);
+        var command = new UpdateKamiCommand(userId, username, kamiId, request, file);
         var result = await _mediator.Send(command);
         return Ok(result.Kami);
     }
@@ -105,7 +111,9 @@ public class KamiController : ControllerBase
     public async Task<IActionResult> DeleteKamiAsync([FromRoute] int kamiId)
     {
         User.EnsureNotDemo();
-        await _mediator.Send(new DeleteKamiCommand(kamiId));
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
+        await _mediator.Send(new DeleteKamiCommand(userId, username, kamiId));
         return NoContent();
     }
 
@@ -132,7 +140,7 @@ public class KamiController : ControllerBase
     // POST /api/kami/{kamiId}/review/reject
     [HttpPost("{kamiId}/review/reject")]
     [Authorize(Roles = "Admin")]    // Admins only
-    public async Task<IActionResult> RejectReviewKamiAsync([FromRoute] int kamiId, [FromBody] RejectKamiRequest request)
+    public async Task<IActionResult> RejectReviewKamiAsync([FromRoute] int kamiId, [FromBody] ReviewMessageRequest request)
     {
         User.EnsureNotDemo();
         var userId = User.GetUserId();
@@ -161,9 +169,9 @@ public class KamiController : ControllerBase
 
     #endregion
 
-     #region GET KAMI REVIEW HISTORY
+    #region GET KAMI REVIEW HISTORY
 
-    // POST /api/kami/{kamiId}/review/history
+    // GET /api/kami/{kamiId}/review/history
     [Authorize]
     [HttpGet("{kamiId}/review/history")]
     public async Task<ActionResult<IReadOnlyList<KamiReviewDto>>> GetKamiReviewHistoryAsync([FromRoute] int kamiId)
@@ -173,10 +181,44 @@ public class KamiController : ControllerBase
     }
 
     #endregion
+
+    #region WITHDRAW DRAFT
+
+    // POST /api/kami/{kamiId}/review/withdraw-draft
+    [HttpPost("{kamiId}/review/withdraw-draft")]
+    [Authorize(Roles = "Editor")]    // Editor only
+    public async Task<IActionResult> WithdrawDraftKamiAsync([FromRoute] int kamiId)
+    {
+        User.EnsureNotDemo();
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
+        var command = new WithdrawDraftKamiCommand(username, kamiId, userId);
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    #endregion
+
+    #region WITHDRAW PUBLISHED
+
+    // POST /api/kami/{kamiId}/review/withdraw-publish
+    [HttpPost("{kamiId}/review/withdraw-publish")]
+    [Authorize(Roles = "Admin")]    // Admins only
+    public async Task<IActionResult> WithdrawPublishedKamiAsync([FromRoute] int kamiId, [FromBody] ReviewMessageRequest request)
+    {
+        User.EnsureNotDemo();
+        var userId = User.GetUserId();
+        var username = User.GetEmail();
+        var command = new WithdrawPublishedKamiCommand(username, kamiId, userId, request.Message);
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    #endregion
 }
 
 #region Reject Kami Request
 
-public record RejectKamiRequest(string Message);
+public record ReviewMessageRequest(string Message);
 
 #endregion

@@ -22,10 +22,14 @@ public class KamiReviewConfiguration : IEntityTypeConfiguration<KamiReview>
         e.Property(x => x.SubmittedBy).HasColumnName("submitted_by").IsRequired();
         
         // Review Data
-        e.Property(x => x.ReviewedAt).HasColumnName("reviewed_at").HasColumnType("timestamp with time zone");
-        e.Property(x => x.ReviewedBy).HasColumnName("reviewed_by");
+        e.Property(x => x.ResolvedAt).HasColumnName("resolved_at").HasColumnType("timestamp with time zone");
+        e.Property(x => x.ResolvedBy).HasColumnName("resolved_by");
 
         e.Property(x => x.ReviewerComment).HasColumnName("reviewer_comment");
+
+        // Withdraw Data Published -> Draft
+        e.Property(x => x.ReturnedToDraftAt).HasColumnName("returned_to_draft_at").HasColumnType("timestamp with time zone");
+        e.Property(x => x.ReturnedToDraftBy).HasColumnName("returned_to_draft_by");
 
         // NOTE: HasConversion is needed as Decision is an Enum without it, it would store as an int.
         e.Property(x => x.Decision).HasColumnName("decision").HasConversion<string>().IsRequired(); 
@@ -43,10 +47,16 @@ public class KamiReviewConfiguration : IEntityTypeConfiguration<KamiReview>
             .HasForeignKey(x => x.SubmittedBy)
             .OnDelete(DeleteBehavior.Restrict);
 
-        //FK: kami_review.reviewed_by -> users.user_id
-        e.HasOne(x => x.ReviewedByUser)
-            .WithMany(r => r.ReviewedKamiReviews)
-            .HasForeignKey(x => x.ReviewedBy)
+        //FK: kami_review.resolved_by -> users.user_id
+        e.HasOne(x => x.ResolvedByUser)
+            .WithMany(r => r.ResolvedKamiReviews)
+            .HasForeignKey(x => x.ResolvedBy)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        //FK: kami_review.returned_to_draft_by -> users.user_id
+        e.HasOne(x => x.ReturnedToDraftByUser)
+            .WithMany(r => r.WithdrawnPublishedKamis)
+            .HasForeignKey(x => x.ReturnedToDraftBy)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

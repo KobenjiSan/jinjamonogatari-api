@@ -11,12 +11,17 @@ public record KamiReviewDto(
     string SubmittedByUsername,
 
     // Review Data
-    DateTime? ReviewedAt,
-    int? ReviewedBy,
-    string? ReviewedByUsername,
+    DateTime? ResolvedAt,
+    int? ResolvedBy,
+    string? ResolvedByUsername,
 
     // Comment
     string? ReviewerComment,
+
+    // Published -> Draft
+    DateTime? ReturnedToDraftAt,
+    int? ReturnedToDraftBy,
+    string? ReturnedToDraftByUsername,
 
     // Decision
     string Decision

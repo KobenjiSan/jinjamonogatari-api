@@ -297,7 +297,7 @@ public class KamiService : IKamiService
                         kc.Citation.UpdatedAt
                     )).ToList(),
                 null,    // Nulling Audit
-                k.EntityAudit == null 
+                k.EntityAudit == null
                     ? null
                     : new EntityAuditCMSDto(
                         k.EntityAudit.EntityAuditId,
@@ -564,7 +564,7 @@ public class KamiService : IKamiService
                         kc.Citation.UpdatedAt
                     )).ToList(),
                 null,    // Nulling Audit
-                k.EntityAudit == null 
+                k.EntityAudit == null
                     ? null
                     : new EntityAuditCMSDto(
                         k.EntityAudit.EntityAuditId,
@@ -647,8 +647,8 @@ public class KamiService : IKamiService
             throw new NotFoundException($"Kami {kamiId} does not have a pending review.");
 
         // Update review
-        review.ReviewedAt = DateTime.UtcNow;
-        review.ReviewedBy = userId;
+        review.ResolvedAt = DateTime.UtcNow;
+        review.ResolvedBy = userId;
         review.ReviewerComment = message;
         review.Decision = ReviewDecision.Rejected;
 
@@ -678,8 +678,8 @@ public class KamiService : IKamiService
             throw new NotFoundException($"Kami {kamiId} does not have a pending review.");
 
         // Update review
-        review.ReviewedAt = DateTime.UtcNow;
-        review.ReviewedBy = userId;
+        review.ResolvedAt = DateTime.UtcNow;
+        review.ResolvedBy = userId;
         review.Decision = ReviewDecision.Published;
 
         // Update kami status
@@ -705,12 +705,80 @@ public class KamiService : IKamiService
                 r.SubmittedAt,
                 r.SubmittedBy,
                 r.SubmittedByUser.Username,
-                r.ReviewedAt,
-                r.ReviewedBy,
-                r.ReviewedByUser != null ? r.ReviewedByUser.Username : null,
+                r.ResolvedAt,
+                r.ResolvedBy,
+                r.ResolvedByUser != null ? r.ResolvedByUser.Username : null,
                 r.ReviewerComment,
+                r.ReturnedToDraftAt,
+                r.ReturnedToDraftBy,
+                r.ReturnedToDraftByUser != null ? r.ReturnedToDraftByUser.Username : null,
                 r.Decision.ToString()
             )).ToListAsync(ct);
+    }
+
+    #endregion
+
+    #region WITHDRAW DRAFT KAMI
+
+    public async Task WithdrawDraftKamiAsync(int kamiId, int userId, CancellationToken ct)
+    {
+        // Get kami and validate it exists
+        var kami = await _db.Kamis.FirstOrDefaultAsync(k => k.KamiId == kamiId, ct);
+        if (kami is null)
+            throw new NotFoundException($"Kami {kamiId} was not found.");
+        if (kami.Status != EntityStatus.Review)
+            throw new BadRequestException("Only Kami in review can be withdrawn in this manner.");
+
+        // Get review and validate it exists
+        var review = await _db.KamiReviews
+            .FirstOrDefaultAsync(r => r.Decision == ReviewDecision.Pending && r.KamiId == kamiId, ct);
+        if (review is null)
+            throw new NotFoundException($"Kami {kamiId} does not have a pending review.");
+
+        // Update review
+        review.ResolvedAt = DateTime.UtcNow;
+        review.ResolvedBy = userId;
+        review.Decision = ReviewDecision.Withdrawn;
+
+        // Update kami status
+        kami.Status = EntityStatus.Draft;
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region WITHDRAW PUBLISHED KAMI
+
+    public async Task WithdrawPublishedKamiAsync(int kamiId, int userId, string message, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            throw new BadRequestException("Reason for returning to draft is required.");
+
+        // Get kami and validate it exists
+        var kami = await _db.Kamis.FirstOrDefaultAsync(k => k.KamiId == kamiId, ct);
+        if (kami is null)
+            throw new NotFoundException($"Kami {kamiId} was not found.");
+        if (kami.Status != EntityStatus.Published)
+            throw new BadRequestException("Only published Kami can be withdrawn in this manner.");
+
+        // Get review and validate it exists
+        var publishedReview = await _db.KamiReviews
+            .FirstOrDefaultAsync(r => r.Decision == ReviewDecision.Published && r.KamiId == kamiId && r.ReturnedToDraftAt == null, ct);
+        if (publishedReview is null)
+            throw new NotFoundException($"Kami {kamiId} has not been published.");
+
+        // Update review
+        publishedReview.ReturnedToDraftAt = DateTime.UtcNow;
+        publishedReview.ReturnedToDraftBy = userId;
+        publishedReview.ReviewerComment = message;
+        publishedReview.Decision = ReviewDecision.Unpublished;
+
+        // Update kami status
+        kami.Status = EntityStatus.Draft;
+        kami.PublishedAt = null;
+
+        await _db.SaveChangesAsync(ct);
     }
 
     #endregion

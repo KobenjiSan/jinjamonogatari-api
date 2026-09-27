@@ -4,5 +4,7 @@ public enum ReviewDecision
 {
     Pending,
     Rejected,
-    Published 
+    Published,
+    Withdrawn,
+    Unpublished
 }

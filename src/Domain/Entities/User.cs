@@ -34,5 +34,6 @@ public class User : IHasTimestamps
     public ICollection<ShrineReview> ReviewedShrineReviews { get; set; } = new List<ShrineReview>();
 
     public ICollection<KamiReview> SubmittedKamiReviews { get; set; } = new List<KamiReview>();
-    public ICollection<KamiReview> ReviewedKamiReviews { get; set; } = new List<KamiReview>();
+    public ICollection<KamiReview> ResolvedKamiReviews { get; set; } = new List<KamiReview>();
+    public ICollection<KamiReview> WithdrawnPublishedKamis { get; set; } = new List<KamiReview>();
 }

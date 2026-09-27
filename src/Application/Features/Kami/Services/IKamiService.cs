@@ -20,4 +20,7 @@ public interface IKamiService
     Task RejectKamiForReviewAsync(int kamiId, int userId, string message, CancellationToken ct);
     Task PublishKamiForReviewAsync(int kamiId, int userId, CancellationToken ct);
     Task<IReadOnlyList<KamiReviewDto>> GetKamiReviewHistoryAsync(int kamiId, CancellationToken ct);
+
+    Task WithdrawDraftKamiAsync(int kamiId, int userId, CancellationToken ct);
+    Task WithdrawPublishedKamiAsync(int kamiId, int userId, string message, CancellationToken ct);
 }
