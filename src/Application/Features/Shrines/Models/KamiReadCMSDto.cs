@@ -17,5 +17,6 @@ public record KamiReadCMSDto(
     ImageCMSDto? Image,
     IReadOnlyList<CitationCMSDto> Citations,
     EntityAuditDto? Audit = null,
-    EntityAuditCMSDto? EntityAudit = null
+    EntityAuditCMSDto? EntityAudit = null,
+    ReviewDecision? LastReviewDecision = null
 );

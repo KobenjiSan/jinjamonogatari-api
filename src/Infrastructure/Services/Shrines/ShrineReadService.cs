@@ -580,7 +580,12 @@ public class ShrineReadService : IShrineReadService
                                 issue.CreatedAt
                             ))
                             .ToList()
-                    )
+                    ),
+                k.Reviews
+                    .OrderByDescending(r => r.SubmittedAt)
+                    .ThenByDescending(r => r.ReviewId)
+                    .Select(r => (ReviewDecision?)r.Decision)
+                    .FirstOrDefault()
         )).ToListAsync(ct);
     }
 
@@ -656,7 +661,12 @@ public class ShrineReadService : IShrineReadService
                                 issue.CreatedAt
                             ))
                             .ToList()
-                    )
+                    ),
+                k.Reviews
+                    .OrderByDescending(r => r.SubmittedAt)
+                    .ThenByDescending(r => r.ReviewId)
+                    .Select(r => (ReviewDecision?)r.Decision)
+                    .FirstOrDefault()
         )).ToListAsync(ct);
     }
 

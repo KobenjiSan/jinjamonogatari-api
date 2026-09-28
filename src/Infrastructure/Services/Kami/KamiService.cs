@@ -319,7 +319,12 @@ public class KamiService : IKamiService
                                 issue.CreatedAt
                             ))
                             .ToList()
-                    )
+                    ),
+                k.Reviews
+                    .OrderByDescending(r => r.SubmittedAt)
+                    .ThenByDescending(r => r.ReviewId)
+                    .Select(r => (ReviewDecision?)r.Decision)
+                    .FirstOrDefault()
         )).ToListAsync(ct);
 
         return (items, totalCount);
@@ -586,7 +591,12 @@ public class KamiService : IKamiService
                                 issue.CreatedAt
                             ))
                             .ToList()
-                    )
+                    ),
+                k.Reviews
+                    .OrderByDescending(r => r.SubmittedAt)
+                    .ThenByDescending(r => r.ReviewId)
+                    .Select(r => (ReviewDecision?)r.Decision)
+                    .FirstOrDefault()
         )).FirstOrDefaultAsync(ct);
     }
 
