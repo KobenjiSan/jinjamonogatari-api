@@ -39,13 +39,13 @@ public class ShrineReviewConfiguration : IEntityTypeConfiguration<ShrineReview>
     
         //FK: shrine_review.submitted_by -> users.user_id
         e.HasOne(x => x.SubmittedByUser)
-            .WithMany(r => r.SubmittedReviews)
+            .WithMany(r => r.SubmittedShrineReviews)
             .HasForeignKey(x => x.SubmittedBy)
             .OnDelete(DeleteBehavior.Restrict);
 
         //FK: shrine_review.reviewed_by -> users.user_id
         e.HasOne(x => x.ReviewedByUser)
-            .WithMany(r => r.ReviewedReviews)
+            .WithMany(r => r.ReviewedShrineReviews)
             .HasForeignKey(x => x.ReviewedBy)
             .OnDelete(DeleteBehavior.Restrict);
     }

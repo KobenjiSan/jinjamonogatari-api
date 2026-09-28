@@ -1,4 +1,5 @@
 using Application.Common.Models.Citations;
+using Application.Common.Models.EntityAudit;
 using Application.Common.Models.Images;
 using Application.Features.Shrines.Models;
 using Application.Features.Shrines.Queries.GetShrineCounts;
@@ -556,7 +557,35 @@ public class ShrineReadService : IShrineReadService
                         kc.Citation.CreatedAt,
                         kc.Citation.UpdatedAt
                     )).ToList(),
-                null    // Nulling Audit
+                null,    // Nulling Audit
+                k.EntityAudit == null
+                    ? null
+                    : new EntityAuditCMSDto(
+                        k.EntityAudit.EntityAuditId,
+                        k.EntityAudit.ErrorCount,
+                        k.EntityAudit.WarningCount,
+                        k.EntityAudit.CanSubmit,
+                        k.EntityAudit.CreatedAt,
+                        k.EntityAudit.UpdatedAt,
+                        k.EntityAudit.Issues
+                            .OrderBy(issue => issue.EntityAuditIssueId)
+                            .Select(issue => new EntityAuditIssueDto(
+                                issue.EntityAuditIssueId,
+                                issue.EntityAuditId,
+                                issue.Severity,
+                                issue.Field,
+                                issue.Message,
+                                issue.RelatedItemType,
+                                issue.RelatedItemId,
+                                issue.CreatedAt
+                            ))
+                            .ToList()
+                    ),
+                k.Reviews
+                    .OrderByDescending(r => r.SubmittedAt)
+                    .ThenByDescending(r => r.ReviewId)
+                    .Select(r => (ReviewDecision?)r.Decision)
+                    .FirstOrDefault()
         )).ToListAsync(ct);
     }
 
@@ -609,7 +638,35 @@ public class ShrineReadService : IShrineReadService
                         kc.Citation.CreatedAt,
                         kc.Citation.UpdatedAt
                     )).ToList(),
-                null    // Nulling Audit
+                null,    // Nulling Audit
+                k.EntityAudit == null
+                    ? null
+                    : new EntityAuditCMSDto(
+                        k.EntityAudit.EntityAuditId,
+                        k.EntityAudit.ErrorCount,
+                        k.EntityAudit.WarningCount,
+                        k.EntityAudit.CanSubmit,
+                        k.EntityAudit.CreatedAt,
+                        k.EntityAudit.UpdatedAt,
+                        k.EntityAudit.Issues
+                            .OrderBy(issue => issue.EntityAuditIssueId)
+                            .Select(issue => new EntityAuditIssueDto(
+                                issue.EntityAuditIssueId,
+                                issue.EntityAuditId,
+                                issue.Severity,
+                                issue.Field,
+                                issue.Message,
+                                issue.RelatedItemType,
+                                issue.RelatedItemId,
+                                issue.CreatedAt
+                            ))
+                            .ToList()
+                    ),
+                k.Reviews
+                    .OrderByDescending(r => r.SubmittedAt)
+                    .ThenByDescending(r => r.ReviewId)
+                    .Select(r => (ReviewDecision?)r.Decision)
+                    .FirstOrDefault()
         )).ToListAsync(ct);
     }
 
