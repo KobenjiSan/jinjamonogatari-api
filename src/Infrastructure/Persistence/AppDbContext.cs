@@ -21,6 +21,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<Kami> Kamis => Set<Kami>();
     public DbSet<ShrineKami> ShrineKamis => Set<ShrineKami>();
     public DbSet<KamiCitation> KamiCitations => Set<KamiCitation>();
+    public DbSet<KamiReview> KamiReviews => Set<KamiReview>();
 
     // History
     public DbSet<History> Histories => Set<History>();
@@ -53,6 +54,10 @@ public class AppDbContext : DbContext, IAppDbContext
 
     // Auditing
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+    // Entity Audits
+    public DbSet<EntityAudit> EntityAudits => Set<EntityAudit>();
+    public DbSet<EntityAuditIssue> EntityAuditIssues => Set<EntityAuditIssue>();
 
     /*
     Builds EF Core model at startup.

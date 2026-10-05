@@ -1,3 +1,5 @@
+using Application.Common.Models.EntityAudit;
+
 namespace Application.Features.Shrines.Models;
 
 public class ShrineAuditSnapshot
@@ -37,34 +39,6 @@ public class TagAuditSnapshot
     public int TagId { get; set; }
     public string? TitleEn { get; set; }
     public string? TitleJp { get; set; }
-}
-
-public class ImageAuditSnapshot
-{
-    public int ImgId { get; set; }
-    public string? ImageUrl { get; set; }
-    public string? Title { get; set; }
-    public string? Desc { get; set; }
-    public CitationAuditSnapshot? Citation { get; set; }
-}
-
-public class CitationAuditSnapshot
-{
-    public int CiteId { get; set; }
-    public string? Title { get; set; }
-    public string? Author { get; set; }
-    public string? Url { get; set; }
-    public int? Year { get; set; }
-}
-
-public class KamiAuditSnapshot
-{
-    public int KamiId { get; set; }
-    public string? NameEn { get; set; }
-    public string? NameJp { get; set; }
-    public string? Desc { get; set; }
-    public ImageAuditSnapshot? Image { get; set; }
-    public List<CitationAuditSnapshot> Citations { get; set; } = new();
 }
 
 public class HistoryAuditSnapshot

@@ -1,4 +1,5 @@
 using Application.Common.Policies;
+using Application.Common.Services;
 using Application.Features.Audits.Services;
 using Application.Features.Images.Services;
 using Application.Features.Shrines.Services;
@@ -12,18 +13,21 @@ public class CreateKamiInShrineHandler : IRequestHandler<CreateKamiInShrineComma
     private readonly IShrineReadService _shrineReadService;
     private readonly IImageService _imageService;
     private readonly IAuditService _audit;
+    private readonly IEntityAuditService _entityAuditService;
 
     public CreateKamiInShrineHandler(
         IShrineWriteService shrineWriteService,
         IShrineReadService shrineReadService,
         IImageService imageService,
-        IAuditService audit
+        IAuditService audit,
+        IEntityAuditService entityAuditService
     )
     {
         _shrineWriteService = shrineWriteService;
         _shrineReadService = shrineReadService;
         _imageService = imageService;
         _audit = audit;
+        _entityAuditService = entityAuditService;
     }
 
     public async Task<Unit> Handle(CreateKamiInShrineCommand request, CancellationToken ct)
@@ -74,6 +78,9 @@ public class CreateKamiInShrineHandler : IRequestHandler<CreateKamiInShrineComma
                 publicId,
                 ct
             );
+
+            // run EntityAudit
+            await _entityAuditService.AuditKamiAsync(kamiId, ct);
 
             await _audit.LogAsync(request.UserId, request.Username, "CreatedKamiInShrine", $"Shrine #{request.ShrineId} (Kami #{kamiId})", true, null, ct);
         }
